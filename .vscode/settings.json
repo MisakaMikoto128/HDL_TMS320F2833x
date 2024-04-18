@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "bfl_buzz.h": "c",
+        "stdint.h": "c",
+        "hdl_gpio.h": "c",
+        "app_main.h": "c",
+        "hdl_uart.h": "c"
+    }
+}
