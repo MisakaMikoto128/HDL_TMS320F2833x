@@ -19,6 +19,8 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#define byte_t uint16_t
+
 #define UNSUSED(x) (void)(x)
 #ifdef __cplusplus
 }

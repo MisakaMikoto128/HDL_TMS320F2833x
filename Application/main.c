@@ -113,6 +113,12 @@ void main(void)
     InitPieVectTable();
 
     //
+    // Enable CPU and PIE interrupts
+    // This example function is found in the DSP2833x_PieCtrl.c file.
+    //
+    // EnableInterrupts();
+
+    //
     // Interrupts that are used in this example are re-mapped to
     // ISR functions found within this file.
     //
@@ -171,18 +177,24 @@ void main(void)
     IER |= M_INT13;
     IER |= M_INT14;
 
+    // Enable CPU int8 and int9 which are connected to SCIs
+    IER |= M_INT8;
+    IER |= M_INT9;
+
     //
     // Enable TINT0 in the PIE: Group 1 interrupt 7
     //
     PieCtrlRegs.PIEIER1.bit.INTx7 = 1;
 
+    APP_Main_Init();
+
+    IER |= 0x100;                         // Enable CPU INT
     //
     // Enable global Interrupts and higher priority real-time debug events:
     //
     EINT; // Enable Global interrupt INTM
     ERTM; // Enable Global realtime interrupt DBGM
 
-    APP_Main_Init();
     //
     // Step 6. IDLE loop. Just sit and loop forever (optional):
     //

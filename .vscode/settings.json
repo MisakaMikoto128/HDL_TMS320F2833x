@@ -4,6 +4,9 @@
         "stdint.h": "c",
         "hdl_gpio.h": "c",
         "app_main.h": "c",
-        "hdl_uart.h": "c"
+        "hdl_uart.h": "c",
+        "ccommon.h": "c",
+        "stdbool.h": "c",
+        "cpu_define.h": "c"
     }
 }

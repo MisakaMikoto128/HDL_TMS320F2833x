@@ -19,20 +19,42 @@ extern "C"
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "ccommon.h"
 
-    // 串口号定义
-    typedef enum
-    {
-        COM1 = 0, // USART1
-        COM2 = 1, // USART3
-        COM_NUM,
-    } COMID_t;
+// Serial Port ID definition
+typedef enum {
+    COM1 = 0, // SCI-A
+    COM2 = 1, // SCI-B
+    COM3 = 2, // SCI-C
+    COM_NUM,
+} COMID_t;
 
-#ifdef AA
-        typedef void (*UartWriteOverCallback_t)(void *args);
-    
-#endif
 
+#define UART_WORD_LEN_5 5
+#define UART_WORD_LEN_6 6
+#define UART_WORD_LEN_7 7
+#define UART_WORD_LEN_8 8
+
+#define UART_STOP_BIT_1 0
+#define UART_STOP_BIT_1_5 1
+#define UART_STOP_BIT_2 2
+
+#define UART_PARITY_NONE 0
+#define UART_PARITY_ODD 1
+#define UART_PARITY_EVEN 2
+
+
+typedef void (*UartWriteOverCallback_t)(void *args);
+typedef void (*UartReceiveCharCallback_t)(byte_t ch);
+
+void Uart_Init(COMID_t comId, uint32_t baud, uint32_t wordLen, uint32_t stopBit, uint32_t parity);
+uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen);
+uint32_t Uart_Read(COMID_t comId, byte_t *pBuf, uint32_t uiLen);
+uint32_t Uart_AvailableBytes(COMID_t comId);
+uint32_t Uart_EmptyReadBuffer(COMID_t comId);
+byte_t Uart_SetWriteOverCallback(COMID_t comId, UartWriteOverCallback_t callback, void *args);
+byte_t Uart_RegisterReceiveCharCallback(COMID_t comId, UartReceiveCharCallback_t callback);
+byte_t Uart_UnregisterReceiveCharCallback(COMID_t comId);
 
 #ifdef __cplusplus
 }

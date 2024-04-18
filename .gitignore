@@ -5,3 +5,5 @@ Debug/.clangd/compile_commands.json
 Debug/APP/APP_Main.obj
 Debug/*.mk
 Debug/*/*.mk
+.vscode/*
+.launches/*
