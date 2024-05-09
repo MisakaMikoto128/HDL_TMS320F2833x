@@ -16,8 +16,7 @@
 //
 #define CPU_FREQ (Uint32)150E6
 #define LSPCLK_FREQ (Uint32)(CPU_FREQ / 4)
-#define SCI_FREQ (Uint32)100E3
-#define SCI_PRD (Uint16)((LSPCLK_FREQ / (SCI_FREQ * 8)) - 1)
+#define SCI_FREQ (Uint32)115200
 
 /*
 The 28x SCI features autobaud detection and transmit/receive FIFO.
@@ -34,6 +33,10 @@ __interrupt void scibRxFifoIsr(void);
 __interrupt void scicTxFifoIsr(void);
 __interrupt void scicRxFifoIsr(void);
 
+void InitSciaGpio(void);
+void InitScibGpio(void);
+void InitScicGpio(void);
+
 void error(void);
 
 //
@@ -48,6 +51,70 @@ Uint16 rdataC[8];    // Received data for SCI-C
 Uint16 rdata_pointA; // Used for checking the received data
 Uint16 rdata_pointB;
 Uint16 rdata_pointC;
+
+static void Scix_Init(volatile struct SCI_REGS *ScixRegs, uint32_t baud, uint32_t wordLen, uint32_t stopBit,
+                      uint32_t parity)
+{
+    // setting the word length
+    if (wordLen < UART_WORD_LEN_5 || wordLen > UART_WORD_LEN_8)
+    {
+        wordLen = UART_WORD_LEN_8;
+    }
+    ScixRegs->SCICCR.bit.SCICHAR = wordLen - 1;
+    // setting the polarity
+    switch (parity)
+    {
+    case UART_PARITY_NONE:
+        ScixRegs->SCICCR.bit.PARITYENA = 0;
+        break;
+    case UART_PARITY_ODD:
+        ScixRegs->SCICCR.bit.PARITYENA = 1;
+        ScixRegs->SCICCR.bit.PARITY = 0;
+        break;
+    case UART_PARITY_EVEN:
+        ScixRegs->SCICCR.bit.PARITYENA = 1;
+        ScixRegs->SCICCR.bit.PARITY = 1;
+        break;
+    default:
+        break;
+    }
+
+    switch (stopBit)
+    {
+    case UART_STOP_BIT_1:
+        ScixRegs->SCICCR.bit.STOPBITS = 0;
+        break;
+    case UART_STOP_BIT_2:
+        ScixRegs->SCICCR.bit.STOPBITS = 1;
+        break;
+    default:
+        break;
+    }
+
+    //
+    // enable TX, RX, internal SCICLK,
+    // Disable RX ERR, SLEEP, TXWAKE
+    //
+    ScixRegs->SCICTL1.all = 0x0003;
+    ScixRegs->SCICTL2.bit.TXINTENA = 0;   // The sending interrupt function was enabled
+    ScixRegs->SCICTL2.bit.RXBKINTENA = 0; // Receiver-buffer break enable
+    uint16_t SCI_PRD = 0;
+    SCI_PRD = (Uint16)((LSPCLK_FREQ / (baud * 8)) - 1);
+    ScixRegs->SCIHBAUD = SCI_PRD >> 8;
+    ScixRegs->SCILBAUD = SCI_PRD;
+    ScixRegs->SCICCR.bit.LOOPBKENA = 0; // Enable loop back
+    ScixRegs->SCIFFTX.all = 0xC028;
+    ScixRegs->SCIFFTX.bit.SCIFFENA = 1;
+    ScibRegs.SCIFFTX.bit.TXFFIENA = 0;  // 发送FIFO中断失能
+    ScixRegs->SCIFFRX.bit.RXFFIENA = 1; // 接收FIFO中断使能
+    ScixRegs->SCIFFRX.bit.RXFFIL = 1;   // 接收1个字节产生一次发送中断，如果使能了
+
+    ScixRegs->SCIFFCT.all = 0x00;
+
+    ScixRegs->SCICTL1.all = 0x0023; // Relinquish SCI from Reset
+    ScixRegs->SCIFFTX.bit.TXFIFOXRESET = 1;
+    ScixRegs->SCIFFRX.bit.RXFIFORESET = 1;
+}
 
 void Uart_Init(COMID_t comId, uint32_t baud, uint32_t wordLen, uint32_t stopBit,
                uint32_t parity)
@@ -66,46 +133,17 @@ void Uart_Init(COMID_t comId, uint32_t baud, uint32_t wordLen, uint32_t stopBit,
         PieVectTable.SCITXINTA = &sciaTxFifoIsr;
         EDIS; // This is needed to disable write to EALLOW protected registers
 
-        //
-        // 1 stop bit,  No loopback, No parity,8 char bits, async mode,
-        // idle-line protocol
-        //
-        SciaRegs.SCICCR.all = 0x0007;
+        Scix_Init(&SciaRegs, baud, wordLen, stopBit, parity);
 
-        //
-        // enable TX, RX, internal SCICLK, Disable RX ERR, SLEEP, TXWAKE
-        //
-        SciaRegs.SCICTL1.all = 0x0003;
-        SciaRegs.SCICTL2.bit.TXINTENA = 1;
-        SciaRegs.SCICTL2.bit.RXBKINTENA = 1;
-        SciaRegs.SCIHBAUD = SCI_PRD >> 8;
-        SciaRegs.SCILBAUD = SCI_PRD;
-        SciaRegs.SCICCR.bit.LOOPBKENA = 1; // Enable loop back
-        SciaRegs.SCIFFTX.all = 0xC028;
-        SciaRegs.SCIFFRX.all = 0x0028;
-        SciaRegs.SCIFFCT.all = 0x00;
-
-        SciaRegs.SCICTL1.all = 0x0023; // Relinquish SCI from Reset
-        SciaRegs.SCIFFTX.bit.TXFIFOXRESET = 1;
-        SciaRegs.SCIFFRX.bit.RXFIFORESET = 1;
         //
         // Step 5. User specific code, enable interrupts:
         //
 
-        //
-        // Init send data.  After each transmission this data will be updated for
-        // the next transmission
-        //
-        for (int i = 0; i < 8; i++)
-        {
-            sdataA[i] = i;
-        }
-
-        rdata_pointA = sdataA[0];
-
         PieCtrlRegs.PIEIER9.bit.INTx1 = 1; // PIE Group 9, int1, SCIRXINTA
         PieCtrlRegs.PIEIER9.bit.INTx2 = 1; // PIE Group 9, INT2, SCITXINTA
 
+        // Enable CPU int8 and int9 which are connected to SCIs
+        IER |= M_INT9;
         break;
     case COM2:
         // Init COM2
@@ -118,44 +156,16 @@ void Uart_Init(COMID_t comId, uint32_t baud, uint32_t wordLen, uint32_t stopBit,
         PieVectTable.SCIRXINTB = &scibRxFifoIsr;
         PieVectTable.SCITXINTB = &scibTxFifoIsr;
         EDIS; // This is needed to disable write to EALLOW protected registers
-        //
-        // 1 stop bit,  No loopback, No parity,8 char bits,
-        // async mode, idle-line protocol
-        //
-        ScibRegs.SCICCR.all = 0x0007;
-
-        //
-        // enable TX, RX, internal SCICLK,
-        // Disable RX ERR, SLEEP, TXWAKE
-        //
-        ScibRegs.SCICTL1.all = 0x0003;
-        ScibRegs.SCICTL2.bit.TXINTENA = 1;   // The sending interrupt function was enabled
-        ScibRegs.SCICTL2.bit.RXBKINTENA = 1; // The receiving interrupt function was enabled
-        ScibRegs.SCIHBAUD = SCI_PRD >> 8;
-        ScibRegs.SCILBAUD = SCI_PRD;
-        ScibRegs.SCICCR.bit.LOOPBKENA = 1; // Enable loop back
-        ScibRegs.SCIFFTX.all = 0xC028;
-        ScibRegs.SCIFFRX.all = 0x0028;
-        ScibRegs.SCIFFCT.all = 0x00;
-
-        ScibRegs.SCICTL1.all = 0x0023; // Relinquish SCI from Reset
-        ScibRegs.SCIFFTX.bit.TXFIFOXRESET = 1;
-        ScibRegs.SCIFFRX.bit.RXFIFORESET = 1;
-
-        //
-        // Init send data.  After each transmission this data will be updated for
-        // the next transmission
-        //
-        for (int i = 0; i < 8; i++)
-        {
-            sdataB[i] = i;
-        }
-
-        rdata_pointB = sdataB[0];
+              //
+              // 1 stop bit,  No loopback, No parity,8 char bits,
+              // async mode, idle-line protocol
+              //
+        Scix_Init(&ScibRegs, baud, wordLen, stopBit, parity);
 
         PieCtrlRegs.PIEIER9.bit.INTx3 = 1; // PIE Group 9, INT3, SCIRXINTB
         PieCtrlRegs.PIEIER9.bit.INTx4 = 1; // PIE Group 9, INT4, SCITXINTB
 
+        IER |= M_INT9;
         break;
     case COM3:
         // Init COM3
@@ -168,50 +178,57 @@ void Uart_Init(COMID_t comId, uint32_t baud, uint32_t wordLen, uint32_t stopBit,
         PieVectTable.SCIRXINTC = &scicRxFifoIsr;
         PieVectTable.SCITXINTC = &scicTxFifoIsr;
         EDIS; // This is needed to disable write to EALLOW protected registers
-        //
-        // 1 stop bit,  No loopback, No parity,8 char bits,
-        // async mode, idle-line protocol
-        //
-        ScicRegs.SCICCR.all = 0x0007;
 
-        //
-        // enable TX, RX, internal SCICLK,
-        // Disable RX ERR, SLEEP, TXWAKE
-        //
-        ScicRegs.SCICTL1.all = 0x0003;
-        ScicRegs.SCICTL2.bit.TXINTENA = 1;   // The sending interrupt function was enabled
-        ScicRegs.SCICTL2.bit.RXBKINTENA = 1; // The receiving interrupt function was enabled
-        ScicRegs.SCIHBAUD = SCI_PRD >> 8;
-        ScicRegs.SCILBAUD = SCI_PRD;
-        ScicRegs.SCICCR.bit.LOOPBKENA = 1; // Enable loop back
-        ScicRegs.SCIFFTX.all = 0xC028;
-        ScicRegs.SCIFFRX.all = 0x0028;
-        ScicRegs.SCIFFCT.all = 0x00;
-
-        ScicRegs.SCICTL1.all = 0x0023; // Relinquish SCI from Reset
-        ScicRegs.SCIFFTX.bit.TXFIFOXRESET = 1;
-        ScicRegs.SCIFFRX.bit.RXFIFORESET = 1;
-
-        //
-        // Init send data.  After each transmission this data will be updated for
-        // the next transmission
-        //
-        for (int i = 0; i < 8; i++)
-        {
-            sdataC[i] = i;
-        }
-
-        rdata_pointC = sdataC[0];
+        Scix_Init(&ScicRegs, baud, wordLen, stopBit, parity);
 
         PieCtrlRegs.PIEIER8.bit.INTx5 = 1; // PIE Group 8, SCIRXINTC
         PieCtrlRegs.PIEIER8.bit.INTx6 = 1; // PIE Group 8, SCITXINTC
+        IER |= M_INT8;
         break;
     default:
         break;
     }
 }
 
-uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen);
+uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen)
+{
+    uint32_t cnt = 0;
+    switch (comId)
+    {
+    case COM1:
+        for (cnt = 0; cnt < uLen; cnt++)
+        {
+            SciaRegs.SCITXBUF = writeBuf[cnt];
+            // 在此做判断，如果发送FIFO缓冲中数据  >= 16字节，要等待下直到FIFO小于16才能再次向FIFO中存数据
+            while (SciaRegs.SCIFFTX.bit.TXFFST >= 16)
+            {
+            }
+        }
+        break;
+    case COM2:
+        for (cnt = 0; cnt < uLen; cnt++)
+        {
+            ScibRegs.SCITXBUF = writeBuf[cnt];
+            while (ScibRegs.SCIFFTX.bit.TXFFST >= 16)
+            {
+            }
+        }
+        break;
+    case COM3:
+        for (cnt = 0; cnt < uLen; cnt++)
+        {
+            ScicRegs.SCITXBUF = writeBuf[cnt];
+            while (ScicRegs.SCIFFTX.bit.TXFFST >= 16)
+            {
+            }
+        }
+        break;
+    default:
+        break;
+    }
+    return cnt;
+}
+
 uint32_t Uart_Read(COMID_t comId, byte_t *pBuf, uint32_t uiLen);
 uint32_t Uart_AvailableBytes(COMID_t comId);
 uint32_t Uart_EmptyReadBuffer(COMID_t comId);
@@ -224,7 +241,7 @@ byte_t Uart_UnregisterReceiveCharCallback(COMID_t comId);
 //
 // InitSciaGpio - This function initializes GPIO pins to function as SCI-A pins
 //
-void InitSciaGpio()
+void InitSciaGpio(void)
 {
     EALLOW;
 
@@ -257,7 +274,7 @@ void InitSciaGpio()
 //
 // InitScibGpio - This function initializes GPIO pins to function as SCI-B pins
 //
-void InitScibGpio()
+void InitScibGpio(void)
 {
     EALLOW;
 
@@ -309,7 +326,7 @@ void InitScibGpio()
 //
 // InitScicGpio - This function initializes GPIO pins to function as SCI-C pins
 //
-void InitScicGpio()
+void InitScicGpio(void)
 {
     EALLOW;
 
@@ -404,16 +421,8 @@ sciaRxFifoIsr(void)
 __interrupt void
 scibTxFifoIsr(void)
 {
-    Uint16 i;
-    for (i = 0; i < 8; i++)
-    {
-        ScibRegs.SCITXBUF = sdataB[i]; // Send data
-    }
-
-    for (i = 0; i < 8; i++) // Increment send data for next cycle
-    {
-        sdataB[i] = (sdataB[i] + 1) & 0x00FF;
-    }
+    // disable the interrupt
+    ScibRegs.SCIFFTX.bit.TXFFIENA = 0;
 
     ScibRegs.SCIFFTX.bit.TXFFINTCLR = 1; // Clear Interrupt flag
     PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ACK
@@ -425,19 +434,16 @@ scibTxFifoIsr(void)
 __interrupt void
 scibRxFifoIsr(void)
 {
-    Uint16 i;
-    for (i = 0; i < 8; i++)
+    uint16_t rx_fifo_ele_num = ScibRegs.SCIFFRX.bit.RXFFST;
+    for (int i = 0; i < rx_fifo_ele_num; i++)
     {
         rdataB[i] = ScibRegs.SCIRXBUF.all; // Read data
     }
-    for (i = 0; i < 8; i++) // Check received data
+
+    for (int i = 0; i < rx_fifo_ele_num; i++)
     {
-        if (rdataB[i] != ((rdata_pointB + i) & 0x00FF))
-        {
-            error();
-        }
+        ScibRegs.SCITXBUF = rdataB[i]; // Send data
     }
-    rdata_pointB = (rdata_pointB + 1) & 0x00FF;
 
     ScibRegs.SCIFFRX.bit.RXFFOVRCLR = 1; // Clear Overflow flag
     ScibRegs.SCIFFRX.bit.RXFFINTCLR = 1; // Clear Interrupt flag

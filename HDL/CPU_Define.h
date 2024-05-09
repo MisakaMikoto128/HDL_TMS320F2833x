@@ -19,7 +19,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "DSP28x_Project.h"     // Device Headerfile and Examples Include File
+#include "DSP28x_Project.h"
 
 #ifdef __cplusplus
 }

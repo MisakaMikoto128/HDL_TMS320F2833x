@@ -7,6 +7,10 @@
         "hdl_uart.h": "c",
         "ccommon.h": "c",
         "stdbool.h": "c",
-        "cpu_define.h": "c"
+        "cpu_define.h": "c",
+        "bfl_measure.h": "c",
+        "hdl_cpu_time.h": "c",
+        "chip_w25q128.h": "c",
+        "hdl_spi.h": "c"
     }
 }

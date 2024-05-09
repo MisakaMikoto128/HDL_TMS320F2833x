@@ -24,7 +24,11 @@ ORDERED_OBJS += \
 "./APP/APP_Main.obj" \
 "./Application/main.obj" \
 "./BFL/BFL_Buzz.obj" \
+"./BFL/BFL_Measure.obj" \
+"./CHIP/CHIP_W25Q128.obj" \
+"./HDL/HDL_CPU_Time.obj" \
 "./HDL/HDL_GPIO.obj" \
+"./HDL/HDL_SPI.obj" \
 "./HDL/HDL_Uart.obj" \
 "./LIB/cfunction.obj" \
 "C:/ti/c2000/C2000Ware_5_01_00_00/device_support/f2833x/common/cmd/28335_RAM_lnk.cmd" \
@@ -43,12 +47,14 @@ RMDIR := RMDIR /S/Q
 -include APP/subdir_vars.mk
 -include Application/subdir_vars.mk
 -include BFL/subdir_vars.mk
+-include CHIP/subdir_vars.mk
 -include HDL/subdir_vars.mk
 -include LIB/subdir_vars.mk
 -include subdir_rules.mk
 -include APP/subdir_rules.mk
 -include Application/subdir_rules.mk
 -include BFL/subdir_rules.mk
+-include CHIP/subdir_rules.mk
 -include HDL/subdir_rules.mk
 -include LIB/subdir_rules.mk
 -include objects.mk
@@ -167,8 +173,8 @@ Example_2833xCpuTimer.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "DSP2833x_ADC_cal.obj" "DSP2833x_CodeStartBranch.obj" "DSP2833x_CpuTimers.obj" "DSP2833x_DefaultIsr.obj" "DSP2833x_GlobalVariableDefs.obj" "DSP2833x_PieCtrl.obj" "DSP2833x_PieVect.obj" "DSP2833x_SysCtrl.obj" "DSP2833x_usDelay.obj" "APP\APP_Main.obj" "Application\main.obj" "BFL\BFL_Buzz.obj" "HDL\HDL_GPIO.obj" "HDL\HDL_Uart.obj" "LIB\cfunction.obj" 
-	-$(RM) "DSP2833x_CpuTimers.d" "DSP2833x_DefaultIsr.d" "DSP2833x_GlobalVariableDefs.d" "DSP2833x_PieCtrl.d" "DSP2833x_PieVect.d" "DSP2833x_SysCtrl.d" "APP\APP_Main.d" "Application\main.d" "BFL\BFL_Buzz.d" "HDL\HDL_GPIO.d" "HDL\HDL_Uart.d" "LIB\cfunction.d" 
+	-$(RM) "DSP2833x_ADC_cal.obj" "DSP2833x_CodeStartBranch.obj" "DSP2833x_CpuTimers.obj" "DSP2833x_DefaultIsr.obj" "DSP2833x_GlobalVariableDefs.obj" "DSP2833x_PieCtrl.obj" "DSP2833x_PieVect.obj" "DSP2833x_SysCtrl.obj" "DSP2833x_usDelay.obj" "APP\APP_Main.obj" "Application\main.obj" "BFL\BFL_Buzz.obj" "BFL\BFL_Measure.obj" "CHIP\CHIP_W25Q128.obj" "HDL\HDL_CPU_Time.obj" "HDL\HDL_GPIO.obj" "HDL\HDL_SPI.obj" "HDL\HDL_Uart.obj" "LIB\cfunction.obj" 
+	-$(RM) "DSP2833x_CpuTimers.d" "DSP2833x_DefaultIsr.d" "DSP2833x_GlobalVariableDefs.d" "DSP2833x_PieCtrl.d" "DSP2833x_PieVect.d" "DSP2833x_SysCtrl.d" "APP\APP_Main.d" "Application\main.d" "BFL\BFL_Buzz.d" "BFL\BFL_Measure.d" "CHIP\CHIP_W25Q128.d" "HDL\HDL_CPU_Time.d" "HDL\HDL_GPIO.d" "HDL\HDL_SPI.d" "HDL\HDL_Uart.d" "LIB\cfunction.d" 
 	-$(RM) "DSP2833x_ADC_cal.d" "DSP2833x_CodeStartBranch.d" "DSP2833x_usDelay.d" 
 	-@echo 'Finished clean'
 	-@echo ' '

@@ -10,7 +10,7 @@
  *
  */
 #include "BFL_Buzz.h"
-#include "DSP2833x_Device.h"
+#include "CPU_Define.h"
 
 static HDL_GPIO_PinState_t g_buzz_trig_level = HDL_GPIO_HIGH;
 

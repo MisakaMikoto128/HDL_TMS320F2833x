@@ -1,16 +1,16 @@
 /**
-* @file ccommon.h
+* @file BFL_Measure.h
 * @author Liu Yuanlin (liuyuanlins@outlook.com)
 * @brief
 * @version 0.1
-* @date 2024-04-17
-* @last modified 2024-04-17
+* @date 2024-04-23
+* @last modified 2024-04-23
 *
 * @copyright Copyright (c) 2024 Liu Yuanlin Personal.
 *
 */
-#ifndef CCOMMON_H
-#define CCOMMON_H
+#ifndef BFL_MEASURE_H
+#define BFL_MEASURE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,12 +19,8 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#define byte_t uint16_t
-
-#ifndef UNUSED
-#define UNUSED(x) (void)(x)
-#endif
+void BFL_Measure_Init();
 #ifdef __cplusplus
 }
 #endif
-#endif //!CCOMMON_H
+#endif //!BFL_MEASURE_H

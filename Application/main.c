@@ -56,12 +56,6 @@
 //
 #include "DSP28x_Project.h" // Device Headerfile and Examples Include File
 #include "APP_Main.h"
-//
-// Function Prototype statements
-//
-__interrupt void cpu_timer0_isr(void);
-__interrupt void cpu_timer1_isr(void);
-__interrupt void cpu_timer2_isr(void);
 
 //
 // Main
@@ -118,77 +112,8 @@ void main(void)
     //
     // EnableInterrupts();
 
-    //
-    // Interrupts that are used in this example are re-mapped to
-    // ISR functions found within this file.
-    //
-    EALLOW; // This is needed to write to EALLOW protected registers
-    PieVectTable.TINT0 = &cpu_timer0_isr;
-    PieVectTable.XINT13 = &cpu_timer1_isr;
-    PieVectTable.TINT2 = &cpu_timer2_isr;
-    EDIS; // This is needed to disable write to EALLOW protected registers
-
-    //
-    // Step 4. Initialize the Device Peripheral. This function can be
-    //         found in DSP2833x_CpuTimers.c
-    //
-    InitCpuTimers(); // For this example, only initialize the Cpu Timers
-
-#if (CPU_FRQ_150MHZ)
-    //
-    // Configure CPU-Timer 0, 1, and 2 to interrupt every second:
-    // 150MHz CPU Freq, 1 second Period (in uSeconds)
-    //
-    ConfigCpuTimer(&CpuTimer0, 150, 1000000);
-    ConfigCpuTimer(&CpuTimer1, 150, 1000000);
-    ConfigCpuTimer(&CpuTimer2, 150, 1000000);
-#endif
-
-#if (CPU_FRQ_100MHZ)
-    //
-    // Configure CPU-Timer 0, 1, and 2 to interrupt every second:
-    // 100MHz CPU Freq, 1 second Period (in uSeconds)
-    //
-    ConfigCpuTimer(&CpuTimer0, 100, 1000000);
-    ConfigCpuTimer(&CpuTimer1, 100, 1000000);
-    ConfigCpuTimer(&CpuTimer2, 100, 1000000);
-#endif
-
-    //
-    // To ensure precise timing, use write-only instructions to write to the
-    // entire register. Therefore, if any of the configuration bits are changed
-    // in ConfigCpuTimer and InitCpuTimers (in DSP2833x_CpuTimers.h), the
-    // below settings must also be updated.
-    //
-    CpuTimer0Regs.TCR.all = 0x4000; // write-only instruction to set TSS bit = 0
-    CpuTimer1Regs.TCR.all = 0x4000; // write-only instruction to set TSS bit = 0
-    CpuTimer2Regs.TCR.all = 0x4000; // write-only instruction to set TSS bit = 0
-
-    //
-    // Step 5. User specific code, enable interrupts
-    //
-
-    //
-    // Enable CPU int1 which is connected to CPU-Timer 0, CPU int13
-    // which is connected to CPU-Timer 1, and CPU int 14, which is connected
-    // to CPU-Timer 2:
-    //
-    IER |= M_INT1;
-    IER |= M_INT13;
-    IER |= M_INT14;
-
-    // Enable CPU int8 and int9 which are connected to SCIs
-    IER |= M_INT8;
-    IER |= M_INT9;
-
-    //
-    // Enable TINT0 in the PIE: Group 1 interrupt 7
-    //
-    PieCtrlRegs.PIEIER1.bit.INTx7 = 1;
-
     APP_Main_Init();
 
-    IER |= 0x100;                         // Enable CPU INT
     //
     // Enable global Interrupts and higher priority real-time debug events:
     //
@@ -202,49 +127,6 @@ void main(void)
     {
         APP_Main_Poll();
     }
-}
-
-//
-// cpu_timer0_isr -
-//
-__interrupt void
-cpu_timer0_isr(void)
-{
-    CpuTimer0.InterruptCount++;
-
-    //
-    // Acknowledge this interrupt to receive more interrupts from group 1
-    //
-    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
-}
-
-//
-// cpu_timer1_isr -
-//
-__interrupt void
-cpu_timer1_isr(void)
-{
-    CpuTimer1.InterruptCount++;
-
-    //
-    // The CPU acknowledges the interrupt.
-    //
-    EDIS;
-}
-
-//
-// cpu_timer2_isr -
-//
-__interrupt void
-cpu_timer2_isr(void)
-{
-    EALLOW;
-    CpuTimer2.InterruptCount++;
-
-    //
-    // The CPU acknowledges the interrupt.
-    //
-    EDIS;
 }
 
 //
