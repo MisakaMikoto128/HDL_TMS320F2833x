@@ -211,4 +211,3 @@ int32_t CHIP_W25q128_Write_One_Sector(uint32_t sector, byte_t *buf)
     status = CHIP_W25Q128_Write_One_Sector_No_Erase(sector, buf);
     return status;
 }
-

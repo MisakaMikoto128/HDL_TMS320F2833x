@@ -11,19 +11,19 @@
  */
 #include "APP_Main.h"
 #include "BFL_Buzz.h"
+#include "BFL_Measure.h"
 #include "CHIP_W25Q128.h"
 #include "CPU_Define.h"
 #include "HDL_CPU_TIme.h"
 #include "HDL_Uart.h"
 
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
+
 // 调试输出数据包最大长度
 #define MAXDEBUGSEND 256
 static char buffer[MAXDEBUGSEND + 1];
 #define DEBUG_COM COM2
-
-byte_t flash_sector_buf[W25Q128_SECTOR_SIZE] = {0};
 
 /**
  * @brief 使用串口调试的格式化输出方法
@@ -46,6 +46,7 @@ void Debug_Printf(const void *format, ...)
 
 void InitSpiaGpio();
 void spi_xmit(Uint16 a);
+
 void APP_Main_Init()
 {
   HDL_CPU_Time_Init();
@@ -54,6 +55,7 @@ void APP_Main_Init()
   // Uart_Init(COM3,115200,UART_WORD_LEN_8,UART_STOP_BIT_1,UART_PARITY_NONE);
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
+  BFL_Measure_Init();
   //     EALLOW;
   //     // General purpose I/O
   //     GpioCtrlRegs.GPCMUX1.bit.GPIO64 = 0x00;
@@ -89,43 +91,39 @@ void APP_Main_Poll()
   HDL_CPU_Time_DelayMs(500);
 }
 
-void CHIP_W25Q128_Test()
-{
+/*
+byte_t flash_sector_buf[W25Q128_SECTOR_SIZE] = {0};
+void CHIP_W25Q128_Test() {
   // Debug_Printf("111\r\n");
   uint16_t id = CHIP_W25Q128_Read_ID();
   Debug_Printf("CHIP_W25Q128_Read_ID:%x\r\n", id);
 
-  for (int i = 0; i < W25Q128_SECTOR_SIZE; i++)
-  {
+  for (int i = 0; i < W25Q128_SECTOR_SIZE; i++) {
     flash_sector_buf[i] = i & 0xFF;
   }
 
   CHIP_W25q128_Write_One_Sector(1, flash_sector_buf);
 
-  for (int i = 0; i < W25Q128_SECTOR_SIZE; i++)
-  {
+  for (int i = 0; i < W25Q128_SECTOR_SIZE; i++) {
     flash_sector_buf[i] = 0;
   }
 
-  CHIP_W25Q128_Read(W25Q128_SECTOR_SIZE * 1, flash_sector_buf, W25Q128_SECTOR_SIZE);
+  CHIP_W25Q128_Read(W25Q128_SECTOR_SIZE * 1, flash_sector_buf,
+                    W25Q128_SECTOR_SIZE);
 
   int cnt = 0;
-  for (int i = 0; i < W25Q128_SECTOR_SIZE; i++)
-  {
-    if (flash_sector_buf[i] != (i & 0xFF))
-    {
+  for (int i = 0; i < W25Q128_SECTOR_SIZE; i++) {
+    if (flash_sector_buf[i] != (i & 0xFF)) {
       cnt++;
     }
   }
 
-  if (cnt == 0)
-  {
+  if (cnt == 0) {
     Debug_Printf("CHIP_W25q128_Write_One_Sector success\r\n");
-  }
-  else
-  {
+  } else {
     Debug_Printf("CHIP_W25q128_Write_One_Sector fail, cnt:%d\r\n", cnt);
   }
 
   cnt = 0;
 }
+*/

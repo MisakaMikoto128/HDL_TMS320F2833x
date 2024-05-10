@@ -14,7 +14,8 @@
 
 static HDL_GPIO_PinState_t g_buzz_trig_level = HDL_GPIO_HIGH;
 
-void BFL_Buzz_Init() {
+void BFL_Buzz_Init()
+{
   EALLOW;
   // GPIO6/EPWM4A/EPWMSYNCI/EPWMSYNCO
   GpioCtrlRegs.GPACTRL.bit.QUALPRD0 = 0;
@@ -29,32 +30,43 @@ void BFL_Buzz_Init() {
   EDIS;
 }
 
-void BFL_Buzz_Off() {
-  if (g_buzz_trig_level == HDL_GPIO_HIGH) {
+void BFL_Buzz_Off()
+{
+  if (g_buzz_trig_level == HDL_GPIO_HIGH)
+  {
     GpioDataRegs.GPACLEAR.bit.GPIO6 = 1;
-  } else {
+  }
+  else
+  {
     GpioDataRegs.GPASET.bit.GPIO6 = 1;
   }
 }
 
 void BFL_Buzz_Toggle() { GpioDataRegs.GPATOGGLE.bit.GPIO6 = 1; }
 
-void BFL_Buzz_On() {
-  if (g_buzz_trig_level == HDL_GPIO_HIGH) {
+void BFL_Buzz_On()
+{
+  if (g_buzz_trig_level == HDL_GPIO_HIGH)
+  {
     GpioDataRegs.GPASET.bit.GPIO6 = 1;
-  } else {
+  }
+  else
+  {
     GpioDataRegs.GPACLEAR.bit.GPIO6 = 1;
   }
 }
 
-bool BFL_Buzz_IsOff() {
-  if (g_buzz_trig_level == HDL_GPIO_HIGH) {
+bool BFL_Buzz_IsOff()
+{
+  if (g_buzz_trig_level == HDL_GPIO_HIGH)
+  {
     return (GpioDataRegs.GPADAT.bit.GPIO6 == 1);
   }
 
   return (GpioDataRegs.GPADAT.bit.GPIO6 == 0);
 }
 
-void BFL_Buzz_SetTrigLevel(HDL_GPIO_PinState_t level) {
+void BFL_Buzz_SetTrigLevel(HDL_GPIO_PinState_t level)
+{
   g_buzz_trig_level = level;
 }
