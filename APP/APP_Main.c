@@ -31,17 +31,17 @@ static char buffer[MAXDEBUGSEND + 1];
  * @param format
  * @param ...
  */
-void Debug_Printf(const void *format, ...) {
-
-  uint32_t uLen;
-  va_list vArgs;
-  va_start(vArgs, format);
-  uLen = vsnprintf(buffer, MAXDEBUGSEND, (char const *)format, vArgs);
-  va_end(vArgs);
-  if (uLen > MAXDEBUGSEND)
-    uLen = MAXDEBUGSEND;
-  Uart_Write(DEBUG_COM, (uint16_t *)buffer, uLen);
-}
+// void Debug_Printf(const void *format, ...) {
+//
+//   uint32_t uLen;
+//   va_list vArgs;
+//   va_start(vArgs, format);
+//   uLen = vsnprintf(buffer, MAXDEBUGSEND, (char const *)format, vArgs);
+//   va_end(vArgs);
+//   if (uLen > MAXDEBUGSEND)
+//     uLen = MAXDEBUGSEND;
+//   Uart_Write(DEBUG_COM, (uint16_t *)buffer, uLen);
+// }
 
 void InitSpiaGpio();
 void spi_xmit(Uint16 a);
@@ -52,7 +52,7 @@ void APP_Main_Init() {
   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
   // Uart_Init(COM3,115200,UART_WORD_LEN_8,UART_STOP_BIT_1,UART_PARITY_NONE);
   BFL_Buzz_Init();
-  CHIP_W25Q128_Init();
+  //  CHIP_W25Q128_Init();
   BFL_Measure_Init();
   EALLOW;
   // General purpose I/O
@@ -64,7 +64,6 @@ void APP_Main_Init() {
 
   GpioDataRegs.GPCCLEAR.bit.GPIO64 = 1;
 
-
   // General purpose I/O
   GpioCtrlRegs.GPCMUX1.bit.GPIO65 = 0x00;
   // Configures the GPIO pin as an output
@@ -73,7 +72,6 @@ void APP_Main_Init() {
   GpioCtrlRegs.GPCPUD.bit.GPIO65 = 0;
 
   GpioDataRegs.GPCSET.bit.GPIO65 = 1;
-
 
   // General purpose I/O
   GpioCtrlRegs.GPBMUX2.bit.GPIO49 = 0x00;
@@ -98,9 +96,8 @@ void APP_Main_Poll() {
   // BFL_Buzz_Toggle();
   HDL_CPU_Time_DelayMs(1000);
 
-  
-//   GpioDataRegs.GPCTOGGLE.bit.GPIO64 = 1;
-//   GpioDataRegs.GPCTOGGLE.bit.GPIO65 = 1;
+  //   GpioDataRegs.GPCTOGGLE.bit.GPIO64 = 1;
+  //   GpioDataRegs.GPCTOGGLE.bit.GPIO65 = 1;
 }
 
 /*

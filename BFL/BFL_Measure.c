@@ -12,7 +12,50 @@
 #include "BFL_Measure.h"
 #include "CPU_Define.h"
 #include "DSP2833x_Device.h"
+#include "average_filter.h"
 
+#define USING_FFT 0
+
+#if USING_FFT == 1
+#include "dsp.h"
+#include "fpu.h"
+#include "fpu32/fpu_rfft.h"
+
+//*****************************************************************************
+// the defines
+//*****************************************************************************
+#define FFT_STAGES (7U)
+#define FFT_SIZE (1 << FFT_STAGES)
+
+//*****************************************************************************
+// the globals
+//*****************************************************************************
+// The global pass, fail values
+uint16_t pass = 0U, fail = 0U;
+// The absolute error between the result and expected values
+float tolerance = 1.0e-3;
+
+// Object of the structure RFFT_F32_STRUCT
+RFFT_F32_STRUCT rfft;
+// Handle to the RFFT_F32_STRUCT object
+RFFT_F32_STRUCT_Handle hnd_rfft = &rfft;
+
+// Object of the structure RFFT_ADC_F32_STRUCT
+RFFT_ADC_F32_STRUCT rfft_adc;
+// Handle to the RFFT_ADC_F32_STRUCT object
+RFFT_ADC_F32_STRUCT_Handle hnd_rfft_adc = &rfft_adc;
+
+// #ifdef __cplusplus
+// #pragma DATA_SECTION("FFT_buffer_2")
+// #else
+// #pragma DATA_SECTION(test_output, "FFT_buffer_2")
+// #endif
+float test_output[FFT_SIZE];
+uint16_t test_input[FFT_SIZE];
+float test_magnitude_phase[(FFT_SIZE >> 1) + 1];
+float twiddleFactors[FFT_SIZE];
+void FFT_Init();
+#endif
 //
 // Defines for ADC start parameters
 //
@@ -34,10 +77,10 @@
 //
 #define ADC_CKPS 0x1
 #define ADC_SHCLK 0xf // S/H width in ADC module periods = 16 ADC clocks
-#define AVG 1000      // Average sample limit
+#define AVG 10        // Average sample limit
 #define ZOFFSET 0x00  // Average Zero offset
 
-#define PIONTS_PER_GROUP 128 // 循环展开优化4层，必须是4的倍数
+#define PIONTS_PER_GROUP 120 // 循环展开优化4层，必须是4的倍数，120/128
 #define GROUP_NUM 8
 #define BUF_SIZE (GROUP_NUM * PIONTS_PER_GROUP) // Sample buffer size
 
@@ -49,9 +92,9 @@ float AdcAvg[GROUP_NUM];
 float AdcVoltRMSE[GROUP_NUM];
 float AdcVoltRMS[GROUP_NUM];
 float AdcVoltAvg[GROUP_NUM];
-// 半波RMS
-float AdcHalfWaveRMS[GROUP_NUM];
 
+average_filter_t AdcVoltRMSFilter[GROUP_NUM];
+float AdcVoltRMSFilterBuf[GROUP_NUM][AVG];
 //
 // Globals
 //
@@ -68,8 +111,16 @@ volatile Uint16 *DMADest;
 volatile Uint16 *DMASource;
 __interrupt void local_DINTCH1_ISR(void);
 
-void BFL_Measure_Init()
-{
+void BFL_Measure_Init() {
+
+  for (int i = 0; i < GROUP_NUM; i++) {
+    average_filter_init(&AdcVoltRMSFilter[i], AdcVoltRMSFilterBuf[i], AVG);
+  }
+
+#if USING_FFT == 1
+  FFT_Init();
+#endif
+
   config_ADC();
   config_DMA();
   StartDMACH1();
@@ -89,8 +140,7 @@ void BFL_Measure_Init()
 //
 // config_ePWM1_to_generate_ADCSOCA -
 //
-void config_ePWM1_to_generate_ADCSOCA_(void)
-{
+void config_ePWM1_to_generate_ADCSOCA_(void) {
   //
   // Configure ePWM1 Timer
   // Interrupt triggers ADCSOCA
@@ -139,8 +189,7 @@ void config_ePWM1_to_generate_ADCSOCA_(void)
   EDIS;
 }
 
-void config_ePWM1_to_generate_ADCSOCA()
-{
+void config_ePWM1_to_generate_ADCSOCA() {
   //
   // For this example, only initialize the ePWM
   //
@@ -159,8 +208,7 @@ void config_ePWM1_to_generate_ADCSOCA()
   EDIS;
 }
 
-void enable_ePWM1(void)
-{
+void enable_ePWM1(void) {
   EALLOW;
   __asm("   NOP");
   EPwm1Regs.TBCTL.bit.CTRMODE = 0; // Up count mode
@@ -171,8 +219,7 @@ void enable_ePWM1(void)
 //
 // config_ePWM2_to_generate_ADCSOCB -
 //
-void config_ePWM2_to_generate_ADCSOCB(void)
-{
+void config_ePWM2_to_generate_ADCSOCB(void) {
   //
   // Configure ePWM2 Timer
   // Interrupt triggers ADCSOCB
@@ -187,8 +234,7 @@ void config_ePWM2_to_generate_ADCSOCB(void)
   EDIS;
 }
 
-void config_ADC()
-{
+void config_ADC() {
 
   //
   // Specific clock setting for this example
@@ -233,8 +279,7 @@ void config_ADC()
   AdcRegs.ADCMAXCONV.bit.MAX_CONV1 = GROUP_NUM - 1;
 }
 
-void config_DMA()
-{
+void config_DMA() {
   //
   // Interrupts that are used in this example are re-mapped to
   // ISR functions found within this file.
@@ -252,8 +297,7 @@ void config_DMA()
   //
   // Clear Table
   //
-  for (int i = 0; i < BUF_SIZE; i++)
-  {
+  for (int i = 0; i < BUF_SIZE; i++) {
     DMABuf1[i] = 0;
   }
 
@@ -287,16 +331,16 @@ void config_DMA()
 //
 // local_DINTCH1_ISR - INT7.1(DMA Channel 1)
 //
-__interrupt void local_DINTCH1_ISR(void)
-{
+__interrupt void local_DINTCH1_ISR(void) {
 
   // 测试当前中断中计算耗时2ms 优化类型5-speed 优化等级O0
   // 优化后548us 优化类型5-speed 优化等级O0
   // 数据预先取优化后493us 优化类型5-speed 优化等级O0
   // 2层循环展开后208us 优化类型5-speed 优化等级O0 无法使用,结果错误 写错了
   // 4层循环展开后92.4us 优化类型5-speed 优化等级O0 无法使用,结果错误 写错了
-  // 4层循环展开后25.1us 优化类型5-speed 优化等级：整个程序优化 无法使用,结果错误 写错了
-  
+  // 4层循环展开后25.1us 优化类型5-speed 优化等级：整个程序优化
+  // 无法使用,结果错误 写错了
+
   // 4层循环展开后405us 优化类型5-speed 优化等级O0
   GpioDataRegs.GPBSET.bit.GPIO49 = 1;
   //
@@ -309,14 +353,12 @@ __interrupt void local_DINTCH1_ISR(void)
   // Remove after inserting ISR Code
   //
   // Calculate RMS
-  for (uint32_t i = 0; i < GROUP_NUM; i++)
-  {
+  for (uint32_t i = 0; i < GROUP_NUM; i++) {
     volatile uint16_t *pData = &DMABuf1[i * PIONTS_PER_GROUP];
     uint32_t sum = 0;
     uint32_t pow2_sum = 0;
     uint32_t data = 0;
-    for (int j = 0; j < PIONTS_PER_GROUP; j += 4)
-    {
+    for (int j = 0; j < PIONTS_PER_GROUP; j += 4) {
       data = pData[j];
       sum += data;
       pow2_sum += (data * data);
@@ -333,35 +375,79 @@ __interrupt void local_DINTCH1_ISR(void)
       sum += data;
       pow2_sum += (data * data);
     }
-
     AdcAvg[i] = (sum * 1.0f / PIONTS_PER_GROUP);
     AdcRMS[i] = sqrtf((pow2_sum * 1.0f / PIONTS_PER_GROUP));
-    AdcVoltAvg[i] = ((AdcAvg[i] - ZOFFSET) * 3.0f / 4096);
+
+    // uint32_t pow2_sum_e = 0;
+    // int32_t temp = 0;
+    // int32_t avgTemp = AdcAvg[i];
+    // for (int j = 0; j < PIONTS_PER_GROUP; j += 4) {
+    //   temp = pData[j] - avgTemp;
+    //   pow2_sum_e += temp * temp;
+
+    //   temp = pData[j + 1] - avgTemp;
+    //   pow2_sum_e += temp * temp;
+
+    //   temp = pData[j + 2] - avgTemp;
+    //   pow2_sum_e += temp * temp;
+
+    //   temp = pData[j + 3] - avgTemp;
+    //   pow2_sum_e += temp * temp;
+    // }
+    // AdcRMSE[i] = sqrtf((pow2_sum_e * 1.0f / PIONTS_PER_GROUP));
+
+    // AdcVoltAvg[i] = ((AdcAvg[i] - ZOFFSET) * 3.0f / 4096);
+    // AdcVoltRMSE[i] = (AdcRMSE[i] * 3.0f / 4096);
     AdcVoltRMS[i] = (AdcRMS[i] * 3.0f / 4096);
 
-    float pow2_sum_e = 0;
-    float temp = 0;
-    float avgTemp = AdcAvg[i];
-    for (int j = 0; j < PIONTS_PER_GROUP; j+=4)
-    {
-      temp = pData[j] - avgTemp;
-      pow2_sum_e += temp * temp;
-
-      temp = pData[j + 1] - avgTemp;
-      pow2_sum_e += temp * temp;
-
-      temp = pData[j + 2] - avgTemp;
-      pow2_sum_e += temp * temp;
-
-      temp = pData[j + 3] - avgTemp;
-      pow2_sum_e += temp * temp;
-    }
-    AdcRMSE[i] = sqrtf((pow2_sum_e * 1.0f / PIONTS_PER_GROUP));
-    AdcVoltRMSE[i] = (AdcRMSE[i] * 3.0f / 4096);
+    average_filter_update(&AdcVoltRMSFilter[i], AdcVoltRMS[i]);
   }
+
+#if USING_FFT == 1
+  for (int i = 0; i < FFT_SIZE; i++) {
+    test_input[i] = DMABuf1[i];
+  }
+  RFFT_adc_f32(hnd_rfft_adc); // Calculate real FFT with 12-bit
+  RFFT_f32_mag(hnd_rfft);
+#endif
+
   GpioDataRegs.GPBCLEAR.bit.GPIO49 = 1;
 }
 
+#if USING_FFT == 1
+void FFT_Init() {
+
+#if defined(_FLASH)
+  //
+  // Setup the FLASH Banks
+  //
+  DSP_Example_setupFlash();
+#endif // defined(_FLASH)
+
+  // Configure the object
+  RFFT_f32_setInputPtr(hnd_rfft, (float *)test_input);
+  RFFT_f32_setOutputPtr(hnd_rfft, test_output);
+  RFFT_f32_setMagnitudePtr(hnd_rfft, test_magnitude_phase);
+  RFFT_f32_setPhasePtr(hnd_rfft, test_magnitude_phase);
+  RFFT_f32_setStages(hnd_rfft, FFT_STAGES);
+  RFFT_f32_setFFTSize(hnd_rfft, FFT_SIZE);
+
+  // Twiddle factor pointer
+#ifdef USE_TABLES
+  RFFT_f32_setTwiddlesPtr(hnd_rfft, RFFT_f32_twiddleFactors);
+#else
+  // Calculate twiddle factor
+  RFFT_f32_setTwiddlesPtr(hnd_rfft, twiddleFactors);
+  RFFT_f32_sincostable(hnd_rfft);
+#endif // USE_TABLES
+
+  // Link the RFFT_ADC_F32_STRUCT to RFFT_F32_STRUCT. Tail pointer
+  // of RFFT_ADC_F32_STRUCT must point to the OutBuf pointer of
+  // RFFT_F32_STRUCT
+  RFFT_ADC_f32_setTailPtr(hnd_rfft_adc, &(hnd_rfft->OutBuf));
+  RFFT_ADC_f32_setInBufPtr(hnd_rfft_adc, test_input);
+}
+#endif
 //
 // End of File
 //
