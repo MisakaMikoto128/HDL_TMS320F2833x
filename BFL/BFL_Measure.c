@@ -11,6 +11,7 @@
  */
 #include "BFL_Measure.h"
 #include "CPU_Define.h"
+#include "DSP2833x_Device.h"
 
 //
 // Defines for ADC start parameters
@@ -36,7 +37,7 @@
 #define AVG 1000      // Average sample limit
 #define ZOFFSET 0x00  // Average Zero offset
 
-#define PIONTS_PER_GROUP 128
+#define PIONTS_PER_GROUP 128 // 循环展开优化4层，必须是4的倍数
 #define GROUP_NUM 8
 #define BUF_SIZE (GROUP_NUM * PIONTS_PER_GROUP) // Sample buffer size
 
@@ -272,7 +273,8 @@ void config_DMA()
   DMACH1AddrConfig(DMADest, DMASource);
 
   DMACH1BurstConfig(GROUP_NUM - 1, 1, PIONTS_PER_GROUP);
-  DMACH1TransferConfig(PIONTS_PER_GROUP - 1, 0, -((GROUP_NUM - 1) * PIONTS_PER_GROUP - 1));
+  DMACH1TransferConfig(PIONTS_PER_GROUP - 1, 0,
+                       -((GROUP_NUM - 1) * PIONTS_PER_GROUP - 1));
   DMACH1WrapConfig(0, 0, PIONTS_PER_GROUP - 1, 0);
   DMACH1ModeConfig(DMA_SEQ1INT, PERINT_ENABLE, ONESHOT_DISABLE, CONT_ENABLE,
                    SYNC_DISABLE, SYNC_SRC, OVRFLOW_DISABLE, SIXTEEN_BIT,
@@ -281,11 +283,22 @@ void config_DMA()
 
 #include <math.h>
 #include <stdint.h>
+
 //
 // local_DINTCH1_ISR - INT7.1(DMA Channel 1)
 //
 __interrupt void local_DINTCH1_ISR(void)
 {
+
+  // 测试当前中断中计算耗时2ms 优化类型5-speed 优化等级O0
+  // 优化后548us 优化类型5-speed 优化等级O0
+  // 数据预先取优化后493us 优化类型5-speed 优化等级O0
+  // 2层循环展开后208us 优化类型5-speed 优化等级O0 无法使用,结果错误 写错了
+  // 4层循环展开后92.4us 优化类型5-speed 优化等级O0 无法使用,结果错误 写错了
+  // 4层循环展开后25.1us 优化类型5-speed 优化等级：整个程序优化 无法使用,结果错误 写错了
+  
+  // 4层循环展开后405us 优化类型5-speed 优化等级O0
+  GpioDataRegs.GPBSET.bit.GPIO49 = 1;
   //
   // To receive more interrupts from this PIE group, acknowledge this
   // interrupt
@@ -302,26 +315,62 @@ __interrupt void local_DINTCH1_ISR(void)
   {
     volatile uint16_t *pData = &DMABuf1[i * PIONTS_PER_GROUP];
     uint32_t sum = 0;
-    for (uint32_t j = 0; j < PIONTS_PER_GROUP; j++)
-    {
-      sum += pData[j];
-    }
-    AdcAvg[i] = sum * 1.0f / PIONTS_PER_GROUP;
-
-    uint32_t pow2_sum_e = 0;
     uint32_t pow2_sum = 0;
-    for (uint32_t j = 0; j < PIONTS_PER_GROUP; j++)
+    uint32_t data = 0;
+    for (int j = 0; j < PIONTS_PER_GROUP; j += 4)
     {
-      pow2_sum_e += powf(pData[j] - AdcAvg[i], 2);
-      pow2_sum += powf(pData[j], 2);
-    }
-    AdcRMSE[i] = sqrtf(pow2_sum_e * 1.0f / PIONTS_PER_GROUP);
-    AdcRMS[i] = sqrtf(pow2_sum * 1.0f / PIONTS_PER_GROUP);
+      data = pData[j];
+      sum += data;
+      pow2_sum += (data * data);
 
-    AdcVoltAvg[i] = (AdcAvg[i] - ZOFFSET) * 3.0f / 4096;
-    AdcVoltRMSE[i] = AdcRMSE[i] * 3.0f / 4096;
-    AdcVoltRMS[i] = AdcRMS[i] * 3.0f / 4096;
+      data = pData[j + 1];
+      sum += data;
+      pow2_sum += (data * data);
+
+      data = pData[j + 2];
+      sum += data;
+      pow2_sum += (data * data);
+
+      data = pData[j + 3];
+      sum += data;
+      pow2_sum += (data * data);
+    }
+
+    // AdcAvg[i] = __divf32(sum * 1.0f, PIONTS_PER_GROUP);
+    AdcAvg[i] = (sum * 1.0f / PIONTS_PER_GROUP);
+    AdcRMS[i] = sqrtf((pow2_sum * 1.0f / PIONTS_PER_GROUP));
+    AdcVoltAvg[i] = ((AdcAvg[i] - ZOFFSET) * 3.0f / 4096);
+    AdcVoltRMS[i] = (AdcRMS[i] * 3.0f / 4096);
+
+    float pow2_sum_e = 0;
+    float temp = 0;
+    float avgTemp = AdcAvg[i];
+    for (int j = 0; j < PIONTS_PER_GROUP; j+=4)
+    {
+      temp = pData[j] - avgTemp;
+      pow2_sum_e += temp * temp;
+
+      temp = pData[j + 1] - avgTemp;
+      pow2_sum_e += temp * temp;
+
+      temp = pData[j + 2] - avgTemp;
+      pow2_sum_e += temp * temp;
+
+      temp = pData[j + 3] - avgTemp;
+      pow2_sum_e += temp * temp;
+    }
+
+    // AdcRMSE[i] = __sqrt(__divf32(pow2_sum_e * 1.0f, PIONTS_PER_GROUP));
+    // AdcRMS[i] = __sqrt(__divf32(pow2_sum * 1.0f, PIONTS_PER_GROUP));
+
+    // AdcVoltAvg[i] = __divf32((AdcAvg[i] - ZOFFSET) * 3.0f, 4096);
+    // AdcVoltRMSE[i] = __divf32(AdcRMSE[i] * 3.0f, 4096);
+    // AdcVoltRMS[i] = __divf32(AdcRMS[i] * 3.0f, 4096);
+
+    AdcRMSE[i] = sqrtf((pow2_sum_e * 1.0f / PIONTS_PER_GROUP));
+    AdcVoltRMSE[i] = (AdcRMSE[i] * 3.0f / 4096);
   }
+  GpioDataRegs.GPBCLEAR.bit.GPIO49 = 1;
 }
 
 //

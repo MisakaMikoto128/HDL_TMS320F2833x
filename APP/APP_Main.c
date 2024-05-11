@@ -31,8 +31,7 @@ static char buffer[MAXDEBUGSEND + 1];
  * @param format
  * @param ...
  */
-void Debug_Printf(const void *format, ...)
-{
+void Debug_Printf(const void *format, ...) {
 
   uint32_t uLen;
   va_list vArgs;
@@ -47,8 +46,7 @@ void Debug_Printf(const void *format, ...)
 void InitSpiaGpio();
 void spi_xmit(Uint16 a);
 
-void APP_Main_Init()
-{
+void APP_Main_Init() {
   HDL_CPU_Time_Init();
   // MAX232
   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
@@ -56,25 +54,36 @@ void APP_Main_Init()
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
   BFL_Measure_Init();
-  //     EALLOW;
-  //     // General purpose I/O
-  //     GpioCtrlRegs.GPCMUX1.bit.GPIO64 = 0x00;
-  //     // Configures the GPIO pin as an output
-  //     GpioCtrlRegs.GPCDIR.bit.GPIO64 = 1;
-  //     // Enable the internal pullup on the specified pin.
-  //     GpioCtrlRegs.GPCPUD.bit.GPIO64 = 0;
-  //
-  //     GpioDataRegs.GPCCLEAR.bit.GPIO64 = 1;
-  //
-  //     // General purpose I/O
-  //     GpioCtrlRegs.GPCMUX1.bit.GPIO65 = 0x00;
-  //     // Configures the GPIO pin as an output
-  //     GpioCtrlRegs.GPCDIR.bit.GPIO65 = 1;
-  //     // Enable the internal pullup on the specified pin.
-  //     GpioCtrlRegs.GPCPUD.bit.GPIO65 = 0;
-  //
-  //     GpioDataRegs.GPCSET.bit.GPIO65 = 1;
-  //     EDIS;
+  EALLOW;
+  // General purpose I/O
+  GpioCtrlRegs.GPCMUX1.bit.GPIO64 = 0x00;
+  // Configures the GPIO pin as an output
+  GpioCtrlRegs.GPCDIR.bit.GPIO64 = 1;
+  // Enable the internal pullup on the specified pin.
+  GpioCtrlRegs.GPCPUD.bit.GPIO64 = 0;
+
+  GpioDataRegs.GPCCLEAR.bit.GPIO64 = 1;
+
+
+  // General purpose I/O
+  GpioCtrlRegs.GPCMUX1.bit.GPIO65 = 0x00;
+  // Configures the GPIO pin as an output
+  GpioCtrlRegs.GPCDIR.bit.GPIO65 = 1;
+  // Enable the internal pullup on the specified pin.
+  GpioCtrlRegs.GPCPUD.bit.GPIO65 = 0;
+
+  GpioDataRegs.GPCSET.bit.GPIO65 = 1;
+
+
+  // General purpose I/O
+  GpioCtrlRegs.GPBMUX2.bit.GPIO49 = 0x00;
+  // Configures the GPIO pin as an output
+  GpioCtrlRegs.GPBDIR.bit.GPIO49 = 1;
+  // Enable the internal pullup on the specified pin.
+  GpioCtrlRegs.GPBPUD.bit.GPIO49 = 0;
+
+  GpioDataRegs.GPBSET.bit.GPIO49 = 1;
+  EDIS;
 
   InitSpiaGpio();
 }
@@ -85,10 +94,13 @@ void APP_Main_Init()
 
 Uint16 sdata; // send data
 Uint16 rdata; // received data
-void APP_Main_Poll()
-{
+void APP_Main_Poll() {
   // BFL_Buzz_Toggle();
-  HDL_CPU_Time_DelayMs(500);
+  HDL_CPU_Time_DelayMs(1000);
+
+  
+//   GpioDataRegs.GPCTOGGLE.bit.GPIO64 = 1;
+//   GpioDataRegs.GPCTOGGLE.bit.GPIO65 = 1;
 }
 
 /*
