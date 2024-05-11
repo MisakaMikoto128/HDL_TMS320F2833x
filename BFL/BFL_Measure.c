@@ -304,12 +304,10 @@ __interrupt void local_DINTCH1_ISR(void)
   // interrupt
   //
   PieCtrlRegs.PIEACK.all |= PIEACK_GROUP7;
-
   //
   // Next two lines for debug only to halt the processor here
   // Remove after inserting ISR Code
   //
-
   // Calculate RMS
   for (uint32_t i = 0; i < GROUP_NUM; i++)
   {
@@ -336,7 +334,6 @@ __interrupt void local_DINTCH1_ISR(void)
       pow2_sum += (data * data);
     }
 
-    // AdcAvg[i] = __divf32(sum * 1.0f, PIONTS_PER_GROUP);
     AdcAvg[i] = (sum * 1.0f / PIONTS_PER_GROUP);
     AdcRMS[i] = sqrtf((pow2_sum * 1.0f / PIONTS_PER_GROUP));
     AdcVoltAvg[i] = ((AdcAvg[i] - ZOFFSET) * 3.0f / 4096);
@@ -359,14 +356,6 @@ __interrupt void local_DINTCH1_ISR(void)
       temp = pData[j + 3] - avgTemp;
       pow2_sum_e += temp * temp;
     }
-
-    // AdcRMSE[i] = __sqrt(__divf32(pow2_sum_e * 1.0f, PIONTS_PER_GROUP));
-    // AdcRMS[i] = __sqrt(__divf32(pow2_sum * 1.0f, PIONTS_PER_GROUP));
-
-    // AdcVoltAvg[i] = __divf32((AdcAvg[i] - ZOFFSET) * 3.0f, 4096);
-    // AdcVoltRMSE[i] = __divf32(AdcRMSE[i] * 3.0f, 4096);
-    // AdcVoltRMS[i] = __divf32(AdcRMS[i] * 3.0f, 4096);
-
     AdcRMSE[i] = sqrtf((pow2_sum_e * 1.0f / PIONTS_PER_GROUP));
     AdcVoltRMSE[i] = (AdcRMSE[i] * 3.0f / 4096);
   }
