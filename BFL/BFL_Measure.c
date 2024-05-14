@@ -111,9 +111,11 @@ volatile Uint16 *DMADest;
 volatile Uint16 *DMASource;
 __interrupt void local_DINTCH1_ISR(void);
 
-void BFL_Measure_Init() {
+void BFL_Measure_Init()
+{
 
-  for (int i = 0; i < GROUP_NUM; i++) {
+  for (int i = 0; i < GROUP_NUM; i++)
+  {
     average_filter_init(&AdcVoltRMSFilter[i], AdcVoltRMSFilterBuf[i], AVG);
   }
 
@@ -140,7 +142,8 @@ void BFL_Measure_Init() {
 //
 // config_ePWM1_to_generate_ADCSOCA -
 //
-void config_ePWM1_to_generate_ADCSOCA_(void) {
+void config_ePWM1_to_generate_ADCSOCA_(void)
+{
   //
   // Configure ePWM1 Timer
   // Interrupt triggers ADCSOCA
@@ -189,7 +192,8 @@ void config_ePWM1_to_generate_ADCSOCA_(void) {
   EDIS;
 }
 
-void config_ePWM1_to_generate_ADCSOCA() {
+void config_ePWM1_to_generate_ADCSOCA()
+{
   //
   // For this example, only initialize the ePWM
   //
@@ -208,7 +212,8 @@ void config_ePWM1_to_generate_ADCSOCA() {
   EDIS;
 }
 
-void enable_ePWM1(void) {
+void enable_ePWM1(void)
+{
   EALLOW;
   __asm("   NOP");
   EPwm1Regs.TBCTL.bit.CTRMODE = 0; // Up count mode
@@ -219,7 +224,8 @@ void enable_ePWM1(void) {
 //
 // config_ePWM2_to_generate_ADCSOCB -
 //
-void config_ePWM2_to_generate_ADCSOCB(void) {
+void config_ePWM2_to_generate_ADCSOCB(void)
+{
   //
   // Configure ePWM2 Timer
   // Interrupt triggers ADCSOCB
@@ -234,7 +240,8 @@ void config_ePWM2_to_generate_ADCSOCB(void) {
   EDIS;
 }
 
-void config_ADC() {
+void config_ADC()
+{
 
   //
   // Specific clock setting for this example
@@ -279,7 +286,8 @@ void config_ADC() {
   AdcRegs.ADCMAXCONV.bit.MAX_CONV1 = GROUP_NUM - 1;
 }
 
-void config_DMA() {
+void config_DMA()
+{
   //
   // Interrupts that are used in this example are re-mapped to
   // ISR functions found within this file.
@@ -297,7 +305,8 @@ void config_DMA() {
   //
   // Clear Table
   //
-  for (int i = 0; i < BUF_SIZE; i++) {
+  for (int i = 0; i < BUF_SIZE; i++)
+  {
     DMABuf1[i] = 0;
   }
 
@@ -331,8 +340,8 @@ void config_DMA() {
 //
 // local_DINTCH1_ISR - INT7.1(DMA Channel 1)
 //
-__interrupt void local_DINTCH1_ISR(void) {
-
+__interrupt void local_DINTCH1_ISR(void)
+{
   // 测试当前中断中计算耗时2ms 优化类型5-speed 优化等级O0
   // 优化后548us 优化类型5-speed 优化等级O0
   // 数据预先取优化后493us 优化类型5-speed 优化等级O0
@@ -342,7 +351,7 @@ __interrupt void local_DINTCH1_ISR(void) {
   // 无法使用,结果错误 写错了
 
   // 4层循环展开后405us 优化类型5-speed 优化等级O0
-  GpioDataRegs.GPBSET.bit.GPIO49 = 1;
+  // GpioDataRegs.GPBSET.bit.GPIO49 = 1;
   //
   // To receive more interrupts from this PIE group, acknowledge this
   // interrupt
@@ -353,12 +362,14 @@ __interrupt void local_DINTCH1_ISR(void) {
   // Remove after inserting ISR Code
   //
   // Calculate RMS
-  for (uint32_t i = 0; i < GROUP_NUM; i++) {
+  for (uint32_t i = 0; i < GROUP_NUM; i++)
+  {
     volatile uint16_t *pData = &DMABuf1[i * PIONTS_PER_GROUP];
     uint32_t sum = 0;
     uint32_t pow2_sum = 0;
     uint32_t data = 0;
-    for (int j = 0; j < PIONTS_PER_GROUP; j += 4) {
+    for (int j = 0; j < PIONTS_PER_GROUP; j += 4)
+    {
       data = pData[j];
       sum += data;
       pow2_sum += (data * data);
@@ -404,18 +415,20 @@ __interrupt void local_DINTCH1_ISR(void) {
   }
 
 #if USING_FFT == 1
-  for (int i = 0; i < FFT_SIZE; i++) {
+  for (int i = 0; i < FFT_SIZE; i++)
+  {
     test_input[i] = DMABuf1[i];
   }
   RFFT_adc_f32(hnd_rfft_adc); // Calculate real FFT with 12-bit
   RFFT_f32_mag(hnd_rfft);
 #endif
 
-  GpioDataRegs.GPBCLEAR.bit.GPIO49 = 1;
+  // GpioDataRegs.GPBCLEAR.bit.GPIO49 = 1;
 }
 
 #if USING_FFT == 1
-void FFT_Init() {
+void FFT_Init()
+{
 
 #if defined(_FLASH)
   //

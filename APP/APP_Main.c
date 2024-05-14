@@ -10,12 +10,15 @@
  *
  */
 #include "APP_Main.h"
+#include "BFL_Button.h"
 #include "BFL_Buzz.h"
 #include "BFL_Measure.h"
+#include "BFL_VCB.h"
 #include "CHIP_W25Q128.h"
 #include "CPU_Define.h"
 #include "HDL_CPU_TIme.h"
 #include "HDL_Uart.h"
+
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -31,108 +34,102 @@ static char buffer[MAXDEBUGSEND + 1];
  * @param format
  * @param ...
  */
-// void Debug_Printf(const void *format, ...) {
-//
-//   uint32_t uLen;
-//   va_list vArgs;
-//   va_start(vArgs, format);
-//   uLen = vsnprintf(buffer, MAXDEBUGSEND, (char const *)format, vArgs);
-//   va_end(vArgs);
-//   if (uLen > MAXDEBUGSEND)
-//     uLen = MAXDEBUGSEND;
-//   Uart_Write(DEBUG_COM, (uint16_t *)buffer, uLen);
-// }
+void Debug_Printf(const void *format, ...) {
+  uint32_t uLen;
+  va_list vArgs;
+  va_start(vArgs, format);
+  uLen = vsnprintf(buffer, MAXDEBUGSEND, (char const *)format, vArgs);
+  va_end(vArgs);
+  if (uLen > MAXDEBUGSEND)
+    uLen = MAXDEBUGSEND;
+  Uart_Write(DEBUG_COM, (uint16_t *)buffer, uLen);
+}
 
 void InitSpiaGpio();
 void spi_xmit(Uint16 a);
 
+struct APP_Main_Stack_t {
+  bool modeBtnPressed;
+};
+
+struct APP_Main_Stack_t g_app_main_stack;
 void APP_Main_Init() {
   HDL_CPU_Time_Init();
   // MAX232
   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
-  // Uart_Init(COM3,115200,UART_WORD_LEN_8,UART_STOP_BIT_1,UART_PARITY_NONE);
+  Uart_Init(COM3, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
   BFL_Buzz_Init();
-  //  CHIP_W25Q128_Init();
+  CHIP_W25Q128_Init();
   BFL_Measure_Init();
-  EALLOW;
-  // General purpose I/O
-  GpioCtrlRegs.GPCMUX1.bit.GPIO64 = 0x00;
-  // Configures the GPIO pin as an output
-  GpioCtrlRegs.GPCDIR.bit.GPIO64 = 1;
-  // Enable the internal pullup on the specified pin.
-  GpioCtrlRegs.GPCPUD.bit.GPIO64 = 0;
+  BFL_VCB_Seurity_Init();
+  BFL_Button_Init();
 
-  GpioDataRegs.GPCCLEAR.bit.GPIO64 = 1;
+  g_app_main_stack.modeBtnPressed = false;
 
-  // General purpose I/O
-  GpioCtrlRegs.GPCMUX1.bit.GPIO65 = 0x00;
-  // Configures the GPIO pin as an output
-  GpioCtrlRegs.GPCDIR.bit.GPIO65 = 1;
-  // Enable the internal pullup on the specified pin.
-  GpioCtrlRegs.GPCPUD.bit.GPIO65 = 0;
+  // // General purpose I/O
+  // GpioCtrlRegs.GPBMUX2.bit.GPIO49 = 0x00;
+  // // Configures the GPIO pin as an output
+  // GpioCtrlRegs.GPBDIR.bit.GPIO49 = 1;
+  // // Enable the internal pullup on the specified pin.
+  // GpioCtrlRegs.GPBPUD.bit.GPIO49 = 0;
 
-  GpioDataRegs.GPCSET.bit.GPIO65 = 1;
+  // GpioDataRegs.GPBSET.bit.GPIO49 = 1;
 
-  // General purpose I/O
-  GpioCtrlRegs.GPBMUX2.bit.GPIO49 = 0x00;
-  // Configures the GPIO pin as an output
-  GpioCtrlRegs.GPBDIR.bit.GPIO49 = 1;
-  // Enable the internal pullup on the specified pin.
-  GpioCtrlRegs.GPBPUD.bit.GPIO49 = 0;
-
-  GpioDataRegs.GPBSET.bit.GPIO49 = 1;
-  EDIS;
-
-  InitSpiaGpio();
+  // GpioDataRegs.GPBCLEAR.bit.GPIO49 = 1;
 }
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+void timer_callback() { Debug_Printf("timer_callback\n"); }
+
 Uint16 sdata; // send data
 Uint16 rdata; // received data
 void APP_Main_Poll() {
   // BFL_Buzz_Toggle();
+
+  // for_Each_VCB_SW_t(vcb)
+  // {
+  //   if (BFL_VCB_Get_Setting_State(vcb) == BFL_VCB_Opened)
+  //   {
+  //     BFL_VCB_Set_As_Switch_Closed(vcb);
+  //   }
+  //   else if (BFL_VCB_Get_Setting_State(vcb) == BFL_VCB_Closed)
+  //   {
+  //     BFL_VCB_Set_As_Switch_Opened(vcb);
+  //   }
+  //   else
+  //   {
+  //     BFL_VCB_Set_As_Switch_Closed(vcb);
+  //   }
+  // }
+
   HDL_CPU_Time_DelayMs(1000);
 
-  //   GpioDataRegs.GPCTOGGLE.bit.GPIO64 = 1;
-  //   GpioDataRegs.GPCTOGGLE.bit.GPIO65 = 1;
-}
-
-/*
-byte_t flash_sector_buf[W25Q128_SECTOR_SIZE] = {0};
-void CHIP_W25Q128_Test() {
-  // Debug_Printf("111\r\n");
-  uint16_t id = CHIP_W25Q128_Read_ID();
-  Debug_Printf("CHIP_W25Q128_Read_ID:%x\r\n", id);
-
-  for (int i = 0; i < W25Q128_SECTOR_SIZE; i++) {
-    flash_sector_buf[i] = i & 0xFF;
+  for_Each_VCB_SW_t(vcb) {
+    BFL_VCB_STATE_t state = BFL_VCB_Get_Actual_State(vcb);
+    BFL_VCB_STATE_t settingState = BFL_VCB_Get_Setting_State(vcb);
+    Debug_Printf("VCB:%s, fb: %s, set:%s\n", BFL_VCB_SW_To_String(vcb),
+                 BFL_VCB_STATE_To_String(state),
+                 BFL_VCB_STATE_To_String(settingState));
   }
 
-  CHIP_W25q128_Write_One_Sector(1, flash_sector_buf);
-
-  for (int i = 0; i < W25Q128_SECTOR_SIZE; i++) {
-    flash_sector_buf[i] = 0;
-  }
-
-  CHIP_W25Q128_Read(W25Q128_SECTOR_SIZE * 1, flash_sector_buf,
-                    W25Q128_SECTOR_SIZE);
-
-  int cnt = 0;
-  for (int i = 0; i < W25Q128_SECTOR_SIZE; i++) {
-    if (flash_sector_buf[i] != (i & 0xFF)) {
-      cnt++;
+  if (BFL_Button_IsPressed(MODE_BTN)) {
+    if (g_app_main_stack.modeBtnPressed == false) {
+      g_app_main_stack.modeBtnPressed = true;
+      Debug_Printf("MODE_BTN is pressed\n");
+    }
+  } else {
+    if (g_app_main_stack.modeBtnPressed == true) {
+      g_app_main_stack.modeBtnPressed = false;
+      Debug_Printf("MODE_BTN is released\n");
     }
   }
 
-  if (cnt == 0) {
-    Debug_Printf("CHIP_W25q128_Write_One_Sector success\r\n");
-  } else {
-    Debug_Printf("CHIP_W25q128_Write_One_Sector fail, cnt:%d\r\n", cnt);
-  }
+  Debug_Printf("Hello World\n");
+  HDL_CPU_Time_StartHardTimer(1, 1500000U, timer_callback);
 
-  cnt = 0;
+  HDL_CPU_Time_DelayMs(1000);
+  Debug_Printf("bb Hello World\n");
 }
-*/

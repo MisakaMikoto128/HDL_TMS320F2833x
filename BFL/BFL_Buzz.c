@@ -26,8 +26,9 @@ void BFL_Buzz_Init()
   // Enable the internal pullup on the specified pin. (default for
   // GPIO12-GPIO31)
   GpioCtrlRegs.GPAPUD.bit.GPIO6 = 0;
-  BFL_Buzz_Off();
   EDIS;
+  
+  BFL_Buzz_Off();
 }
 
 void BFL_Buzz_Off()
