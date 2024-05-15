@@ -34,8 +34,7 @@ static char buffer[MAXDEBUGSEND + 1];
  * @param format
  * @param ...
  */
-void Debug_Printf(const void *format, ...)
-{
+void Debug_Printf(const void *format, ...) {
   uint32_t uLen;
   va_list vArgs;
   va_start(vArgs, format);
@@ -49,14 +48,12 @@ void Debug_Printf(const void *format, ...)
 void InitSpiaGpio();
 void spi_xmit(Uint16 a);
 
-struct APP_Main_Stack_t
-{
+struct APP_Main_Stack_t {
   bool modeBtnPressed;
 };
 
 struct APP_Main_Stack_t g_app_main_stack;
-void APP_Main_Init()
-{
+void APP_Main_Init() {
   HDL_CPU_Time_Init();
   // MAX232
   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
@@ -90,8 +87,8 @@ void timer_callback() { Debug_Printf("timer_callback\n"); }
 
 Uint16 sdata; // send data
 Uint16 rdata; // received data
-void APP_Main_Poll()
-{
+uint32_t signal;
+void APP_Main_Poll() {
   // BFL_Buzz_Toggle();
 
   // for_Each_VCB_SW_t(vcb)
@@ -148,7 +145,9 @@ void APP_Main_Poll()
   //   }
 
   {
-    HDL_CPU_Time_DelayMs(100);
-    BFL_SCRT_Pluse_Transmit(SCRTA, 4, 2000);
+    HDL_CPU_Time_DelayMs(200);
+    BFL_SCRT_Pluse_Transmit(SCRT_ALL, 4, 2000);
+
+    signal = BFL_SCRR_Have_Signal(SCRR_ALL);
   }
 }

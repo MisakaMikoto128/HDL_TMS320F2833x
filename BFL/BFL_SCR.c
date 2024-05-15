@@ -52,7 +52,7 @@ EPWM_INFO epwm3_info;
 #define SCRR2B_IsSet() (GpioDataRegs.GPADAT.bit.GPIO11)
 #define SCRR3A_IsSet() (GpioDataRegs.GPADAT.bit.GPIO12)
 #define SCRR3B_IsSet() (GpioDataRegs.GPADAT.bit.GPIO13)
-
+#define SCRA_ALL_Read() (GpioDataRegs.GPADAT.all & 0x00003F00)
 /**
  * @brief SCR输入输出通道初始化。
  *
@@ -155,10 +155,10 @@ void BFL_SCR_Init()
  * @brief
  *
  * @param scrr 输入通道。
- * @return true 有光信号输入进来。
- * @return false 没有光信号输入进来。
+ * @return > 0 有光信号输入进来。
+ * @return 0 没有光信号输入进来。
  */
-bool BFL_SCRR_Have_Signal(BFL_SCRR_t scrr)
+uint32_t BFL_SCRR_Have_Signal(BFL_SCRR_t scrr)
 {
     switch (scrr)
     {
@@ -174,6 +174,8 @@ bool BFL_SCRR_Have_Signal(BFL_SCRR_t scrr)
         return SCRR3A_IsSet();
     case SCRR3B:
         return SCRR3B_IsSet();
+    case SCRR_ALL:
+        return SCRA_ALL_Read();
     }
     return false;
 }
@@ -181,9 +183,10 @@ bool BFL_SCRR_Have_Signal(BFL_SCRR_t scrr)
 //
 // Defines that configure the period for each timer
 //
-#define EPWM1_PWM_PERIOD 5                                             // 5ms Period
-#define EPWM1_TIMER_TBPRD (9375000ULL / (1000 / EPWM1_PWM_PERIOD) - 1) // 5ms Period，max 6
-
+#define EPWM1_PWM_PERIOD 5 // 5ms Period
+#define EPWM1_TIMER_TBPRD \
+    (9375000ULL / (1000 / EPWM1_PWM_PERIOD) - 1) // 5ms Period，max 6
+#define EPWM123_ENABLE_SYNC 0
 //
 // InitEPwm1Example -
 //
@@ -196,10 +199,22 @@ void InitEPwm1Example()
     //
     EPwmxRegsHandle->TBCTL.bit.CTRMODE = TB_FREEZE; // Count up
     // PWM period = (TBPRD + 1 ) × TTBCLK Up-Count mode
-    EPwmxRegsHandle->TBPRD = EPWM1_TIMER_TBPRD;    // Set timer period
-    EPwmxRegsHandle->TBCTL.bit.PHSEN = TB_DISABLE; // Disable phase loading
-    EPwmxRegsHandle->TBPHS.half.TBPHS = 0x0000;    // Phase is 0
-    EPwmxRegsHandle->TBCTR = 0x0000;               // Clear counter
+    EPwmxRegsHandle->TBPRD = EPWM1_TIMER_TBPRD; // Set timer period
+
+#if EPWM123_ENABLE_SYNC == 1
+    EPwmxRegsHandle->TBCTL.bit.PHSEN =
+        TB_DISABLE;                                    // Disable phase loading Master module
+    EPwmxRegsHandle->TBPHS.half.TBPHS = 0x0000;        // Phase is 0
+    EPwmxRegsHandle->TBCTL.bit.SYNCOSEL = TB_CTR_ZERO; // Sync down-stream module
+    EPwmxRegsHandle->TBCTL.bit.PHSDIR = TB_UP;         // Phase Direction Down
+    EPwmxRegsHandle->TBCTL.bit.PRDLD = TB_SHADOW;
+#else
+    EPwmxRegsHandle->TBCTL.bit.PHSEN =
+        TB_DISABLE;                             // Disable phase loading Master module
+    EPwmxRegsHandle->TBPHS.half.TBPHS = 0x0000; // Phase is 0
+#endif // EPWM123_ENABLE_SYNC
+
+    EPwmxRegsHandle->TBCTR = 0x0000; // Clear counter
     // TBCLK=SYSCLKOUT/(HSPCLKDIV*CLKDIV):150/(4*4)
     EPwmxRegsHandle->TBCTL.bit.HSPCLKDIV = TB_DIV4; // Clock ratio to SYSCLKOUT
     EPwmxRegsHandle->TBCTL.bit.CLKDIV = TB_DIV4;
@@ -215,8 +230,9 @@ void InitEPwm1Example()
     //
     // Set Compare values
     //
-    EPwmxRegsHandle->CMPA.half.CMPA = EPWM1_TIMER_TBPRD >> 1; // Set compare A value
-    EPwmxRegsHandle->CMPB = EPWM1_TIMER_TBPRD >> 1;           // Set Compare B value
+    EPwmxRegsHandle->CMPA.half.CMPA =
+        EPWM1_TIMER_TBPRD >> 1;                     // Set compare A value
+    EPwmxRegsHandle->CMPB = EPWM1_TIMER_TBPRD >> 1; // Set Compare B value
 
     //
     // Set actions
@@ -254,10 +270,21 @@ void InitEPwm2Example()
     //
     EPwmxRegsHandle->TBCTL.bit.CTRMODE = TB_FREEZE; // Count up
     // PWM period = (TBPRD + 1 ) × TTBCLK Up-Count mode
-    EPwmxRegsHandle->TBPRD = EPWM1_TIMER_TBPRD;    // Set timer period
-    EPwmxRegsHandle->TBCTL.bit.PHSEN = TB_DISABLE; // Disable phase loading
-    EPwmxRegsHandle->TBPHS.half.TBPHS = 0x0000;    // Phase is 0
-    EPwmxRegsHandle->TBCTR = 0x0000;               // Clear counter
+    EPwmxRegsHandle->TBPRD = EPWM1_TIMER_TBPRD; // Set timer period
+
+#if EPWM123_ENABLE_SYNC == 1
+    EPwmxRegsHandle->TBCTL.bit.SYNCOSEL = TB_SYNC_IN;            // Sync down-stream module
+    EPwmxRegsHandle->TBCTL.bit.PHSDIR = TB_UP;                   // Phase Direction Down
+    EPwmxRegsHandle->TBCTL.bit.PHSEN = TB_ENABLE;                // Disable phase loading
+    EPwmxRegsHandle->TBPHS.half.TBPHS = (EPWM1_TIMER_TBPRD / 3); // Phase is 0
+    EPwmxRegsHandle->TBCTL.bit.PRDLD = TB_SHADOW;
+#else
+    EPwmxRegsHandle->TBCTL.bit.PHSEN =
+        TB_DISABLE;                             // Disable phase loading Master module
+    EPwmxRegsHandle->TBPHS.half.TBPHS = 0x0000; // Phase is 0
+#endif // EPWM123_ENABLE_SYNC
+
+    EPwmxRegsHandle->TBCTR = 0x0000; // Clear counter
     // TBCLK=SYSCLKOUT/(HSPCLKDIV*CLKDIV):150/(4*4)
     EPwmxRegsHandle->TBCTL.bit.HSPCLKDIV = TB_DIV4; // Clock ratio to SYSCLKOUT
     EPwmxRegsHandle->TBCTL.bit.CLKDIV = TB_DIV4;
@@ -273,8 +300,9 @@ void InitEPwm2Example()
     //
     // Set Compare values
     //
-    EPwmxRegsHandle->CMPA.half.CMPA = EPWM1_TIMER_TBPRD >> 1; // Set compare A value
-    EPwmxRegsHandle->CMPB = EPWM1_TIMER_TBPRD >> 1;           // Set Compare B value
+    EPwmxRegsHandle->CMPA.half.CMPA =
+        EPWM1_TIMER_TBPRD >> 1;                     // Set compare A value
+    EPwmxRegsHandle->CMPB = EPWM1_TIMER_TBPRD >> 1; // Set Compare B value
 
     //
     // Set actions
@@ -312,10 +340,21 @@ void InitEPwm3Example(void)
     //
     EPwmxRegsHandle->TBCTL.bit.CTRMODE = TB_FREEZE; // Count up
     // PWM period = (TBPRD + 1 ) × TTBCLK Up-Count mode
-    EPwmxRegsHandle->TBPRD = EPWM1_TIMER_TBPRD;    // Set timer period
-    EPwmxRegsHandle->TBCTL.bit.PHSEN = TB_DISABLE; // Disable phase loading
-    EPwmxRegsHandle->TBPHS.half.TBPHS = 0x0000;    // Phase is 0
-    EPwmxRegsHandle->TBCTR = 0x0000;               // Clear counter
+    EPwmxRegsHandle->TBPRD = EPWM1_TIMER_TBPRD; // Set timer period
+
+#if EPWM123_ENABLE_SYNC == 1
+    EPwmxRegsHandle->TBCTL.bit.SYNCOSEL = TB_SYNC_IN;                // Sync down-stream module
+    EPwmxRegsHandle->TBCTL.bit.PHSDIR = TB_UP;                       // Phase Direction Down
+    EPwmxRegsHandle->TBCTL.bit.PHSEN = TB_ENABLE;                    // Disable phase loading
+    EPwmxRegsHandle->TBPHS.half.TBPHS = (EPWM1_TIMER_TBPRD * 2 / 3); // Phase is 0
+    EPwmxRegsHandle->TBCTL.bit.PRDLD = TB_SHADOW;
+#else
+    EPwmxRegsHandle->TBCTL.bit.PHSEN =
+        TB_DISABLE;                             // Disable phase loading Master module
+    EPwmxRegsHandle->TBPHS.half.TBPHS = 0x0000; // Phase is 0
+#endif // EPWM123_ENABLE_SYNC
+
+    EPwmxRegsHandle->TBCTR = 0x0000; // Clear counter
     // TBCLK=SYSCLKOUT/(HSPCLKDIV*CLKDIV):150/(4*4)
     EPwmxRegsHandle->TBCTL.bit.HSPCLKDIV = TB_DIV4; // Clock ratio to SYSCLKOUT
     EPwmxRegsHandle->TBCTL.bit.CLKDIV = TB_DIV4;
@@ -331,8 +370,9 @@ void InitEPwm3Example(void)
     //
     // Set Compare values
     //
-    EPwmxRegsHandle->CMPA.half.CMPA = EPWM1_TIMER_TBPRD >> 1; // Set compare A value
-    EPwmxRegsHandle->CMPB = EPWM1_TIMER_TBPRD >> 1;           // Set Compare B value
+    EPwmxRegsHandle->CMPA.half.CMPA =
+        EPWM1_TIMER_TBPRD >> 1;                     // Set compare A value
+    EPwmxRegsHandle->CMPB = EPWM1_TIMER_TBPRD >> 1; // Set Compare B value
 
     //
     // Set actions
@@ -443,15 +483,21 @@ __interrupt void epwm3_isr(void)
     PieCtrlRegs.PIEACK.all |= PIEACK_GROUP3;
 }
 
-static void BFL_SCRT_Pluse_Transmit_Config(EPWM_INFO *pEpwmx_info, uint16_t _uiPluseNum, uint16_t _uiPluseWidth)
+static void BFL_SCRT_Pluse_Transmit_Config(EPWM_INFO *pEpwmx_info,
+                                           uint16_t _uiPluseNum,
+                                           uint16_t _uiPluseWidth)
 {
     volatile struct EPWM_REGS *EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
     pEpwmx_info->INT_CNT = 0;
     pEpwmx_info->PLUSE_NUM = _uiPluseNum - 1;
     pEpwmx_info->busy = 1;
-    // 最大值为5000 + 1 us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 + 1时，输出的脉冲宽度为5000us。
+    // 最大值为5000 + 1
+    // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
+    // 1时，输出的脉冲宽度为5000us。
     //(_uiPluseWidth / (EPWM1_PWM_PERIOD * 1000)) * EPWM1_TIMER_TBPRD;
-    EPwmRegHandle->CMPA.half.CMPA = EPWM1_TIMER_TBPRD - ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD / (EPWM1_PWM_PERIOD * 1000ULL));
+    EPwmRegHandle->CMPA.half.CMPA =
+        EPWM1_TIMER_TBPRD - ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
+                             (EPWM1_PWM_PERIOD * 1000ULL));
     EPwmRegHandle->CMPB = EPwmRegHandle->CMPA.half.CMPA;
     EPwmRegHandle->TBCTR = 0x0000;                  // Clear counter
     EPwmRegHandle->TBCTL.bit.CTRMODE = TB_COUNT_UP; // Up count mode
@@ -465,9 +511,11 @@ static void BFL_SCRT_Pluse_Transmit_Config(EPWM_INFO *pEpwmx_info, uint16_t _uiP
  * @param _uiPluseNum
  * @param _uiPluseWidth 单位us，范围[1,5000]
  */
-void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum, uint16_t _uiPluseWidth)
+void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
+                             uint16_t _uiPluseWidth)
 {
-    if (_uiPluseWidth >= (EPWM1_PWM_PERIOD * 1000ULL) || _uiPluseWidth == 0 || _uiPluseNum == 0)
+    if (_uiPluseWidth >= (EPWM1_PWM_PERIOD * 1000ULL) || _uiPluseWidth == 0 ||
+        _uiPluseNum == 0)
     {
         return;
     }
@@ -488,10 +536,63 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum, uint16_t _ui
         BFL_SCRT_Pluse_Transmit_Config(pEpwmx_info, _uiPluseNum, _uiPluseWidth);
         break;
     case SCRT_ALL:
-        BFL_SCRT_Pluse_Transmit_Config(&epwm1_info, _uiPluseNum, _uiPluseWidth);
-        BFL_SCRT_Pluse_Transmit_Config(&epwm2_info, _uiPluseNum, _uiPluseWidth);
-        BFL_SCRT_Pluse_Transmit_Config(&epwm3_info, _uiPluseNum, _uiPluseWidth);
-        break;
+    {
+        volatile struct EPWM_REGS *EPwmRegHandle = NULL;
+
+        pEpwmx_info = &epwm1_info;
+        EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
+        pEpwmx_info->INT_CNT = 0;
+        pEpwmx_info->PLUSE_NUM = _uiPluseNum - 1;
+        pEpwmx_info->busy = 1;
+        // 最大值为5000 + 1
+        // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
+        // 1时，输出的脉冲宽度为5000us。
+        //(_uiPluseWidth / (EPWM1_PWM_PERIOD * 1000)) * EPWM1_TIMER_TBPRD;
+        EPwmRegHandle->CMPA.half.CMPA =
+            EPWM1_TIMER_TBPRD - ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
+                                 (EPWM1_PWM_PERIOD * 1000ULL));
+        EPwmRegHandle->CMPB = EPwmRegHandle->CMPA.half.CMPA;
+        EPwmRegHandle->TBCTR = 0x0000; // Clear counter
+
+        pEpwmx_info = &epwm2_info;
+        EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
+        pEpwmx_info->INT_CNT = 0;
+        pEpwmx_info->PLUSE_NUM = _uiPluseNum - 1;
+        pEpwmx_info->busy = 1;
+        // 最大值为5000 + 1
+        // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
+        // 1时，输出的脉冲宽度为5000us。
+        //(_uiPluseWidth / (EPWM1_PWM_PERIOD * 1000)) * EPWM1_TIMER_TBPRD;
+        EPwmRegHandle->CMPA.half.CMPA =
+            EPWM1_TIMER_TBPRD - ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
+                                 (EPWM1_PWM_PERIOD * 1000ULL));
+        EPwmRegHandle->CMPB = EPwmRegHandle->CMPA.half.CMPA;
+        EPwmRegHandle->TBCTR = 0x0000; // Clear counter
+
+        pEpwmx_info = &epwm3_info;
+        EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
+        pEpwmx_info->INT_CNT = 0;
+        pEpwmx_info->PLUSE_NUM = _uiPluseNum - 1;
+        pEpwmx_info->busy = 1;
+        // 最大值为5000 + 1
+        // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
+        // 1时，输出的脉冲宽度为5000us。
+        //(_uiPluseWidth / (EPWM1_PWM_PERIOD * 1000)) * EPWM1_TIMER_TBPRD;
+        EPwmRegHandle->CMPA.half.CMPA =
+            EPWM1_TIMER_TBPRD - ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
+                                 (EPWM1_PWM_PERIOD * 1000ULL));
+        EPwmRegHandle->CMPB = EPwmRegHandle->CMPA.half.CMPA;
+        EPwmRegHandle->TBCTR = 0x0000; // Clear counter
+
+        EPwm1Regs.TBCTL.bit.CTRMODE = TB_COUNT_UP; // Up count mode
+        EPwm2Regs.TBCTL.bit.CTRMODE = TB_COUNT_UP; // Up count mode
+        EPwm3Regs.TBCTL.bit.CTRMODE = TB_COUNT_UP; // Up count mode
+        EPwm2Regs.ETSEL.bit.INTEN = 1;             // Enable INT
+        EPwm1Regs.ETSEL.bit.INTEN = 1;             // Enable INT
+        EPwm3Regs.ETSEL.bit.INTEN = 1;             // Enable INT
+    }
+
+    break;
     default:
         return;
     }

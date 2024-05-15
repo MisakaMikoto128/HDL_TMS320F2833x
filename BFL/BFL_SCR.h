@@ -43,6 +43,7 @@ extern "C"
         SCRR3A,
         SCRR3B,
         SCRR_NUM,
+        SCRR_ALL,
     } BFL_SCRR_t;
 
     /**
@@ -64,10 +65,10 @@ extern "C"
      * @brief
      *
      * @param scrr 输入通道。
-     * @return true 有光信号输入进来。
-     * @return false 没有光信号输入进来。
+     * @return > 0 有光信号输入进来。
+     * @return 0 没有光信号输入进来。
      */
-    bool BFL_SCRR_Have_Signal(BFL_SCRR_t scrr);
+    uint32_t BFL_SCRR_Have_Signal(BFL_SCRR_t scrr);
 
 #ifdef __cplusplus
 }
