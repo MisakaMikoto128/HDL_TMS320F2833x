@@ -17,10 +17,12 @@
 #include "BFL_VCB.h"
 #include "CHIP_W25Q128.h"
 #include "CPU_Define.h"
+#include "DSP2833x_Device.h"
 #include "HDL_CPU_TIme.h"
 #include "HDL_Uart.h"
 
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdio.h>
 
 // 调试输出数据包最大长度
@@ -53,17 +55,51 @@ struct APP_Main_Stack_t {
 };
 
 struct APP_Main_Stack_t g_app_main_stack;
+
+#define RS485C_Take_Bus() (GpioDataRegs.GPBSET.bit.GPIO61 = 1)
+#define RS485C_Release_Bus() (GpioDataRegs.GPBCLEAR.bit.GPIO61 = 1)
+
+#define RS485A_Take_Bus() (GpioDataRegs.GPASET.bit.GPIO28 = 1)
+#define RS485A_Release_Bus() (GpioDataRegs.GPACLEAR.bit.GPIO28 = 1)
+
+void cb1(void *arg) { Debug_Printf("cb1\n"); }
 void APP_Main_Init() {
   HDL_CPU_Time_Init();
-  // MAX232
-  Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
-  Uart_Init(COM3, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
-  BFL_Buzz_Init();
-  CHIP_W25Q128_Init();
-  BFL_Measure_Init();
-  BFL_VCB_Seurity_Init();
-  BFL_Button_Init();
-  BFL_SCR_Init();
+
+  EALLOW;
+  // EN485C GPIO,无上下拉电阻
+  // General purpose I/O
+  GpioCtrlRegs.GPBMUX2.bit.GPIO61 = 0x00;
+  // Configures the GPIO pin as an output
+  GpioCtrlRegs.GPBDIR.bit.GPIO61 = 1;
+  // Enable the internal pullup on the specified pin.
+  GpioCtrlRegs.GPBPUD.bit.GPIO61 = 0;
+  RS485C_Release_Bus();
+
+  // EN485A GPIO,无上下拉电阻
+  // General purpose I/O
+  GpioCtrlRegs.GPAMUX2.bit.GPIO28 = 0x00;
+  // Configures the GPIO pin as an output
+  GpioCtrlRegs.GPADIR.bit.GPIO28 = 1;
+  // Enable the internal pullup on the specified pin.
+  GpioCtrlRegs.GPAPUD.bit.GPIO28 = 0;
+  RS485A_Release_Bus();
+  EDIS;
+
+  Uart_Init(COM1, 9600, UART_WORD_LEN_8, UART_STOP_BIT_1,
+            UART_PARITY_NONE); // 隔离 MAX3485
+  Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1,
+            UART_PARITY_NONE); // MAX232
+  Uart_Init(COM3, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1,
+            UART_PARITY_NONE); // MAX3485
+  //   BFL_Buzz_Init();
+  //   CHIP_W25Q128_Init();
+  //   BFL_Measure_Init();
+  //   BFL_VCB_Seurity_Init();
+  //   BFL_Button_Init();
+  //   BFL_SCR_Init();
+
+  Uart_SetWriteOverCallback(COM3, cb1, NULL);
 
   g_app_main_stack.modeBtnPressed = false;
 
@@ -84,7 +120,8 @@ void APP_Main_Init() {
 #include <string.h>
 
 void timer_callback() { Debug_Printf("timer_callback\n"); }
-
+float t = 0;
+int cnt = 1;
 Uint16 sdata; // send data
 Uint16 rdata; // received data
 uint32_t signal;
@@ -145,9 +182,38 @@ void APP_Main_Poll() {
   //   }
 
   {
-    HDL_CPU_Time_DelayMs(200);
-    BFL_SCRT_Pluse_Transmit(SCRT_ALL, 4, 2000);
+    HDL_CPU_Time_DelayMs(1000ULL);
+    // BFL_SCRT_Pluse_Transmit(SCRT_ALL, 4, 2000);
 
-    signal = BFL_SCRR_Have_Signal(SCRR_ALL);
+    // signal = BFL_SCRR_Have_Signal(SCRR_ALL);
+
+    // RS485C_Release_Bus();
+    // RS485A_Release_Bus();
+
+    RS485C_Take_Bus();
+    RS485A_Take_Bus();
+
+    Uint32 tickA = HDL_CPU_Time_GetUsTick();
+
+    Uart_Write(COM1, (const uint16_t
+    *)"123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789",
+    cnt);
+
+    // for (uint32_t i = 0; i < cnt; i++) {
+    //   //            cnt);
+    //   SciaRegs.SCITXBUF = 'a';
+    //   // 在此做判断，如果发送FIFO缓冲中数据  >=
+    //   // 16字节，要等待下直到FIFO小于16才能再次向FIFO中存数据
+    //   while (SciaRegs.SCICTL2.bit.TXRDY == 0) {
+    //   }
+    // }
+    // //  TX FIFO Interrupt Enable
+    // SciaRegs.SCIFFTX.bit.TXFFIENA = 1;
+
+    Uint32 tickB = HDL_CPU_Time_GetUsTick();
+
+    t = (tickB - tickA);
+    // Uart_Write(COM2, (const uint16_t *)"123456789123456789", 18);
+    // Uart_Write(COM3, (const uint16_t *)"123456789123456789", 18);
   }
 }
