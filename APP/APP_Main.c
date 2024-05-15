@@ -13,12 +13,12 @@
 #include "BFL_Button.h"
 #include "BFL_Buzz.h"
 #include "BFL_Measure.h"
+#include "BFL_SCR.h"
 #include "BFL_VCB.h"
 #include "CHIP_W25Q128.h"
 #include "CPU_Define.h"
 #include "HDL_CPU_TIme.h"
 #include "HDL_Uart.h"
-
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -34,7 +34,8 @@ static char buffer[MAXDEBUGSEND + 1];
  * @param format
  * @param ...
  */
-void Debug_Printf(const void *format, ...) {
+void Debug_Printf(const void *format, ...)
+{
   uint32_t uLen;
   va_list vArgs;
   va_start(vArgs, format);
@@ -48,12 +49,14 @@ void Debug_Printf(const void *format, ...) {
 void InitSpiaGpio();
 void spi_xmit(Uint16 a);
 
-struct APP_Main_Stack_t {
+struct APP_Main_Stack_t
+{
   bool modeBtnPressed;
 };
 
 struct APP_Main_Stack_t g_app_main_stack;
-void APP_Main_Init() {
+void APP_Main_Init()
+{
   HDL_CPU_Time_Init();
   // MAX232
   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
@@ -63,6 +66,7 @@ void APP_Main_Init() {
   BFL_Measure_Init();
   BFL_VCB_Seurity_Init();
   BFL_Button_Init();
+  BFL_SCR_Init();
 
   g_app_main_stack.modeBtnPressed = false;
 
@@ -86,7 +90,8 @@ void timer_callback() { Debug_Printf("timer_callback\n"); }
 
 Uint16 sdata; // send data
 Uint16 rdata; // received data
-void APP_Main_Poll() {
+void APP_Main_Poll()
+{
   // BFL_Buzz_Toggle();
 
   // for_Each_VCB_SW_t(vcb)
@@ -105,31 +110,45 @@ void APP_Main_Poll() {
   //   }
   // }
 
-  HDL_CPU_Time_DelayMs(1000);
+  //   {
 
-  for_Each_VCB_SW_t(vcb) {
-    BFL_VCB_STATE_t state = BFL_VCB_Get_Actual_State(vcb);
-    BFL_VCB_STATE_t settingState = BFL_VCB_Get_Setting_State(vcb);
-    Debug_Printf("VCB:%s, fb: %s, set:%s\n", BFL_VCB_SW_To_String(vcb),
-                 BFL_VCB_STATE_To_String(state),
-                 BFL_VCB_STATE_To_String(settingState));
+  //     HDL_CPU_Time_DelayMs(1000);
+
+  //     for_Each_VCB_SW_t(vcb)
+  //     {
+  //       BFL_VCB_STATE_t state = BFL_VCB_Get_Actual_State(vcb);
+  //       BFL_VCB_STATE_t settingState = BFL_VCB_Get_Setting_State(vcb);
+  //       Debug_Printf("VCB:%s, fb: %s, set:%s\n", BFL_VCB_SW_To_String(vcb),
+  //                    BFL_VCB_STATE_To_String(state),
+  //                    BFL_VCB_STATE_To_String(settingState));
+  //     }
+
+  //     if (BFL_Button_IsPressed(MODE_BTN))
+  //     {
+  //       if (g_app_main_stack.modeBtnPressed == false)
+  //       {
+  //         g_app_main_stack.modeBtnPressed = true;
+  //         Debug_Printf("MODE_BTN is pressed\n");
+  //       }
+  //     }
+  //     else
+  //     {
+  //       if (g_app_main_stack.modeBtnPressed == true)
+  //       {
+  //         g_app_main_stack.modeBtnPressed = false;
+  //         Debug_Printf("MODE_BTN is released\n");
+  //       }
+  //     }
+
+  //     Debug_Printf("Hello World\n");
+  //     HDL_CPU_Time_StartHardTimer(1, 1500000U, timer_callback);
+
+  //     HDL_CPU_Time_DelayMs(1000);
+  //     Debug_Printf("bb Hello World\n");
+  //   }
+
+  {
+    HDL_CPU_Time_DelayMs(100);
+    BFL_SCRT_Pluse_Transmit(SCRTA, 4, 2000);
   }
-
-  if (BFL_Button_IsPressed(MODE_BTN)) {
-    if (g_app_main_stack.modeBtnPressed == false) {
-      g_app_main_stack.modeBtnPressed = true;
-      Debug_Printf("MODE_BTN is pressed\n");
-    }
-  } else {
-    if (g_app_main_stack.modeBtnPressed == true) {
-      g_app_main_stack.modeBtnPressed = false;
-      Debug_Printf("MODE_BTN is released\n");
-    }
-  }
-
-  Debug_Printf("Hello World\n");
-  HDL_CPU_Time_StartHardTimer(1, 1500000U, timer_callback);
-
-  HDL_CPU_Time_DelayMs(1000);
-  Debug_Printf("bb Hello World\n");
 }

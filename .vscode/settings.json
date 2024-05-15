@@ -35,6 +35,9 @@
         "xloctime": "c",
         "xmemory": "c",
         "xstring": "c",
-        "xutility": "c"
+        "xutility": "c",
+        "bfl_scrt.h": "c",
+        "bfl_button.h": "c",
+        "bfl_scr.h": "c"
     }
 }

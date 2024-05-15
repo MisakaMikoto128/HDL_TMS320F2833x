@@ -101,9 +101,8 @@ float AdcVoltRMSFilterBuf[GROUP_NUM][AVG];
 #pragma DATA_SECTION(DMABuf1, "DMARAML4");
 volatile Uint16 DMABuf1[BUF_SIZE];
 
-void config_ePWM1_to_generate_ADCSOCA(void);
-void enable_ePWM1(void);
-void config_ePWM2_to_generate_ADCSOCB(void);
+void config_ePWM4_to_generate_ADCSOCA(void);
+void enable_ePWM4(void);
 
 void config_ADC();
 void config_DMA();
@@ -126,73 +125,73 @@ void BFL_Measure_Init()
   config_ADC();
   config_DMA();
   StartDMACH1();
-  config_ePWM1_to_generate_ADCSOCA();
-  enable_ePWM1();
+  config_ePWM4_to_generate_ADCSOCA();
+  enable_ePWM4();
 }
 
 //
 // Defines that configure the period for each timer
 //
-#define EPWM1_TIMER_TBPRD (75000000ULL / 2000UL - 1) // Period register
-#define EPWM1_MAX_CMPA 1950
-#define EPWM1_MIN_CMPA 50
-#define EPWM1_MAX_CMPB 1950
-#define EPWM1_MIN_CMPB 50
+#define EPWM4_TIMER_TBPRD (75000000ULL / 2000UL - 1) // Period register
+#define EPWM4_MAX_CMPA 1950
+#define EPWM4_MIN_CMPA 50
+#define EPWM4_MAX_CMPB 1950
+#define EPWM4_MIN_CMPB 50
 
 //
-// config_ePWM1_to_generate_ADCSOCA -
+// config_ePWM4_to_generate_ADCSOCA -
 //
-void config_ePWM1_to_generate_ADCSOCA_(void)
+void config_ePWM4_to_generate_ADCSOCA_(void)
 {
   //
-  // Configure ePWM1 Timer
+  // Configure ePWM4 Timer
   // Interrupt triggers ADCSOCA
   //
   EALLOW;
 
-  EPwm1Regs.ETSEL.bit.SOCAEN = 1;  // Enable SOC on A group
-  EPwm1Regs.ETSEL.bit.SOCASEL = 4; // Select SOC on up-count
-  EPwm1Regs.ETPS.bit.SOCAPRD = 1;  // Generate pulse on 1st event
+  EPwm4Regs.ETSEL.bit.SOCAEN = 1;  // Enable SOC on A group
+  EPwm4Regs.ETSEL.bit.SOCASEL = 4; // Select SOC on up-count
+  EPwm4Regs.ETPS.bit.SOCAPRD = 1;  // Generate pulse on 1st event
 
   // PWM period = (TBPRD + 1 ) × TTBCLK Up-Count mode
-  EPwm1Regs.TBPRD = EPWM1_TIMER_TBPRD; // Set EPwm1 Timer period （周期）
+  EPwm4Regs.TBPRD = EPWM4_TIMER_TBPRD; // Set EPwm1 Timer period （周期）
 
   // Freeze counter （冻结 ，不运行，配置为0则开始运行）
-  EPwm1Regs.TBCTL.bit.CTRMODE = TB_FREEZE;
+  EPwm4Regs.TBCTL.bit.CTRMODE = TB_FREEZE;
 
   //
   // Setup TBCLK
   //
 
-  EPwm1Regs.TBPHS.half.TBPHS = 0x0000; // Phase is 0
-  EPwm1Regs.TBCTR = 0x0000;            // Clear counter
+  EPwm4Regs.TBPHS.half.TBPHS = 0x0000; // Phase is 0
+  EPwm4Regs.TBCTR = 0x0000;            // Clear counter
 
   //
   // Setup counter mode TBCLK = SYSCLKOUT / (HSPCLKDIV × CLKDIV)
   //
   // TBCLK=SYSCLKOUT/(HSPCLKDIV*CLKDIV):150/(1*2)=75MHz
-  EPwm1Regs.TBCTL.bit.HSPCLKDIV = TB_DIV2;
-  EPwm1Regs.TBCTL.bit.CLKDIV = TB_DIV1;
+  EPwm4Regs.TBCTL.bit.HSPCLKDIV = TB_DIV2;
+  EPwm4Regs.TBCTL.bit.CLKDIV = TB_DIV1;
 
   //
   // Setup shadowing
   //
-  EPwm1Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
-  EPwm1Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
-  EPwm1Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // Load on Zero
-  EPwm1Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO;
+  EPwm4Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
+  EPwm4Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
+  EPwm4Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // Load on Zero
+  EPwm4Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO;
 
   //
   // Interrupt where we will change the Compare Values
   //
-  EPwm1Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO; // Select INT on period event
-  EPwm1Regs.ETSEL.bit.INTEN = 1;            // Enable INT
-  EPwm1Regs.ETPS.bit.INTPRD = ET_1ST;       // Generate INT on every event
+  EPwm4Regs.ETSEL.bit.INTSEL = ET_CTR_ZERO; // Select INT on period event
+  EPwm4Regs.ETSEL.bit.INTEN = 1;            // Enable INT
+  EPwm4Regs.ETPS.bit.INTPRD = ET_1ST;       // Generate INT on every event
 
   EDIS;
 }
 
-void config_ePWM1_to_generate_ADCSOCA()
+void config_ePWM4_to_generate_ADCSOCA()
 {
   //
   // For this example, only initialize the ePWM
@@ -205,38 +204,19 @@ void config_ePWM1_to_generate_ADCSOCA()
   SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 0;
   EDIS;
 
-  config_ePWM1_to_generate_ADCSOCA_();
+  config_ePWM4_to_generate_ADCSOCA_();
 
   EALLOW;
   SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 1;
   EDIS;
 }
 
-void enable_ePWM1(void)
+void enable_ePWM4(void)
 {
   EALLOW;
   __asm("   NOP");
-  EPwm1Regs.TBCTL.bit.CTRMODE = 0; // Up count mode
-  EPwm1Regs.ETSEL.bit.SOCAEN = 1;
-  EDIS;
-}
-
-//
-// config_ePWM2_to_generate_ADCSOCB -
-//
-void config_ePWM2_to_generate_ADCSOCB(void)
-{
-  //
-  // Configure ePWM2 Timer
-  // Interrupt triggers ADCSOCB
-  //
-  EALLOW;
-  EPwm2Regs.TBPRD = 150; // Setup periodSetup period
-  EPwm2Regs.CMPA.all = 0x200000;
-  EPwm2Regs.ETSEL.bit.SOCBSEL = 2;   // ADCSOCB on TBCTR=TBPRD
-  EPwm2Regs.ETPS.bit.SOCBPRD = 1;    // Generate SOCB on 1st event
-  EPwm2Regs.ETSEL.bit.SOCBEN = 1;    // Enable SOCB generation
-  EPwm2Regs.TBCTL.bit.HSPCLKDIV = 0; // /1 clock mode
+  EPwm4Regs.TBCTL.bit.CTRMODE = 0; // Up count mode
+  EPwm4Regs.ETSEL.bit.SOCAEN = 1;
   EDIS;
 }
 
