@@ -38,6 +38,7 @@
         "xutility": "c",
         "bfl_scrt.h": "c",
         "bfl_button.h": "c",
-        "bfl_scr.h": "c"
+        "bfl_scr.h": "c",
+        "hdl_can.h": "c"
     }
 }

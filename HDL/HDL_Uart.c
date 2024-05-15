@@ -13,6 +13,7 @@
 #include "CPU_Define.h"
 #include "DSP2833x_Sci.h"
 #include <stddef.h>
+#include "cqueue.h"
 //
 // Defines
 //
@@ -39,16 +40,6 @@ void InitSciaGpio(void);
 void InitScibGpio(void);
 void InitScicGpio(void);
 
-//
-// Globals
-//
-Uint16 sdataA[8]; // Send data for SCI-A
-Uint16 sdataB[8]; // Send data for SCI-B
-Uint16 sdataC[8]; // Send data for SCI-C
-Uint16 rdataA[8]; // Received data for SCI-A
-Uint16 rdataB[8]; // Received data for SCI-B
-Uint16 rdataC[8]; // Received data for SCI-C
-
 typedef struct tagCOM_Dev_t
 {
     COMID_t comId;
@@ -65,12 +56,42 @@ typedef struct tagCOM_Dev_t
     uint32_t wordLen;
     uint32_t stopBit;
     uint32_t parity;
+
+    CQueue_t txQueue;
+    CQueue_t rxQueue;
+    byte_t *txBuf;
+    byte_t *rxBuf;
     // 串口是否初始化
     bool inited;
     volatile struct SCI_REGS *ScixRegs;
 } COM_Dev_t;
 
-COM_Dev_t _gCOMList[COM_NUM];
+//
+// Globals
+//
+COM_Dev_t _gCOMList[COM_NUM] = {
+    [COM1] = {.inited = false},
+    [COM2] = {.inited = false},
+    [COM3] = {.inited = false},
+};
+
+// 串口1相关变量
+#define COM1_RX_BUF_SIZE 80
+static byte_t m_Com1RxBuf[COM1_RX_BUF_SIZE] = {0};
+#define COM1_TX_BUF_SIZE 1
+static byte_t m_Com1TxBuf[COM1_TX_BUF_SIZE] = {0};
+
+// 串口2相关变量
+#define COM2_RX_BUF_SIZE 80
+static byte_t m_Com2RxBuf[COM2_RX_BUF_SIZE] = {0};
+#define COM2_TX_BUF_SIZE 1
+static byte_t m_Com2TxBuf[COM2_TX_BUF_SIZE] = {0};
+
+// 串口3相关变量
+#define COM3_RX_BUF_SIZE 80
+static byte_t m_Com3RxBuf[COM3_RX_BUF_SIZE] = {0};
+#define COM3_TX_BUF_SIZE 1
+static byte_t m_Com3TxBuf[COM3_TX_BUF_SIZE] = {0};
 
 static void Scix_Init(volatile struct SCI_REGS *ScixRegs, uint32_t baud,
                       uint32_t wordLen, uint32_t stopBit, uint32_t parity)
@@ -167,6 +188,14 @@ void Uart_Init(COMID_t comId, uint32_t baud, uint32_t wordLen, uint32_t stopBit,
     switch (comId)
     {
     case COM1:
+        if (pDev->inited == false)
+        {
+            pDev->txBuf = (byte_t *)m_Com1TxBuf;
+            pDev->rxBuf = (byte_t *)m_Com1RxBuf;
+            cqueue_create(&pDev->txQueue, pDev->txBuf, COM1_TX_BUF_SIZE, sizeof(byte_t));
+            cqueue_create(&pDev->rxQueue, pDev->rxBuf, COM1_RX_BUF_SIZE, sizeof(byte_t));
+            pDev->ScixRegs = &SciaRegs;
+        }
         // Init COM1
         //
         InitSciaGpio();
@@ -192,6 +221,15 @@ void Uart_Init(COMID_t comId, uint32_t baud, uint32_t wordLen, uint32_t stopBit,
 
         break;
     case COM2:
+        if (pDev->inited == false)
+        {
+            pDev->txBuf = (byte_t *)m_Com2TxBuf;
+            pDev->rxBuf = (byte_t *)m_Com2RxBuf;
+            cqueue_create(&pDev->txQueue, pDev->txBuf, COM2_TX_BUF_SIZE, sizeof(byte_t));
+            cqueue_create(&pDev->rxQueue, pDev->rxBuf, COM2_RX_BUF_SIZE, sizeof(byte_t));
+            pDev->ScixRegs = &ScibRegs;
+        }
+
         // Init COM2
         //
         InitScibGpio();
@@ -214,6 +252,14 @@ void Uart_Init(COMID_t comId, uint32_t baud, uint32_t wordLen, uint32_t stopBit,
         IER |= M_INT9;
         break;
     case COM3:
+        if (pDev->inited == false)
+        {
+            pDev->txBuf = (byte_t *)m_Com3TxBuf;
+            pDev->rxBuf = (byte_t *)m_Com3RxBuf;
+            cqueue_create(&pDev->txQueue, pDev->txBuf, COM3_TX_BUF_SIZE, sizeof(byte_t));
+            cqueue_create(&pDev->rxQueue, pDev->rxBuf, COM3_RX_BUF_SIZE, sizeof(byte_t));
+            pDev->ScixRegs = &ScicRegs;
+        }
         // Init COM3
         InitScicGpio();
 
@@ -292,9 +338,56 @@ uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen)
     return cnt;
 }
 
-uint32_t Uart_Read(COMID_t comId, byte_t *pBuf, uint32_t uiLen);
-uint32_t Uart_AvailableBytes(COMID_t comId);
-uint32_t Uart_EmptyReadBuffer(COMID_t comId);
+/**
+ * @brief 串口读操作
+ *
+ * @param comx 串口号
+ * @param pBuf 存放读取数据的缓存区的指针
+ * @param uiLen 本次操作最多能读取的字节数
+ * @return uint32_t >0-实际读取的字节数，0-没有数据或者串口不可用
+ */
+uint32_t Uart_Read(COMID_t comId, byte_t *pBuf, uint32_t uiLen)
+{
+    uint32_t uRtn = 0;
+    if (comId < COM_NUM)
+    {
+        uRtn = cqueue_out(&_gCOMList[comId].rxQueue, pBuf, uiLen);
+    }
+    return uRtn;
+}
+
+/**
+ * @brief 获取当前串口接收缓存中收到字节数。
+ *
+ * @param comId
+ * @return uint32_t 当前串口接收缓存中收到字节数。
+ */
+uint32_t Uart_AvailableBytes(COMID_t comId)
+{
+    uint32_t uRtn = 0;
+    if (comId < COM_NUM)
+    {
+        uRtn = cqueue_size(&_gCOMList[comId].rxQueue);
+    }
+    return uRtn;
+}
+
+/**
+ * @brief 清空串口接收缓存。
+ *
+ * @param comId 串口号。
+ * @return uint32_t 成功清空的字节数。
+ */
+uint32_t Uart_EmptyReadBuffer(COMID_t comId)
+{
+    int uRtn = 0;
+    if (comId < COM_NUM)
+    {
+        uRtn = cqueue_size(&_gCOMList[comId].rxQueue);
+        cqueue_make_empty(&_gCOMList[comId].rxQueue);
+    }
+    return uRtn;
+}
 
 /**
  * @brief
@@ -575,10 +668,24 @@ __interrupt void sciaRxFifoIsr(void)
     of SCIRXBUF - An active SW RESET - A system reset
     */
 
-    uint16_t rx_fifo_ele_num = SciaRegs.SCIFFRX.bit.RXFFST;
-    for (uint16_t i = 0; i < rx_fifo_ele_num; i++)
+    COM_Dev_t *pDev = &_gCOMList[COM1];
+    if (pDev->receive_char_callback != NULL)
     {
-        rdataB[i] = SciaRegs.SCIRXBUF.all; // Read data
+        byte_t ret = pDev->ScixRegs->SCIRXBUF.all;
+        pDev->receive_char_callback(ret);
+    }
+    else if (pDev->receive_char_ready_callback != NULL)
+    {
+        pDev->receive_char_ready_callback();
+    }
+    else
+    {
+        uint16_t rx_fifo_ele_num = pDev->ScixRegs->SCIFFRX.bit.RXFFST;
+        for (uint16_t i = 0; i < rx_fifo_ele_num; i++)
+        {
+            byte_t ch = pDev->ScixRegs->SCIRXBUF.all; // Read data
+            cqueue_enqueue(&pDev->rxQueue, &ch);
+        }
     }
 
     if (SciaRegs.SCIRXST.bit.RXRDY == 1)
@@ -602,7 +709,6 @@ __interrupt void sciaRxFifoIsr(void)
 //
 __interrupt void scibTxFifoIsr(void)
 {
-    COM_Dev_t *pDev = &_gCOMList[COM2];
 
     if (ScibRegs.SCICTL2.bit.TXRDY == 1)
     {
@@ -612,6 +718,7 @@ __interrupt void scibTxFifoIsr(void)
     {
         // Disable transmit FIFO interrrupt
         ScibRegs.SCIFFTX.bit.TXFFIENA = 0;
+        COM_Dev_t *pDev = &_gCOMList[COM2];
 
         if (pDev->write_over_callback != NULL)
         {
@@ -628,10 +735,24 @@ __interrupt void scibTxFifoIsr(void)
 //
 __interrupt void scibRxFifoIsr(void)
 {
-    uint16_t rx_fifo_ele_num = ScibRegs.SCIFFRX.bit.RXFFST;
-    for (uint16_t i = 0; i < rx_fifo_ele_num; i++)
+    COM_Dev_t *pDev = &_gCOMList[COM2];
+    if (pDev->receive_char_callback != NULL)
     {
-        rdataB[i] = ScibRegs.SCIRXBUF.all; // Read data
+        byte_t ret = pDev->ScixRegs->SCIRXBUF.all;
+        pDev->receive_char_callback(ret);
+    }
+    else if (pDev->receive_char_ready_callback != NULL)
+    {
+        pDev->receive_char_ready_callback();
+    }
+    else
+    {
+        uint16_t rx_fifo_ele_num = pDev->ScixRegs->SCIFFRX.bit.RXFFST;
+        for (uint16_t i = 0; i < rx_fifo_ele_num; i++)
+        {
+            byte_t ch = pDev->ScixRegs->SCIRXBUF.all; // Read data
+            cqueue_enqueue(&pDev->rxQueue, &ch);
+        }
     }
 
     if (ScibRegs.SCIRXST.bit.RXRDY == 1)
@@ -652,7 +773,6 @@ __interrupt void scibRxFifoIsr(void)
 //
 __interrupt void scicTxFifoIsr(void)
 {
-    COM_Dev_t *pDev = &_gCOMList[COM3];
 
     if (ScicRegs.SCICTL2.bit.TXRDY == 1)
     {
@@ -662,6 +782,7 @@ __interrupt void scicTxFifoIsr(void)
     {
         // Disable transmit FIFO interrrupt
         ScicRegs.SCIFFTX.bit.TXFFIENA = 0;
+        COM_Dev_t *pDev = &_gCOMList[COM3];
 
         if (pDev->write_over_callback != NULL)
         {
@@ -678,10 +799,25 @@ __interrupt void scicTxFifoIsr(void)
 //
 __interrupt void scicRxFifoIsr(void)
 {
-    uint16_t rx_fifo_ele_num = ScicRegs.SCIFFRX.bit.RXFFST;
-    for (uint16_t i = 0; i < rx_fifo_ele_num; i++)
+
+    COM_Dev_t *pDev = &_gCOMList[COM3];
+    if (pDev->receive_char_callback != NULL)
     {
-        rdataB[i] = ScicRegs.SCIRXBUF.all; // Read data
+        byte_t ret = pDev->ScixRegs->SCIRXBUF.all;
+        pDev->receive_char_callback(ret);
+    }
+    else if (pDev->receive_char_ready_callback != NULL)
+    {
+        pDev->receive_char_ready_callback();
+    }
+    else
+    {
+        uint16_t rx_fifo_ele_num = pDev->ScixRegs->SCIFFRX.bit.RXFFST;
+        for (uint16_t i = 0; i < rx_fifo_ele_num; i++)
+        {
+            byte_t ch = pDev->ScixRegs->SCIRXBUF.all; // Read data
+            cqueue_enqueue(&pDev->rxQueue, &ch);
+        }
     }
 
     if (ScicRegs.SCIRXST.bit.RXRDY == 1)

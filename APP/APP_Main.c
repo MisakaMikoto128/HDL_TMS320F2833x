@@ -36,7 +36,8 @@ static char buffer[MAXDEBUGSEND + 1];
  * @param format
  * @param ...
  */
-void Debug_Printf(const void *format, ...) {
+void Debug_Printf(const void *format, ...)
+{
   uint32_t uLen;
   va_list vArgs;
   va_start(vArgs, format);
@@ -50,7 +51,8 @@ void Debug_Printf(const void *format, ...) {
 void InitSpiaGpio();
 void spi_xmit(Uint16 a);
 
-struct APP_Main_Stack_t {
+struct APP_Main_Stack_t
+{
   bool modeBtnPressed;
 };
 
@@ -63,7 +65,8 @@ struct APP_Main_Stack_t g_app_main_stack;
 #define RS485A_Release_Bus() (GpioDataRegs.GPACLEAR.bit.GPIO28 = 1)
 
 void cb1(void *arg) { Debug_Printf("cb1\n"); }
-void APP_Main_Init() {
+void APP_Main_Init()
+{
   HDL_CPU_Time_Init();
 
   EALLOW;
@@ -125,7 +128,8 @@ int cnt = 1;
 Uint16 sdata; // send data
 Uint16 rdata; // received data
 uint32_t signal;
-void APP_Main_Poll() {
+void APP_Main_Poll()
+{
   // BFL_Buzz_Toggle();
 
   // for_Each_VCB_SW_t(vcb)
@@ -187,17 +191,21 @@ void APP_Main_Poll() {
 
     // signal = BFL_SCRR_Have_Signal(SCRR_ALL);
 
-    // RS485C_Release_Bus();
-    // RS485A_Release_Bus();
+    RS485C_Release_Bus();
+    RS485A_Release_Bus();
 
-    RS485C_Take_Bus();
-    RS485A_Take_Bus();
+    // RS485C_Take_Bus();
+    // RS485A_Take_Bus();
 
     Uint32 tickA = HDL_CPU_Time_GetUsTick();
 
-    Uart_Write(COM1, (const uint16_t
-    *)"123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789",
-    cnt);
+    Uart_Write(COM1, (const uint16_t *)"123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789",
+               cnt);
+    uint32_t readLen = Uart_Read(COM2, (uint16_t *)buffer, sizeof(buffer));
+    if (readLen > 0)
+    {
+      Uart_Write(COM2, (const uint16_t *)buffer, readLen);
+    }
 
     // for (uint32_t i = 0; i < cnt; i++) {
     //   //            cnt);

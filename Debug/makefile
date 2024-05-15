@@ -18,6 +18,7 @@ ORDERED_OBJS += \
 "./DSP2833x_CpuTimers.obj" \
 "./DSP2833x_DMA.obj" \
 "./DSP2833x_DefaultIsr.obj" \
+"./DSP2833x_ECan.obj" \
 "./DSP2833x_EPwm.obj" \
 "./DSP2833x_GlobalVariableDefs.obj" \
 "./DSP2833x_PieCtrl.obj" \
@@ -33,12 +34,14 @@ ORDERED_OBJS += \
 "./BFL/BFL_SCR.obj" \
 "./BFL/BFL_VCB.obj" \
 "./CHIP/CHIP_W25Q128.obj" \
+"./HDL/HDL_CAN.obj" \
 "./HDL/HDL_CPU_Time.obj" \
 "./HDL/HDL_GPIO.obj" \
 "./HDL/HDL_SPI.obj" \
 "./HDL/HDL_Uart.obj" \
 "./LIB/average_filter.obj" \
 "./LIB/cfunction.obj" \
+"./LIB/cqueue.obj" \
 "./Test/test.obj" \
 "../28335_RAM_lnk.cmd" \
 "C:/ti/c2000/C2000Ware_5_01_00_00/device_support/f2833x/headers/cmd/DSP2833x_Headers_nonBIOS.cmd" \
@@ -177,15 +180,15 @@ all: Example_2833xCpuTimer.out
 Example_2833xCpuTimer.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: C2000 Linker'
-	"C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259/bin/cl2000" -v28 -ml -mt --float_support=fpu32 --advice:performance=all --define=_DEBUG --define=LARGE_MODEL -g --c99 --diag_suppress=10063 --diag_warning=225 --issue_remarks --verbose_diagnostics --quiet -z -m"Example_2833xCpuTimer.map" --stack_size=0x200 --warn_sections -i"C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259/lib" -i"C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259/include" -i"C:/Users/liuyu/workspace_ccstheia/HDL_2833x" -i"C:/ti/c2000/C2000Ware_5_01_00_00/device_support/f2833x/common/lib" -i"C:/ti/c2000/C2000Ware_5_01_00_00/libraries/math/IQmath/c28/lib" -i"C:/ti/c2000/C2000Ware_5_01_00_00/libraries/math/FPUfastRTS/c28/lib" --priority --reread_libs --issue_remarks --verbose_diagnostics --xml_link_info="Example_2833xCpuTimer_linkInfo.xml" --entry_point=code_start --rom_model -o "Example_2833xCpuTimer.out" $(ORDERED_OBJS)
+	"C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259/bin/cl2000" -v28 -ml -mt --float_support=fpu32 -O4 --opt_for_speed=0 --advice:performance=all --define=_DEBUG --define=LARGE_MODEL -g --c99 --diag_suppress=10063 --diag_warning=225 --issue_remarks --verbose_diagnostics --quiet -z -m"Example_2833xCpuTimer.map" --stack_size=0x200 --warn_sections -i"C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259/lib" -i"C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259/include" -i"C:/Users/liuyu/workspace_ccstheia/HDL_2833x" -i"C:/ti/c2000/C2000Ware_5_01_00_00/device_support/f2833x/common/lib" -i"C:/ti/c2000/C2000Ware_5_01_00_00/libraries/math/IQmath/c28/lib" -i"C:/ti/c2000/C2000Ware_5_01_00_00/libraries/math/FPUfastRTS/c28/lib" --priority --reread_libs --issue_remarks --verbose_diagnostics --xml_link_info="Example_2833xCpuTimer_linkInfo.xml" --entry_point=code_start --rom_model -o "Example_2833xCpuTimer.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "DSP2833x_ADC_cal.obj" "DSP2833x_Adc.obj" "DSP2833x_CodeStartBranch.obj" "DSP2833x_CpuTimers.obj" "DSP2833x_DMA.obj" "DSP2833x_DefaultIsr.obj" "DSP2833x_EPwm.obj" "DSP2833x_GlobalVariableDefs.obj" "DSP2833x_PieCtrl.obj" "DSP2833x_PieVect.obj" "DSP2833x_SysCtrl.obj" "DSP2833x_usDelay.obj" "APP\APP_Main.obj" "Application\main.obj" "BFL\BFL_Button.obj" "BFL\BFL_Buzz.obj" "BFL\BFL_Measure.obj" "BFL\BFL_RS485.obj" "BFL\BFL_SCR.obj" "BFL\BFL_VCB.obj" "CHIP\CHIP_W25Q128.obj" "HDL\HDL_CPU_Time.obj" "HDL\HDL_GPIO.obj" "HDL\HDL_SPI.obj" "HDL\HDL_Uart.obj" "LIB\average_filter.obj" "LIB\cfunction.obj" "Test\test.obj" 
-	-$(RM) "DSP2833x_Adc.d" "DSP2833x_CpuTimers.d" "DSP2833x_DMA.d" "DSP2833x_DefaultIsr.d" "DSP2833x_EPwm.d" "DSP2833x_GlobalVariableDefs.d" "DSP2833x_PieCtrl.d" "DSP2833x_PieVect.d" "DSP2833x_SysCtrl.d" "APP\APP_Main.d" "Application\main.d" "BFL\BFL_Button.d" "BFL\BFL_Buzz.d" "BFL\BFL_Measure.d" "BFL\BFL_RS485.d" "BFL\BFL_SCR.d" "BFL\BFL_VCB.d" "CHIP\CHIP_W25Q128.d" "HDL\HDL_CPU_Time.d" "HDL\HDL_GPIO.d" "HDL\HDL_SPI.d" "HDL\HDL_Uart.d" "LIB\average_filter.d" "LIB\cfunction.d" "Test\test.d" 
+	-$(RM) "DSP2833x_ADC_cal.obj" "DSP2833x_Adc.obj" "DSP2833x_CodeStartBranch.obj" "DSP2833x_CpuTimers.obj" "DSP2833x_DMA.obj" "DSP2833x_DefaultIsr.obj" "DSP2833x_ECan.obj" "DSP2833x_EPwm.obj" "DSP2833x_GlobalVariableDefs.obj" "DSP2833x_PieCtrl.obj" "DSP2833x_PieVect.obj" "DSP2833x_SysCtrl.obj" "DSP2833x_usDelay.obj" "APP\APP_Main.obj" "Application\main.obj" "BFL\BFL_Button.obj" "BFL\BFL_Buzz.obj" "BFL\BFL_Measure.obj" "BFL\BFL_RS485.obj" "BFL\BFL_SCR.obj" "BFL\BFL_VCB.obj" "CHIP\CHIP_W25Q128.obj" "HDL\HDL_CAN.obj" "HDL\HDL_CPU_Time.obj" "HDL\HDL_GPIO.obj" "HDL\HDL_SPI.obj" "HDL\HDL_Uart.obj" "LIB\average_filter.obj" "LIB\cfunction.obj" "LIB\cqueue.obj" "Test\test.obj" 
+	-$(RM) "DSP2833x_Adc.d" "DSP2833x_CpuTimers.d" "DSP2833x_DMA.d" "DSP2833x_DefaultIsr.d" "DSP2833x_ECan.d" "DSP2833x_EPwm.d" "DSP2833x_GlobalVariableDefs.d" "DSP2833x_PieCtrl.d" "DSP2833x_PieVect.d" "DSP2833x_SysCtrl.d" "APP\APP_Main.d" "Application\main.d" "BFL\BFL_Button.d" "BFL\BFL_Buzz.d" "BFL\BFL_Measure.d" "BFL\BFL_RS485.d" "BFL\BFL_SCR.d" "BFL\BFL_VCB.d" "CHIP\CHIP_W25Q128.d" "HDL\HDL_CAN.d" "HDL\HDL_CPU_Time.d" "HDL\HDL_GPIO.d" "HDL\HDL_SPI.d" "HDL\HDL_Uart.d" "LIB\average_filter.d" "LIB\cfunction.d" "LIB\cqueue.d" "Test\test.d" 
 	-$(RM) "DSP2833x_ADC_cal.d" "DSP2833x_CodeStartBranch.d" "DSP2833x_usDelay.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
