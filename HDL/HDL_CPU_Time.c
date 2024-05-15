@@ -34,7 +34,8 @@ static bool s_TIM1Busy = false;
 // after configuration.
 //
 static void ConfigTheCpuTimer(struct CPUTIMER_VARS *Timer, uint16_t TDDR,
-                              uint16_t PSC, Uint32 PRD, int enableInt) {
+                              uint16_t PSC, Uint32 PRD, int enableInt)
+{
   //
   // Initialize timer period
   //
@@ -80,7 +81,8 @@ static void ConfigTheCpuTimer(struct CPUTIMER_VARS *Timer, uint16_t TDDR,
   // Timer->InterruptCount = 0;
 }
 
-void HDL_CPU_Time_Init() {
+void HDL_CPU_Time_Init()
+{
   //
   // Interrupts that are used in this example are re-mapped to
   // ISR functions found within this file.
@@ -152,16 +154,33 @@ void HDL_CPU_Time_Init() {
   PieCtrlRegs.PIEIER1.bit.INTx7 = 1;
 }
 
-uint32_t HDL_CPU_Time_GetTick() { return CpuTimer0.InterruptCount; }
+uint32_t HDL_CPU_Time_GetTick()
+{
+  uint32_t count;
+  uint16_t intStatus;
+
+  // 禁止中断
+  intStatus = __disable_interrupts();
+
+  // 读取计数器值
+  count = CpuTimer0.InterruptCount;
+
+  // 恢复中断
+  __restore_interrupts(intStatus);
+
+  return count;
+}
 
 void HDL_CPU_Time_ResetTick() { CpuTimer0.InterruptCount = 0; }
 
-uint32_t HDL_CPU_Time_GetUsTick() {
+uint32_t HDL_CPU_Time_GetUsTick()
+{
   uint32_t ret = 0xFFFFFFFFUL - CpuTimer1.RegsAddr->TIM.all;
   return ret;
 }
 
-void HDL_CPU_Time_ResetUsTick() {
+void HDL_CPU_Time_ResetUsTick()
+{
   //
   // Reload all counter register with period value
   //
@@ -178,11 +197,13 @@ void HDL_CPU_Time_SetCPUTickCallback(CPU_Time_Callback_t _pCallBack);
  *
  * @param DelayUs
  */
-void HDL_CPU_Time_DelayUs(UsTimer_t DelayUs) {
+void HDL_CPU_Time_DelayUs(UsTimer_t DelayUs)
+{
   UsTimer_t tickstart = HDL_CPU_Time_GetUsTick();
   UsTimer_t wait = DelayUs;
 
-  while ((HDL_CPU_Time_GetUsTick() - tickstart) < wait) {
+  while ((HDL_CPU_Time_GetUsTick() - tickstart) < wait)
+  {
   }
 }
 
@@ -193,11 +214,13 @@ void HDL_CPU_Time_DelayUs(UsTimer_t DelayUs) {
  * 这个函数在中断中使用时必须保证调用这个函数的中断优先级低于CPU毫秒定时器中断的优先级。
  * @param DelayMs
  */
-void HDL_CPU_Time_DelayMs(uint32_t DelayMs) {
+void HDL_CPU_Time_DelayMs(uint32_t DelayMs)
+{
   uint32_t tickstart = HDL_CPU_Time_GetTick();
   uint32_t wait = DelayMs;
 
-  while ((HDL_CPU_Time_GetTick() - tickstart) < wait) {
+  while ((HDL_CPU_Time_GetTick() - tickstart) < wait)
+  {
   }
 }
 
@@ -206,7 +229,8 @@ void HDL_CPU_Time_DelayMs(uint32_t DelayMs) {
  * tick定时器的每次中断回调 的函数。
  * @retval None
  */
-void HDL_CPU_Time_SetCPUTickCallback(CPU_Time_Callback_t _pCallBack) {
+void HDL_CPU_Time_SetCPUTickCallback(CPU_Time_Callback_t _pCallBack)
+{
   _gCPUTickCallback = _pCallBack;
 }
 
@@ -225,13 +249,16 @@ void HDL_CPU_Time_SetCPUTickCallback(CPU_Time_Callback_t _pCallBack) {
  * @retval true : 启动成功, false : 定时器忙
  */
 bool HDL_CPU_Time_StartHardTimer(uint16_t _CC, UsTimer_t _uiTimeOut,
-                                 void *_pCallBack) {
+                                 void *_pCallBack)
+{
 
-  if (s_TIM1Busy) {
+  if (s_TIM1Busy)
+  {
     return false;
   }
 
-  if (_CC == 1) {
+  if (_CC == 1)
+  {
     s_TIM_CallBack1 = (CPU_Time_Callback_t)_pCallBack;
 
     s_TIM1Busy = true;
@@ -258,8 +285,10 @@ bool HDL_CPU_Time_StartHardTimer(uint16_t _CC, UsTimer_t _uiTimeOut,
  * 这个函数主要还是用于启动定时器后不需要了，要在定时中间关闭，不打算定时器去执行回调函数的情况。
  * @param _CC : 捕获比较通道几，1
  */
-void HDL_CPU_Time_StopHardTimer(uint16_t _CC) {
-  if (_CC == 1) {
+void HDL_CPU_Time_StopHardTimer(uint16_t _CC)
+{
+  if (_CC == 1)
+  {
     CpuTimer2.RegsAddr->TCR.bit.TSS = 1;
   }
 }
@@ -267,9 +296,11 @@ void HDL_CPU_Time_StopHardTimer(uint16_t _CC) {
 //
 // cpu_timer0_isr -
 //
-__interrupt void cpu_timer0_isr(void) {
+__interrupt void cpu_timer0_isr(void)
+{
   CpuTimer0.InterruptCount++;
-  if (_gCPUTickCallback != NULL) {
+  if (_gCPUTickCallback != NULL)
+  {
     _gCPUTickCallback();
   }
   //
@@ -281,7 +312,8 @@ __interrupt void cpu_timer0_isr(void) {
 //
 // cpu_timer1_isr -
 //
-__interrupt void cpu_timer1_isr(void) {
+__interrupt void cpu_timer1_isr(void)
+{
   CpuTimer1.InterruptCount++;
 
   //
@@ -293,7 +325,8 @@ __interrupt void cpu_timer1_isr(void) {
 //
 // cpu_timer2_isr -
 //
-__interrupt void cpu_timer2_isr(void) {
+__interrupt void cpu_timer2_isr(void)
+{
   EALLOW;
   CpuTimer2.InterruptCount++;
 
@@ -301,7 +334,8 @@ __interrupt void cpu_timer2_isr(void) {
   CpuTimer2.RegsAddr->TCR.bit.TIE = 0;
 
   /* 先关闭中断，再执行回调函数。因为回调函数可能需要重启定时器 */
-  if (s_TIM_CallBack1 != NULL) {
+  if (s_TIM_CallBack1 != NULL)
+  {
     s_TIM_CallBack1();
   }
 
