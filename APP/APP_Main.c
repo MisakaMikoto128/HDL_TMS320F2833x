@@ -52,8 +52,8 @@ void APP_Main_Init()
 
   BFL_RS485_Init(RS485_1, 38400, UART_WORD_LEN_8, UART_STOP_BIT_1,
                  UART_PARITY_NONE); // 隔离 MAX3485
-  Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1,
-            UART_PARITY_NONE); // MAX232
+//   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1,
+//             UART_PARITY_NONE); // MAX232
   //   BFL_Buzz_Init();
   //   CHIP_W25Q128_Init();
   //   BFL_Measure_Init();
@@ -202,7 +202,7 @@ void APP_Main_Poll()
     if (readLen > 0)
     {
       //    Debug_Printf("Hello World\n");
-      Uart_Write(COM2, buffer, readLen);
+    //   Uart_Write(COM2, buffer, readLen);
     }
 
     static PeriodREC_t s_tPollTime = 0;

@@ -24,6 +24,7 @@ typedef enum
     RS485_1 = 0, // SCI-A,隔离 MAX3485
     RS485_2 = 1, // SCI-C,MAX3485
     RS485_NUM,
+    RS485_NONE,
 } BFL_RS485_t;
 
 void BFL_RS485_Init(BFL_RS485_t rs485, uint32_t baud, uint32_t wordLen, uint32_t stopBit, uint32_t parity);
