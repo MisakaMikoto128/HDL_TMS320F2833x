@@ -42,6 +42,7 @@
         "hdl_can.h": "c",
         "mbfunc.h": "c",
         "mbtcp.h": "c",
-        "period_query.h": "c"
+        "period_query.h": "c",
+        "port.h": "c"
     }
 }

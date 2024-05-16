@@ -86,16 +86,18 @@ void FFT_Init();
 #define BUF_SIZE (GROUP_NUM * PIONTS_PER_GROUP) // Sample buffer size
 
 // 全波RMS
-float AdcRMSE[GROUP_NUM];
-float AdcRMS[GROUP_NUM];
-float AdcAvg[GROUP_NUM];
+static float AdcRMSE[GROUP_NUM];
+static float AdcRMS[GROUP_NUM];
+static float AdcAvg[GROUP_NUM];
 
-float AdcVoltRMSE[GROUP_NUM];
-float AdcVoltRMS[GROUP_NUM];
-float AdcVoltAvg[GROUP_NUM];
+static float AdcVoltRMSE[GROUP_NUM];
+static float AdcVoltRMS[GROUP_NUM];
+static float AdcVoltAvg[GROUP_NUM];
 
-average_filter_t AdcVoltRMSFilter[GROUP_NUM];
-float AdcVoltRMSFilterBuf[GROUP_NUM][AVG];
+static average_filter_t AdcVoltRMSFilter[GROUP_NUM];
+static float AdcVoltRMSFilterBuf[GROUP_NUM][AVG];
+static bool g_measure_ready = false;
+
 //
 // Globals
 //
@@ -128,6 +130,29 @@ void BFL_Measure_Init()
   StartDMACH1();
   config_ePWM4_to_generate_ADCSOCA();
   enable_ePWM4();
+}
+
+bool BFL_Measure_ReadReady()
+{
+  bool ret = g_measure_ready;
+  if (ret)
+  {
+    g_measure_ready = false;
+  }
+  return ret;
+}
+
+void BFL_Measure_Read(BFL_Measure_t *pMeasure){
+
+  _disable_interrupts();
+  for (int i = 0; i < GROUP_NUM; i++)
+  {
+    pMeasure->AdcVoltRMS[i] = AdcVoltRMS[i];
+    pMeasure->AdcVoltAvg[i] = AdcVoltAvg[i];
+    pMeasure->AdcVoltRMS_Filted[i] = AdcVoltRMSFilter[i].average;
+    pMeasure->AdcVoltAvg_Filted[i] = AdcVoltRMSFilter[i].average;
+  }
+  _enable_interrupts();
 }
 
 //
@@ -408,6 +433,7 @@ __interrupt void local_DINTCH1_ISR(void)
 #endif
 
   // GpioDataRegs.GPBCLEAR.bit.GPIO49 = 1;
+  g_measure_ready = true;
 }
 
 #if USING_FFT == 1

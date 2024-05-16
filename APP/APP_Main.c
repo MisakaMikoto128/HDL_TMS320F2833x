@@ -44,8 +44,7 @@ struct APP_Main_Stack_t
 struct APP_Main_Stack_t g_app_main_stack;
 
 void cb1(void *arg) { Debug_Printf("cb1\n"); }
-// 01 03 00 00 00 02 C4 0B
-// 02 03 00 00 00 02 C4 38
+// 01 03 00 00 00 03 05 CB
 void APP_Main_Init()
 {
   HDL_CPU_Time_Init();
@@ -56,7 +55,7 @@ void APP_Main_Init()
             UART_PARITY_NONE); // MAX232
   //   BFL_Buzz_Init();
   //   CHIP_W25Q128_Init();
-  //   BFL_Measure_Init();
+    BFL_Measure_Init();
   //   BFL_VCB_Seurity_Init();
   //   BFL_Button_Init();
   //   BFL_SCR_Init();
@@ -91,7 +90,7 @@ int cnt = 1;
 Uint16 sdata; // send data
 Uint16 rdata; // received data
 uint32_t signal;
-
+BFL_Measure_t measure;
 void APP_Main_Poll()
 {
   // BFL_Buzz_Toggle();
@@ -192,17 +191,21 @@ void APP_Main_Poll()
   {
     if_period_query(1, 100)
     {
-
-      const byte_t request_cmd1[] = {0x01, 0x03, 0x00, 0x00, 0x00, 0x02, 0xC4, 0x0B};
-      const byte_t request_cmd2[] = {0x02, 0x03, 0x00, 0x00, 0x00, 0x02, 0xC4, 0x38};
-      BFL_RS485_Write(RS485_1, request_cmd1, sizeof(request_cmd1));
+      const byte_t request_cmd[] = {0x01, 0x03, 0x00, 0x00, 0x00, 0x03, 0x05, 0xCB};
+      BFL_RS485_Write(RS485_1, request_cmd, sizeof(request_cmd));
     }
 
     uint32_t readLen = BFL_RS485_Read(RS485_1, (uint16_t *)buffer, sizeof(buffer));
     if (readLen > 0)
     {
       //    Debug_Printf("Hello World\n");
-      Uart_Write(COM2, buffer, readLen);
+      // Uart_Write(COM2, buffer, readLen);
+    }
+
+    if (BFL_Measure_ReadReady())
+    {
+      
+      BFL_Measure_Read(&measure);
     }
 
     static PeriodREC_t s_tPollTime = 0;

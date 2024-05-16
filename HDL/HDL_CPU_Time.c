@@ -26,7 +26,7 @@ static CPU_Time_Callback_t _gCPUTickCallback =
 /* 保存 TIM定时中断到后执行的回调函数指针 */
 static CPU_Time_Callback_t s_TIM_CallBack1;
 static bool s_TIM1Busy = false;
-
+static bool g_TimerInited = false;
 //
 // ConfigCpuTimer - This function initializes the selected timer to the period
 // specified by the "Freq" and "Period" parameters. The "Freq" is entered as
@@ -83,6 +83,11 @@ static void ConfigTheCpuTimer(struct CPUTIMER_VARS *Timer, uint16_t TDDR,
 
 void HDL_CPU_Time_Init()
 {
+
+  if(g_TimerInited)
+  {
+    return;
+  }
   //
   // Interrupts that are used in this example are re-mapped to
   // ISR functions found within this file.
@@ -152,6 +157,8 @@ void HDL_CPU_Time_Init()
   // Enable TINT0 in the PIE: Group 1 interrupt 7
   //
   PieCtrlRegs.PIEIER1.bit.INTx7 = 1;
+
+  g_TimerInited = true;
 }
 
 uint32_t HDL_CPU_Time_GetTick()

@@ -351,7 +351,9 @@ uint32_t Uart_Read(COMID_t comId, byte_t *pBuf, uint32_t uiLen)
     uint32_t uRtn = 0;
     if (comId < COM_NUM)
     {
+        _disable_interrupts();
         uRtn = cqueue_out(&_gCOMList[comId].rxQueue, pBuf, uiLen);
+        _enable_interrupts();
     }
     return uRtn;
 }
@@ -384,7 +386,9 @@ uint32_t Uart_EmptyReadBuffer(COMID_t comId)
     if (comId < COM_NUM)
     {
         uRtn = cqueue_size(&_gCOMList[comId].rxQueue);
+        _disable_interrupts();
         cqueue_make_empty(&_gCOMList[comId].rxQueue);
+        _enable_interrupts();
     }
     return uRtn;
 }
