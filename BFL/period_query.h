@@ -34,7 +34,7 @@ extern "C"
      * @return true 周期到了
      * @return false 周期未到。
      */
-    bool period_query_(uint16_t period_id, PeriodREC_t period);
+    bool period_query(uint16_t period_id, PeriodREC_t period);
     /**
      * @brief 同period_query_user，只是时间记录再一个uint32_t*指向的变量中。
      *
@@ -43,7 +43,7 @@ extern "C"
      * @return true 周期到了
      * @return false 周期未到。
      */
-    bool period_query_user_(PeriodREC_t *period_recorder, PeriodREC_t period);
+    bool period_query_user(PeriodREC_t *period_recorder, PeriodREC_t period);
 
     typedef struct
     {
@@ -60,12 +60,12 @@ extern "C"
      * @return true 延时条件满足
      * @return false
      */
-    bool delay_one_times_(DelayREC_t *delay_rec, uint32_t delay);
+    bool delay_one_times(DelayREC_t *delay_rec, uint32_t delay);
 
 
-#define period_query(period_id, period) if(period_query_(period_id, period))
-#define period_query_user(period_recorder, period) if(period_query_user_(period_recorder, period))
-#define delay_one_times(delay_rec, delay) if(delay_one_times_(delay_rec, delay))
+#define if_period_query(period_id, period) if(period_query(period_id, period))
+#define if_period_query_user(period_recorder, period) if(period_query_user(period_recorder, period))
+#define if_delay_one_times(delay_rec, delay) if(delay_one_times(delay_rec, delay))
 #ifdef __cplusplus
 }
 #endif

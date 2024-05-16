@@ -1,5 +1,7 @@
 #include "mb.h"
 #include "CPU_Define.h"
+#include "ccommon.h"
+#include <stdlib.h>
 
 // 输入寄存器起始地址
 #define REG_INPUT_START 0x0000
@@ -128,7 +130,6 @@ eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegist
                     usNRegs--;
                 }
 
-                SaveSysInfo();
                 // 小端序
                 //  iRegIndex = iRegIndex + usNRegs - 1;
                 //  while (usNRegs > 0) {

@@ -1,5 +1,5 @@
 /**
- * @file period_query_.c
+ * @file period_query.c
  * @author Liu Yuanlin (liuyuanlins@outlook.com)
  * @brief
  * @version 0.1
@@ -24,7 +24,7 @@ static PeriodREC_t period_last_exe_tick_table[MAX_PERIOD_ID + 1] = {0};
  * @return true 周期到了
  * @return false 周期未到。
  */
-bool period_query_(uint16_t period_id, PeriodREC_t period)
+bool period_query(uint16_t period_id, PeriodREC_t period)
 {
     bool ret = false;
 
@@ -46,7 +46,7 @@ bool period_query_(uint16_t period_id, PeriodREC_t period)
  * @return true 周期到了
  * @return false 周期未到。
  */
-bool period_query_user_(PeriodREC_t *period_recorder, PeriodREC_t period)
+bool period_query_user(PeriodREC_t *period_recorder, PeriodREC_t period)
 {
     bool ret = false;
     // 这里一定是>=，如果是 > ，那么在1 cpu tick间隔的时候时间上是2cpu tick执行一次。

@@ -45,6 +45,21 @@ ORDERED_OBJS += \
 "./LIB/cfunction.obj" \
 "./LIB/cqueue.obj" \
 "./Test/test.obj" \
+"./freemodbus/functions/mbfunccoils.obj" \
+"./freemodbus/functions/mbfuncdiag.obj" \
+"./freemodbus/functions/mbfuncdisc.obj" \
+"./freemodbus/functions/mbfuncholding.obj" \
+"./freemodbus/functions/mbfuncinput.obj" \
+"./freemodbus/functions/mbfuncother.obj" \
+"./freemodbus/functions/mbutils.obj" \
+"./freemodbus/mb.obj" \
+"./freemodbus/port/mbcb.obj" \
+"./freemodbus/port/portevent.obj" \
+"./freemodbus/port/portserial.obj" \
+"./freemodbus/port/porttimer.obj" \
+"./freemodbus/rtu/mbcrc.obj" \
+"./freemodbus/rtu/mbrtu.obj" \
+"./freemodbus/tcp/mbtcp.obj" \
 "../28335_RAM_lnk.cmd" \
 "C:/ti/c2000/C2000Ware_5_01_00_00/device_support/f2833x/headers/cmd/DSP2833x_Headers_nonBIOS.cmd" \
 $(GEN_CMDS__FLAG) \
@@ -65,6 +80,11 @@ RMDIR := RMDIR /S/Q
 -include HDL/subdir_vars.mk
 -include LIB/subdir_vars.mk
 -include Test/subdir_vars.mk
+-include freemodbus/functions/subdir_vars.mk
+-include freemodbus/subdir_vars.mk
+-include freemodbus/port/subdir_vars.mk
+-include freemodbus/rtu/subdir_vars.mk
+-include freemodbus/tcp/subdir_vars.mk
 -include subdir_rules.mk
 -include APP/subdir_rules.mk
 -include Application/subdir_rules.mk
@@ -73,6 +93,11 @@ RMDIR := RMDIR /S/Q
 -include HDL/subdir_rules.mk
 -include LIB/subdir_rules.mk
 -include Test/subdir_rules.mk
+-include freemodbus/functions/subdir_rules.mk
+-include freemodbus/subdir_rules.mk
+-include freemodbus/port/subdir_rules.mk
+-include freemodbus/rtu/subdir_rules.mk
+-include freemodbus/tcp/subdir_rules.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -189,8 +214,10 @@ Example_2833xCpuTimer.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "DSP2833x_ADC_cal.obj" "DSP2833x_Adc.obj" "DSP2833x_CodeStartBranch.obj" "DSP2833x_CpuTimers.obj" "DSP2833x_DMA.obj" "DSP2833x_DefaultIsr.obj" "DSP2833x_ECan.obj" "DSP2833x_EPwm.obj" "DSP2833x_GlobalVariableDefs.obj" "DSP2833x_PieCtrl.obj" "DSP2833x_PieVect.obj" "DSP2833x_SysCtrl.obj" "DSP2833x_usDelay.obj" "APP\APP_Main.obj" "Application\main.obj" "BFL\BFL_Button.obj" "BFL\BFL_Buzz.obj" "BFL\BFL_Measure.obj" "BFL\BFL_RS485.obj" "BFL\BFL_SCR.obj" "BFL\BFL_VCB.obj" "BFL\log.obj" "BFL\period_query.obj" "CHIP\CHIP_W25Q128.obj" "HDL\HDL_CAN.obj" "HDL\HDL_CPU_Time.obj" "HDL\HDL_GPIO.obj" "HDL\HDL_SPI.obj" "HDL\HDL_Uart.obj" "LIB\average_filter.obj" "LIB\cfunction.obj" "LIB\cqueue.obj" "Test\test.obj" 
-	-$(RM) "DSP2833x_Adc.d" "DSP2833x_CpuTimers.d" "DSP2833x_DMA.d" "DSP2833x_DefaultIsr.d" "DSP2833x_ECan.d" "DSP2833x_EPwm.d" "DSP2833x_GlobalVariableDefs.d" "DSP2833x_PieCtrl.d" "DSP2833x_PieVect.d" "DSP2833x_SysCtrl.d" "APP\APP_Main.d" "Application\main.d" "BFL\BFL_Button.d" "BFL\BFL_Buzz.d" "BFL\BFL_Measure.d" "BFL\BFL_RS485.d" "BFL\BFL_SCR.d" "BFL\BFL_VCB.d" "BFL\log.d" "BFL\period_query.d" "CHIP\CHIP_W25Q128.d" "HDL\HDL_CAN.d" "HDL\HDL_CPU_Time.d" "HDL\HDL_GPIO.d" "HDL\HDL_SPI.d" "HDL\HDL_Uart.d" "LIB\average_filter.d" "LIB\cfunction.d" "LIB\cqueue.d" "Test\test.d" 
+	-$(RM) "DSP2833x_ADC_cal.obj" "DSP2833x_Adc.obj" "DSP2833x_CodeStartBranch.obj" "DSP2833x_CpuTimers.obj" "DSP2833x_DMA.obj" "DSP2833x_DefaultIsr.obj" "DSP2833x_ECan.obj" "DSP2833x_EPwm.obj" "DSP2833x_GlobalVariableDefs.obj" "DSP2833x_PieCtrl.obj" "DSP2833x_PieVect.obj" "DSP2833x_SysCtrl.obj" "DSP2833x_usDelay.obj" "APP\APP_Main.obj" "Application\main.obj" "BFL\BFL_Button.obj" "BFL\BFL_Buzz.obj" "BFL\BFL_Measure.obj" "BFL\BFL_RS485.obj" "BFL\BFL_SCR.obj" "BFL\BFL_VCB.obj" "BFL\log.obj" "BFL\period_query.obj" "CHIP\CHIP_W25Q128.obj" "HDL\HDL_CAN.obj" "HDL\HDL_CPU_Time.obj" "HDL\HDL_GPIO.obj" "HDL\HDL_SPI.obj" "HDL\HDL_Uart.obj" "LIB\average_filter.obj" "LIB\cfunction.obj" "LIB\cqueue.obj" "Test\test.obj" "freemodbus\functions\mbfunccoils.obj" "freemodbus\functions\mbfuncdiag.obj" "freemodbus\functions\mbfuncdisc.obj" "freemodbus\functions\mbfuncholding.obj" "freemodbus\functions\mbfuncinput.obj" "freemodbus\functions\mbfuncother.obj" "freemodbus\functions\mbutils.obj" "freemodbus\mb.obj" "freemodbus\port\mbcb.obj" 
+	-$(RM) "freemodbus\port\portevent.obj" "freemodbus\port\portserial.obj" "freemodbus\port\porttimer.obj" "freemodbus\rtu\mbcrc.obj" "freemodbus\rtu\mbrtu.obj" "freemodbus\tcp\mbtcp.obj" 
+	-$(RM) "DSP2833x_Adc.d" "DSP2833x_CpuTimers.d" "DSP2833x_DMA.d" "DSP2833x_DefaultIsr.d" "DSP2833x_ECan.d" "DSP2833x_EPwm.d" "DSP2833x_GlobalVariableDefs.d" "DSP2833x_PieCtrl.d" "DSP2833x_PieVect.d" "DSP2833x_SysCtrl.d" "APP\APP_Main.d" "Application\main.d" "BFL\BFL_Button.d" "BFL\BFL_Buzz.d" "BFL\BFL_Measure.d" "BFL\BFL_RS485.d" "BFL\BFL_SCR.d" "BFL\BFL_VCB.d" "BFL\log.d" "BFL\period_query.d" "CHIP\CHIP_W25Q128.d" "HDL\HDL_CAN.d" "HDL\HDL_CPU_Time.d" "HDL\HDL_GPIO.d" "HDL\HDL_SPI.d" "HDL\HDL_Uart.d" "LIB\average_filter.d" "LIB\cfunction.d" "LIB\cqueue.d" "Test\test.d" "freemodbus\functions\mbfunccoils.d" "freemodbus\functions\mbfuncdiag.d" "freemodbus\functions\mbfuncdisc.d" "freemodbus\functions\mbfuncholding.d" "freemodbus\functions\mbfuncinput.d" "freemodbus\functions\mbfuncother.d" "freemodbus\functions\mbutils.d" "freemodbus\mb.d" "freemodbus\port\mbcb.d" "freemodbus\port\portevent.d" "freemodbus\port\portserial.d" "freemodbus\port\porttimer.d" "freemodbus\rtu\mbcrc.d" "freemodbus\rtu\mbrtu.d" 
+	-$(RM) "freemodbus\tcp\mbtcp.d" 
 	-$(RM) "DSP2833x_ADC_cal.d" "DSP2833x_CodeStartBranch.d" "DSP2833x_usDelay.d" 
 	-@echo 'Finished clean'
 	-@echo ' '

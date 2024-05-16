@@ -11,6 +11,7 @@
  */
 #include "APP_Main.h"
 
+#include "mb.h"
 #include "ccommon.h"
 #include "log.h"
 #include "period_query.h"
@@ -53,8 +54,6 @@ void APP_Main_Init()
                  UART_PARITY_NONE); // 隔离 MAX3485
   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1,
             UART_PARITY_NONE); // MAX232
-  BFL_RS485_Init(RS485_2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1,
-                 UART_PARITY_NONE); // MAX3485
   //   BFL_Buzz_Init();
   //   CHIP_W25Q128_Init();
   //   BFL_Measure_Init();
@@ -74,6 +73,12 @@ void APP_Main_Init()
   // GpioDataRegs.GPBSET.bit.GPIO49 = 1;
 
   // GpioDataRegs.GPBCLEAR.bit.GPIO49 = 1;
+
+  /*
+   * RTU模式 从机地址：0x01 串口：这里不起作用，随便写 波特率：115200 无奇偶校验位
+   */
+  eMBInit(MB_RTU, 0x01, 0, 115200, MB_PAR_NONE);
+  eMBEnable();
 }
 
 #include <stdio.h>
@@ -185,7 +190,7 @@ void APP_Main_Poll()
   // }
 
   {
-    period_query(1, 100)
+    if_period_query(1, 100)
     {
 
       const byte_t request_cmd1[] = {0x01, 0x03, 0x00, 0x00, 0x00, 0x02, 0xC4, 0x0B};
@@ -198,6 +203,12 @@ void APP_Main_Poll()
     {
       //    Debug_Printf("Hello World\n");
       Uart_Write(COM2, buffer, readLen);
+    }
+
+    static PeriodREC_t s_tPollTime = 0;
+    if_period_query_user(&s_tPollTime, 1)
+    {
+      eMBPoll();
     }
   }
 }

@@ -20,9 +20,16 @@
  */
 
 /* ----------------------- Platform includes --------------------------------*/
+#include "DSP2833x_Device.h"
 #include "port.h"
 #include "CPU_Define.h"
 #include "HDL_Uart.h"
+#include "BFL_RS485.h"
+#include "ccommon.h"
+#include <stddef.h>
+#define RTU_COM COM3
+#define RTU_COM_RS485 RS485_2
+#define SciregUsed ScicRegs
 /* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
 #include "mbport.h"
@@ -30,18 +37,8 @@
 /* ----------------------- Defines ------------------------------------------*/
 void serialReceiveOneByteISR(void);
 
-void serialSentOneByteISR(void);
+void serialSentOneByteISR(void*);
 
-static void RS485_ReleaseBus()
-{
-    LL_GPIO_ResetOutputPin(RS485_CON1_GPIO_Port, RS485_CON1_Pin);
-}
-
-static void RS485_TakeBus()
-{
-    LL_GPIO_SetOutputPin(RS485_CON1_GPIO_Port, RS485_CON1_Pin);
-    // LL_mDelay(1 - 1);
-}
 
 /* ----------------------- Static variables ---------------------------------*/
 
@@ -49,22 +46,27 @@ static void RS485_TakeBus()
 void vMBPortSerialEnable(BOOL xRxEnable, BOOL xTxEnable)
 {
     if (xTxEnable) {
-        RS485_TakeBus();
+        BFL_RS485_Take_Bus(RTU_COM_RS485);
     } else {
-        RS485_ReleaseBus();
-    }
-
-    if (xRxEnable) {
-        LL_USART_EnableIT_RXNE(USART3);
-    } else {
-        LL_USART_DisableIT_RXNE(USART3);
+        BFL_RS485_Release_Bus(RTU_COM_RS485);
     }
 
     if (xTxEnable) {
-        RS485_TakeBus();
-        LL_USART_EnableIT_TC(USART3); // 使能发送完成中断
+        // UART_EnableIT_TC(USART3); // 使能发送完成中断
+       //  TX FIFO Interrupt Enable
+        SciregUsed.SCIFFTX.bit.TXFFIENA = 1;
     } else {
-        LL_USART_DisableIT_TC(USART3); // 禁能发送完成中断
+        // UART_DisableIT_TC(USART3); // 禁能发送完成中断
+                // Disable transmit FIFO interrrupt
+        SciregUsed.SCIFFTX.bit.TXFFIENA = 0;
+    }
+    
+    if (xRxEnable) {
+        // UART_EnableIT_RXNE(USART3);
+            SciregUsed.SCIFFRX.bit.RXFFIENA = 1; // 接收FIFO中断使能
+    } else {
+        // UART_DisableIT_RXNE(USART3);
+            SciregUsed.SCIFFRX.bit.RXFFIENA = 0; 
     }
 }
 
@@ -77,28 +79,30 @@ BOOL xMBPortSerialInit(UCHAR ucPort, ULONG ulBaudRate, UCHAR ucDataBits, eMBPari
      * eParity Modbus-RTU要求一帧是11位，所以如果有奇偶校验，那么就是1位停止位，否侧使用2位停止位。
      */
     UNUSED(ucPort);
-    uint32_t stopBit = LL_USART_STOPBITS_1;
-    uint32_t parity  = LL_USART_PARITY_NONE;
+    UNUSED(ucDataBits);
+    uint32_t stopBit = UART_STOP_BIT_1;
+    uint32_t parity  = UART_PARITY_NONE;
 
-    stopBit = eParity == MB_PAR_NONE ? LL_USART_STOPBITS_2 : LL_USART_STOPBITS_1;
+    stopBit = eParity == MB_PAR_NONE ? UART_STOP_BIT_2 : UART_STOP_BIT_1;
     switch (eParity) {
         case MB_PAR_NONE:
-            parity = LL_USART_PARITY_NONE;
+            parity = UART_PARITY_NONE;
             break;
         case MB_PAR_ODD:
-            parity = LL_USART_PARITY_ODD;
+            parity = UART_PARITY_ODD;
             break;
         case MB_PAR_EVEN:
-            parity = LL_USART_PARITY_EVEN;
+            parity = UART_PARITY_EVEN;
             break;
         default:
             break;
     }
-    Uart_Init(COM3, ulBaudRate, LL_USART_DATAWIDTH_8B, stopBit, parity);
+
+    BFL_RS485_Init(RTU_COM_RS485, ulBaudRate, UART_WORD_LEN_8, stopBit, parity);
 
     // 因为我使用的这个库已经自己实现了接收完成中断，所以这里没有单独列出中断函数来,按照文章说明的意思来即可
-    Uart_RegisterReceiveCharNotReadCallback(COM3, serialReceiveOneByteISR);
-    Uart_SetWriteOverCallback(COM3, serialSentOneByteISR);
+    Uart_RegisterReceiveReadyCharCallback(RTU_COM, serialReceiveOneByteISR);
+    Uart_SetWriteOverCallback(RTU_COM, serialSentOneByteISR, NULL);
 
     // 如果初始化失败，应当返回FALSE
     return bInitialized;
@@ -106,13 +110,13 @@ BOOL xMBPortSerialInit(UCHAR ucPort, ULONG ulBaudRate, UCHAR ucDataBits, eMBPari
 
 BOOL xMBPortSerialPutByte(CHAR ucByte)
 {
-    USART3->TDR = ucByte;
+    Uart_Write(RTU_COM, (const uint16_t *)&ucByte, 1);
     return TRUE;
 }
 
 BOOL xMBPortSerialGetByte(CHAR *pucByte)
 {
-    *pucByte = USART3->RDR;
+    *pucByte = SciregUsed.SCIRXBUF.all;
     return TRUE;
 }
 
@@ -121,20 +125,20 @@ void serialReceiveOneByteISR(void)
     pxMBFrameCBByteReceived();
 }
 
-void serialSentOneByteISR(void)
+void serialSentOneByteISR(void*arg)
 {
+    UNUSED(arg);
     pxMBFrameCBTransmitterEmpty();
 }
 
 void EnterCriticalSection(void)
 {
     // 禁止中断
-    __disable_interrupts();
+    _disable_interrupts();
 }
 
 void ExitCriticalSection(void)
 {
   // 恢复中断
-  uint16_t intStatus;
-  __restore_interrupts(intStatus);
+  _enable_interrupts();
 }

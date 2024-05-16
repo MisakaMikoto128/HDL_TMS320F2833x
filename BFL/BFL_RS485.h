@@ -30,6 +30,8 @@ void BFL_RS485_Init(BFL_RS485_t rs485, uint32_t baud, uint32_t wordLen, uint32_t
 uint32_t BFL_RS485_Write(BFL_RS485_t rs485, const uint16_t *writeBuf, uint32_t uLen);
 uint32_t BFL_RS485_Read(BFL_RS485_t rs485, uint16_t *pBuf, uint32_t uiLen);
 
+void BFL_RS485_Take_Bus(BFL_RS485_t rs485);
+void BFL_RS485_Release_Bus(BFL_RS485_t rs485);
 #ifdef __cplusplus
 }
 #endif
