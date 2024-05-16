@@ -12,7 +12,9 @@
 #include "APP_Main.h"
 
 #include "ccommon.h"
+#include "log.h"
 #include "period_query.h"
+#include "BFL_RS485.h"
 #include "BFL_Button.h"
 #include "BFL_Buzz.h"
 #include "BFL_Measure.h"
@@ -28,151 +30,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#define RS485C_Take_Bus() (GpioDataRegs.GPBSET.bit.GPIO61 = 1)
-#define RS485C_Release_Bus() (GpioDataRegs.GPBCLEAR.bit.GPIO61 = 1)
-
-#define RS485A_Take_Bus() (GpioDataRegs.GPASET.bit.GPIO28 = 1)
-#define RS485A_Release_Bus() (GpioDataRegs.GPACLEAR.bit.GPIO28 = 1)
-
-typedef enum
-{
-  RS485_1 = 0, // SCI-A,隔离 MAX3485
-  RS485_2 = 1, // SCI-C,MAX3485
-  RS485_NUM,
-} BFL_RS485_t;
-
-void BFL_RS485_Take_Bus(BFL_RS485_t rs485)
-{
-  if (rs485 == RS485_1)
-  {
-    RS485A_Take_Bus();
-  }
-  else if (rs485 == RS485_2)
-  {
-    RS485C_Take_Bus();
-  }
-}
-
-void BFL_RS485_Release_Bus(BFL_RS485_t rs485)
-{
-  if (rs485 == RS485_1)
-  {
-    RS485A_Release_Bus();
-  }
-  else if (rs485 == RS485_2)
-  {
-    RS485C_Release_Bus();
-  }
-}
-
-void BFL_RS485_Take_Bus_RS4851()
-{
-  RS485A_Take_Bus();
-}
-
-void BFL_RS485_Release_Bus_RS4851(void *arg)
-{
-  UNUSED(arg);
-  RS485A_Release_Bus();
-}
-
-void BFL_RS485_Take_Bus_RS4852()
-{
-  RS485C_Take_Bus();
-}
-
-void BFL_RS485_Release_Bus_RS4852(void *arg)
-{
-  UNUSED(arg);
-  RS485C_Release_Bus();
-}
-
-void BFL_RS485_Init(BFL_RS485_t rs485, uint32_t baud, uint32_t wordLen, uint32_t stopBit, uint32_t parity)
-{
-  if (rs485 == RS485_1)
-  {
-
-    EALLOW;
-    // EN485A GPIO,无上下拉电阻
-    // General purpose I/O
-    GpioCtrlRegs.GPAMUX2.bit.GPIO28 = 0x00;
-    // Configures the GPIO pin as an output
-    GpioCtrlRegs.GPADIR.bit.GPIO28 = 1;
-    // Enable the internal pullup on the specified pin.
-    GpioCtrlRegs.GPAPUD.bit.GPIO28 = 0;
-    RS485A_Release_Bus();
-    EDIS;
-    Uart_Init(COM1, baud, wordLen, stopBit, parity);
-    Uart_SetWriteOverCallback(COM1, BFL_RS485_Release_Bus_RS4851, NULL);
-  }
-  else if (rs485 == RS485_2)
-  {
-
-    EALLOW;
-    // EN485C GPIO,无上下拉电阻
-    // General purpose I/O
-    GpioCtrlRegs.GPBMUX2.bit.GPIO61 = 0x00;
-    // Configures the GPIO pin as an output
-    GpioCtrlRegs.GPBDIR.bit.GPIO61 = 1;
-    // Enable the internal pullup on the specified pin.
-    GpioCtrlRegs.GPBPUD.bit.GPIO61 = 0;
-    RS485C_Release_Bus();
-    EDIS;
-    Uart_Init(COM3, baud, wordLen, stopBit, parity);
-    Uart_SetWriteOverCallback(COM3, BFL_RS485_Release_Bus_RS4852, NULL);
-  }
-}
-
-uint32_t BFL_RS485_Write(BFL_RS485_t rs485, const uint16_t *writeBuf, uint32_t uLen)
-{
-  if (rs485 == RS485_1)
-  {
-    BFL_RS485_Take_Bus(rs485);
-    return Uart_Write(COM1, writeBuf, uLen);
-  }
-  else if (rs485 == RS485_2)
-  {
-    BFL_RS485_Take_Bus(rs485);
-    return Uart_Write(COM3, writeBuf, uLen);
-  }
-  return 0;
-}
-
-uint32_t BFL_RS485_Read(BFL_RS485_t rs485, uint16_t *pBuf, uint32_t uiLen)
-{
-  if (rs485 == RS485_1)
-  {
-    return Uart_Read(COM1, pBuf, uiLen);
-  }
-  else if (rs485 == RS485_2)
-  {
-    return Uart_Read(COM3, pBuf, uiLen);
-  }
-  return 0;
-}
-
-// 调试输出数据包最大长度
-#define MAXDEBUGSEND 256
-static char buffer[MAXDEBUGSEND + 1];
-#define DEBUG_COM COM2
-
-/**
- * @brief 使用串口调试的格式化输出方法
- *
- * @param format
- * @param ...
- */
-void Debug_Printf(const void *format, ...)
-{
-  uint32_t uLen;
-  va_list vArgs;
-  va_start(vArgs, format);
-  uLen = vsnprintf(buffer, MAXDEBUGSEND, (char const *)format, vArgs);
-  va_end(vArgs);
-  if (uLen > MAXDEBUGSEND)
-    uLen = MAXDEBUGSEND;
-  Uart_Write(DEBUG_COM, (uint16_t *)buffer, uLen);
-}
+static char buffer[256 + 1];
 
 void InitSpiaGpio();
 void spi_xmit(Uint16 a);

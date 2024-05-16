@@ -33,6 +33,7 @@ ORDERED_OBJS += \
 "./BFL/BFL_RS485.obj" \
 "./BFL/BFL_SCR.obj" \
 "./BFL/BFL_VCB.obj" \
+"./BFL/log.obj" \
 "./BFL/period_query.obj" \
 "./CHIP/CHIP_W25Q128.obj" \
 "./HDL/HDL_CAN.obj" \
@@ -188,8 +189,8 @@ Example_2833xCpuTimer.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "DSP2833x_ADC_cal.obj" "DSP2833x_Adc.obj" "DSP2833x_CodeStartBranch.obj" "DSP2833x_CpuTimers.obj" "DSP2833x_DMA.obj" "DSP2833x_DefaultIsr.obj" "DSP2833x_ECan.obj" "DSP2833x_EPwm.obj" "DSP2833x_GlobalVariableDefs.obj" "DSP2833x_PieCtrl.obj" "DSP2833x_PieVect.obj" "DSP2833x_SysCtrl.obj" "DSP2833x_usDelay.obj" "APP\APP_Main.obj" "Application\main.obj" "BFL\BFL_Button.obj" "BFL\BFL_Buzz.obj" "BFL\BFL_Measure.obj" "BFL\BFL_RS485.obj" "BFL\BFL_SCR.obj" "BFL\BFL_VCB.obj" "BFL\period_query.obj" "CHIP\CHIP_W25Q128.obj" "HDL\HDL_CAN.obj" "HDL\HDL_CPU_Time.obj" "HDL\HDL_GPIO.obj" "HDL\HDL_SPI.obj" "HDL\HDL_Uart.obj" "LIB\average_filter.obj" "LIB\cfunction.obj" "LIB\cqueue.obj" "Test\test.obj" 
-	-$(RM) "DSP2833x_Adc.d" "DSP2833x_CpuTimers.d" "DSP2833x_DMA.d" "DSP2833x_DefaultIsr.d" "DSP2833x_ECan.d" "DSP2833x_EPwm.d" "DSP2833x_GlobalVariableDefs.d" "DSP2833x_PieCtrl.d" "DSP2833x_PieVect.d" "DSP2833x_SysCtrl.d" "APP\APP_Main.d" "Application\main.d" "BFL\BFL_Button.d" "BFL\BFL_Buzz.d" "BFL\BFL_Measure.d" "BFL\BFL_RS485.d" "BFL\BFL_SCR.d" "BFL\BFL_VCB.d" "BFL\period_query.d" "CHIP\CHIP_W25Q128.d" "HDL\HDL_CAN.d" "HDL\HDL_CPU_Time.d" "HDL\HDL_GPIO.d" "HDL\HDL_SPI.d" "HDL\HDL_Uart.d" "LIB\average_filter.d" "LIB\cfunction.d" "LIB\cqueue.d" "Test\test.d" 
+	-$(RM) "DSP2833x_ADC_cal.obj" "DSP2833x_Adc.obj" "DSP2833x_CodeStartBranch.obj" "DSP2833x_CpuTimers.obj" "DSP2833x_DMA.obj" "DSP2833x_DefaultIsr.obj" "DSP2833x_ECan.obj" "DSP2833x_EPwm.obj" "DSP2833x_GlobalVariableDefs.obj" "DSP2833x_PieCtrl.obj" "DSP2833x_PieVect.obj" "DSP2833x_SysCtrl.obj" "DSP2833x_usDelay.obj" "APP\APP_Main.obj" "Application\main.obj" "BFL\BFL_Button.obj" "BFL\BFL_Buzz.obj" "BFL\BFL_Measure.obj" "BFL\BFL_RS485.obj" "BFL\BFL_SCR.obj" "BFL\BFL_VCB.obj" "BFL\log.obj" "BFL\period_query.obj" "CHIP\CHIP_W25Q128.obj" "HDL\HDL_CAN.obj" "HDL\HDL_CPU_Time.obj" "HDL\HDL_GPIO.obj" "HDL\HDL_SPI.obj" "HDL\HDL_Uart.obj" "LIB\average_filter.obj" "LIB\cfunction.obj" "LIB\cqueue.obj" "Test\test.obj" 
+	-$(RM) "DSP2833x_Adc.d" "DSP2833x_CpuTimers.d" "DSP2833x_DMA.d" "DSP2833x_DefaultIsr.d" "DSP2833x_ECan.d" "DSP2833x_EPwm.d" "DSP2833x_GlobalVariableDefs.d" "DSP2833x_PieCtrl.d" "DSP2833x_PieVect.d" "DSP2833x_SysCtrl.d" "APP\APP_Main.d" "Application\main.d" "BFL\BFL_Button.d" "BFL\BFL_Buzz.d" "BFL\BFL_Measure.d" "BFL\BFL_RS485.d" "BFL\BFL_SCR.d" "BFL\BFL_VCB.d" "BFL\log.d" "BFL\period_query.d" "CHIP\CHIP_W25Q128.d" "HDL\HDL_CAN.d" "HDL\HDL_CPU_Time.d" "HDL\HDL_GPIO.d" "HDL\HDL_SPI.d" "HDL\HDL_Uart.d" "LIB\average_filter.d" "LIB\cfunction.d" "LIB\cqueue.d" "Test\test.d" 
 	-$(RM) "DSP2833x_ADC_cal.d" "DSP2833x_CodeStartBranch.d" "DSP2833x_usDelay.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
