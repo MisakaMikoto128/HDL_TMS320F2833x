@@ -66,6 +66,10 @@
                                     <listOptionValue value="${PROJECT_LOC}/CHIP"/>
                                     <listOptionValue value="${PROJECT_LOC}/FPU/include/fpu32/"/>
                                     <listOptionValue value="${PROJECT_LOC}/FPU/include/"/>
+                                    <listOptionValue value="${PROJECT_LOC}/freemodbus/include"/>
+                                    <listOptionValue value="${PROJECT_LOC}/freemodbus/functions"/>
+                                    <listOptionValue value="${PROJECT_LOC}/freemodbus/port"/>
+                                    <listOptionValue value="${PROJECT_LOC}/freemodbus/rtu"/>
                                 </option>
                                 <option id="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.QUIET_LEVEL.648091827" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.QUIET_LEVEL" value="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.QUIET_LEVEL.QUIET" valueType="enumerated"/>
                                 <option id="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.VERBOSE_DIAGNOSTICS.65076604" superClass="com.ti.ccstudio.buildDefinitions.C2000_22.6.compilerID.VERBOSE_DIAGNOSTICS" value="true" valueType="boolean"/>
@@ -123,7 +127,7 @@
                         </toolChain>
                     </folderInfo>
                     <sourceEntries>
-                        <entry excluding="FPU|source" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        <entry excluding="freemodbus|FPU|source" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
                     </sourceEntries>
                 </configuration>
             </storageModule>

@@ -21,6 +21,7 @@
 "./BFL/BFL_RS485.obj"
 "./BFL/BFL_SCR.obj"
 "./BFL/BFL_VCB.obj"
+"./BFL/period_query.obj"
 "./CHIP/CHIP_W25Q128.obj"
 "./HDL/HDL_CAN.obj"
 "./HDL/HDL_CPU_Time.obj"

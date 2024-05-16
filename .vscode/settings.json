@@ -39,6 +39,9 @@
         "bfl_scrt.h": "c",
         "bfl_button.h": "c",
         "bfl_scr.h": "c",
-        "hdl_can.h": "c"
+        "hdl_can.h": "c",
+        "mbfunc.h": "c",
+        "mbtcp.h": "c",
+        "period_query.h": "c"
     }
 }
