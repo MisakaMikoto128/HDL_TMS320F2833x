@@ -14,7 +14,7 @@
 #include "ccommon.h"
 void HDL_GPIO_SetMode(enum HDL_GPIO_Port port, enum HDL_GPIO_PIN pin,
                       enum HDL_GPIO_MODE mode) {
-  UNSUSED(port);
+  UNUSED(port);
 
   EALLOW;
 

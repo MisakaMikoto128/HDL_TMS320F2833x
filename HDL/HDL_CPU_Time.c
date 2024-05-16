@@ -84,7 +84,7 @@ static void ConfigTheCpuTimer(struct CPUTIMER_VARS *Timer, uint16_t TDDR,
 void HDL_CPU_Time_Init()
 {
 
-  if(g_TimerInited)
+  if (g_TimerInited)
   {
     return;
   }
@@ -164,16 +164,22 @@ void HDL_CPU_Time_Init()
 uint32_t HDL_CPU_Time_GetTick()
 {
   uint32_t count;
-  uint16_t intStatus;
 
   // 禁止中断
-  intStatus = __disable_interrupts();
+  _disable_interrupts();
+  //
+  // 0 = Disable/ 1 = Enable Timer Interrupt
+  //
+//   CpuTimer0.RegsAddr->TCR.bit.TIE = 0; 
+  //TODO:这样做可以提高性能，避免影响其他的中断，也可以在中断中调用，因为只是获取值，而不是等待
+  //但是实际在其他的中断中循环调用是否会造成问题还有待考证，还有就是
 
   // 读取计数器值
   count = CpuTimer0.InterruptCount;
 
   // 恢复中断
-  __restore_interrupts(intStatus);
+  _enable_interrupts();
+//   CpuTimer0.RegsAddr->TCR.bit.TIE = 1;
 
   return count;
 }

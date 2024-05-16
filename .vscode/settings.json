@@ -43,6 +43,9 @@
         "mbfunc.h": "c",
         "mbtcp.h": "c",
         "period_query.h": "c",
-        "port.h": "c"
+        "port.h": "c",
+        "bfl_debugpin.h": "c",
+        "b1_measure.h": "c",
+        "crc.h": "c"
     }
 }

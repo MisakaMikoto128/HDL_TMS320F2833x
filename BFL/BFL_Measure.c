@@ -86,11 +86,14 @@ void FFT_Init();
 #define BUF_SIZE (GROUP_NUM * PIONTS_PER_GROUP) // Sample buffer size
 
 // 全波RMS
+#if USING_RMSE == 1
 static float AdcRMSE[GROUP_NUM];
+#endif
 static float AdcRMS[GROUP_NUM];
 static float AdcAvg[GROUP_NUM];
-
+#if USING_RMSE == 1
 static float AdcVoltRMSE[GROUP_NUM];
+#endif
 static float AdcVoltRMS[GROUP_NUM];
 static float AdcVoltAvg[GROUP_NUM];
 
@@ -142,7 +145,8 @@ bool BFL_Measure_ReadReady()
   return ret;
 }
 
-void BFL_Measure_Read(BFL_Measure_t *pMeasure){
+void BFL_Measure_Read(BFL_Measure_t *pMeasure)
+{
 
   _disable_interrupts();
   for (int i = 0; i < GROUP_NUM; i++)
@@ -343,7 +347,7 @@ void config_DMA()
 
 #include <math.h>
 #include <stdint.h>
-
+#include "BFL_DebugPin.h"
 //
 // local_DINTCH1_ISR - INT7.1(DMA Channel 1)
 //
@@ -358,7 +362,7 @@ __interrupt void local_DINTCH1_ISR(void)
   // 无法使用,结果错误 写错了
 
   // 4层循环展开后405us 优化类型5-speed 优化等级O0
-  // GpioDataRegs.GPBSET.bit.GPIO49 = 1;
+  BFL_DebugPin_Set(DEBUG_PIN_1);
   //
   // To receive more interrupts from this PIE group, acknowledge this
   // interrupt
@@ -432,8 +436,8 @@ __interrupt void local_DINTCH1_ISR(void)
   RFFT_f32_mag(hnd_rfft);
 #endif
 
-  // GpioDataRegs.GPBCLEAR.bit.GPIO49 = 1;
   g_measure_ready = true;
+  BFL_DebugPin_Reset(DEBUG_PIN_1);
 }
 
 #if USING_FFT == 1
