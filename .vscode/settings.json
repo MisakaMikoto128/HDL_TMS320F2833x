@@ -46,6 +46,7 @@
         "port.h": "c",
         "bfl_debugpin.h": "c",
         "b1_measure.h": "c",
-        "crc.h": "c"
+        "crc.h": "c",
+        "stdlib.h": "c"
     }
 }

@@ -1,5 +1,5 @@
 /**
- * @file HDL_CPU_TIme.c
+ * @file HDL_CPU_Time.c
  * @author Liu Yuanlin (liuyuanlins@outlook.com)
  * @brief
  * @version 0.1
@@ -9,7 +9,7 @@
  * @copyright Copyright (c) 2024 Liu Yuanlin Personal.
  *
  */
-#include "HDL_CPU_TIme.h"
+#include "HDL_CPU_Time.h"
 #include "CPU_Define.h"
 #include <limits.h>
 #include <stddef.h>

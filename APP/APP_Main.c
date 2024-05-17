@@ -20,7 +20,7 @@
 #include "CHIP_W25Q128.h"
 #include "CPU_Define.h"
 #include "DSP2833x_Device.h"
-#include "HDL_CPU_TIme.h"
+#include "HDL_CPU_Time.h"
 #include "HDL_Uart.h"
 #include "ccommon.h"
 #include "log.h"
@@ -56,19 +56,18 @@ void APP_Main_Init()
   // MAX232
   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1,
             UART_PARITY_NONE);
-  //   BFL_Buzz_Init();
-  //   CHIP_W25Q128_Init();
-  //   BFL_VCB_Seurity_Init();
-  //   BFL_Button_Init();
-  //   BFL_SCR_Init();
+  BFL_Buzz_Init();
+  CHIP_W25Q128_Init();
+  BFL_VCB_Seurity_Init();
+  BFL_SCR_Init();
 
   memset(&g_AppMainInfo, 0, sizeof(g_AppMainInfo));
 
   B1_Measure_Init();
   B1_CapacitanceTemperatureMeasure_Init();
   B1_ModbusRTUSlaver_Init();
-
-  g_app_main_stack.modeBtnPressed = false;
+  B1_SysModeGet_Init();
+  B1_VCBStatusGet_Init();
 }
 
 #include <stdio.h>
@@ -85,9 +84,12 @@ void APP_Main_Poll()
 {
   BFL_DebugPin_Set(DEBUG_PIN_2);
 
+  B0_DeltaPoll();
   B1_CapacitanceTemperatureMeasure_Poll();
   B1_ModbusRTUSlaver_Poll();
   B1_Measure_Poll();
-  //   HDL_CPU_Time_DelayMs(1000);
+
+  // HDL_CPU_Time_DelayMs(1000);
+
   BFL_DebugPin_Reset(DEBUG_PIN_2);
 }

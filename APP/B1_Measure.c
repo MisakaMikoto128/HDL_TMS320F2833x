@@ -12,7 +12,7 @@
 #include "ccommon.h"
 #include "period_query.h"
 #include "BFL_Measure.h"
-#include "HDL_CPU_TIme.h"
+#include "HDL_CPU_Time.h"
 #include "HDL_Uart.h"
 #include "APP_Main.h"
 

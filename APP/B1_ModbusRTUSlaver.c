@@ -13,7 +13,7 @@
 #include "ccommon.h"
 #include "period_query.h"
 #include "BFL_RS485.h"
-#include "HDL_CPU_TIme.h"
+#include "HDL_CPU_Time.h"
 #include "HDL_Uart.h"
 #include "APP_Main.h"
 void B1_ModbusRTUSlaver_Init()

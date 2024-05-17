@@ -52,7 +52,7 @@ EPWM_INFO epwm3_info;
 #define SCRR2B_IsSet() (GpioDataRegs.GPADAT.bit.GPIO11)
 #define SCRR3A_IsSet() (GpioDataRegs.GPADAT.bit.GPIO12)
 #define SCRR3B_IsSet() (GpioDataRegs.GPADAT.bit.GPIO13)
-#define SCRA_ALL_Read() (GpioDataRegs.GPADAT.all & 0x00003F00)
+#define SCRA_ALL_Read() ((GpioDataRegs.GPADAT.all & 0x00003F00) >> 8)
 /**
  * @brief SCR输入输出通道初始化。
  *
@@ -155,7 +155,9 @@ void BFL_SCR_Init()
  * @brief
  *
  * @param scrr 输入通道。
- * @return > 0 有光信号输入进来。
+ * @return > 0 有光信号输入进来。为SCRR_ALL时有效位mask为0x3F。
+ * bit0对应SCRR3B，bit1对应SCRR3A，bit2对应SCRR2B，
+ * bit3对应SCRR2A，bit4对应SCRR1B，bit5对应SCRR1A。
  * @return 0 没有光信号输入进来。
  */
 uint32_t BFL_SCRR_Have_Signal(BFL_SCRR_t scrr)
@@ -175,7 +177,11 @@ uint32_t BFL_SCRR_Have_Signal(BFL_SCRR_t scrr)
     case SCRR3B:
         return SCRR3B_IsSet();
     case SCRR_ALL:
-        return SCRA_ALL_Read();
+    {
+        uint32_t _uiRet = 0;
+        _uiRet = SCRA_ALL_Read();
+        return _uiRet;
+    }
     }
     return false;
 }
@@ -186,6 +192,7 @@ uint32_t BFL_SCRR_Have_Signal(BFL_SCRR_t scrr)
 #define EPWM1_PWM_PERIOD 5 // 5ms Period
 #define EPWM1_TIMER_TBPRD \
     (9375000ULL / (1000 / EPWM1_PWM_PERIOD) - 1) // 5ms Period，max 6
+#define EPWM1_TIMER_CMPA_MIN 4
 #define EPWM123_ENABLE_SYNC 0
 //
 // InitEPwm1Example -
@@ -239,9 +246,11 @@ void InitEPwm1Example()
     //
     EPwmxRegsHandle->AQCTLA.bit.ZRO = AQ_CLEAR; // Set PWM1A on Zero
     EPwmxRegsHandle->AQCTLA.bit.CAU = AQ_SET;   // Clear PWM1A on event A, up count
+    EPwmxRegsHandle->AQCTLA.bit.CBU = AQ_CLEAR; // Clear PWM1A on event B, up count
 
     EPwmxRegsHandle->AQCTLB.bit.ZRO = AQ_CLEAR; // Set PWM1B on Zero
-    EPwmxRegsHandle->AQCTLB.bit.CBU = AQ_SET;   // Clear PWM1B on event B, up count
+    EPwmxRegsHandle->AQCTLB.bit.CAU = AQ_SET;   // Clear PWM1B on event A, up count
+    EPwmxRegsHandle->AQCTLB.bit.CBU = AQ_CLEAR; // Clear PWM1B on event B, up count
 
     //
     // Interrupt where we will change the Compare Values
@@ -495,10 +504,9 @@ static void BFL_SCRT_Pluse_Transmit_Config(EPWM_INFO *pEpwmx_info,
     // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
     // 1时，输出的脉冲宽度为5000us。
     //(_uiPluseWidth / (EPWM1_PWM_PERIOD * 1000)) * EPWM1_TIMER_TBPRD;
-    EPwmRegHandle->CMPA.half.CMPA =
-        EPWM1_TIMER_TBPRD - ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
-                             (EPWM1_PWM_PERIOD * 1000ULL));
-    EPwmRegHandle->CMPB = EPwmRegHandle->CMPA.half.CMPA;
+    EPwmRegHandle->CMPA.half.CMPA = EPWM1_TIMER_CMPA_MIN;
+    EPwmRegHandle->CMPB = ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
+                           (EPWM1_PWM_PERIOD * 1000ULL));
     EPwmRegHandle->TBCTR = 0x0000;                  // Clear counter
     EPwmRegHandle->TBCTL.bit.CTRMODE = TB_COUNT_UP; // Up count mode
     EPwmRegHandle->ETSEL.bit.INTEN = 1;             // Enable INT
@@ -509,15 +517,25 @@ static void BFL_SCRT_Pluse_Transmit_Config(EPWM_INFO *pEpwmx_info,
  *
  * @param scrt 输出通道。
  * @param _uiPluseNum
- * @param _uiPluseWidth 单位us，范围[1,5000]
+ * @param _uiPluseWidth 单位us，范围[4,5000]
  */
 void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
                              uint16_t _uiPluseWidth)
 {
-    if (_uiPluseWidth >= (EPWM1_PWM_PERIOD * 1000ULL) || _uiPluseWidth == 0 ||
+    if (_uiPluseWidth == 0 ||
         _uiPluseNum == 0)
     {
         return;
+    }
+
+    if (_uiPluseWidth > (EPWM1_PWM_PERIOD * 1000ULL))
+    {
+        _uiPluseWidth = (EPWM1_PWM_PERIOD * 1000ULL);
+    }
+
+    if (_uiPluseWidth < EPWM1_TIMER_CMPA_MIN)
+    {
+        _uiPluseWidth = EPWM1_TIMER_CMPA_MIN;
     }
 
     EPWM_INFO *pEpwmx_info = NULL;
@@ -548,10 +566,9 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
         // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
         // 1时，输出的脉冲宽度为5000us。
         //(_uiPluseWidth / (EPWM1_PWM_PERIOD * 1000)) * EPWM1_TIMER_TBPRD;
-        EPwmRegHandle->CMPA.half.CMPA =
-            EPWM1_TIMER_TBPRD - ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
-                                 (EPWM1_PWM_PERIOD * 1000ULL));
-        EPwmRegHandle->CMPB = EPwmRegHandle->CMPA.half.CMPA;
+        EPwmRegHandle->CMPA.half.CMPA = EPWM1_TIMER_CMPA_MIN;
+        EPwmRegHandle->CMPB = ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
+                               (EPWM1_PWM_PERIOD * 1000ULL));
         EPwmRegHandle->TBCTR = 0x0000; // Clear counter
 
         pEpwmx_info = &epwm2_info;
@@ -563,10 +580,9 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
         // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
         // 1时，输出的脉冲宽度为5000us。
         //(_uiPluseWidth / (EPWM1_PWM_PERIOD * 1000)) * EPWM1_TIMER_TBPRD;
-        EPwmRegHandle->CMPA.half.CMPA =
-            EPWM1_TIMER_TBPRD - ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
-                                 (EPWM1_PWM_PERIOD * 1000ULL));
-        EPwmRegHandle->CMPB = EPwmRegHandle->CMPA.half.CMPA;
+        EPwmRegHandle->CMPA.half.CMPA = EPWM1_TIMER_CMPA_MIN;
+        EPwmRegHandle->CMPB = ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
+                               (EPWM1_PWM_PERIOD * 1000ULL));
         EPwmRegHandle->TBCTR = 0x0000; // Clear counter
 
         pEpwmx_info = &epwm3_info;
@@ -578,10 +594,9 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
         // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
         // 1时，输出的脉冲宽度为5000us。
         //(_uiPluseWidth / (EPWM1_PWM_PERIOD * 1000)) * EPWM1_TIMER_TBPRD;
-        EPwmRegHandle->CMPA.half.CMPA =
-            EPWM1_TIMER_TBPRD - ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
-                                 (EPWM1_PWM_PERIOD * 1000ULL));
-        EPwmRegHandle->CMPB = EPwmRegHandle->CMPA.half.CMPA;
+        EPwmRegHandle->CMPA.half.CMPA = EPWM1_TIMER_CMPA_MIN;
+        EPwmRegHandle->CMPB = ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
+                               (EPWM1_PWM_PERIOD * 1000ULL));
         EPwmRegHandle->TBCTR = 0x0000; // Clear counter
 
         EPwm1Regs.TBCTL.bit.CTRMODE = TB_COUNT_UP; // Up count mode
