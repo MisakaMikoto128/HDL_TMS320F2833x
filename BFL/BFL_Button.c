@@ -12,10 +12,10 @@
 #include "BFL_Button.h"
 #include "CPU_Define.h"
 
-#define XIN5_IsSet() (GpioDataRegs.GPBDAT.bit.GPIO44)
-#define XIN6_IsSet() (GpioDataRegs.GPBDAT.bit.GPIO45)
-#define XIN7_IsSet() (GpioDataRegs.GPBDAT.bit.GPIO46)
-#define XIN8_IsSet() (GpioDataRegs.GPBDAT.bit.GPIO47)
+#define XIN5_IsSet() (GpioDataRegs.GPBDAT.bit.GPIO44 == 1)
+#define XIN6_IsSet() (GpioDataRegs.GPBDAT.bit.GPIO45 == 1)
+#define XIN7_IsSet() (GpioDataRegs.GPBDAT.bit.GPIO46 == 1)
+#define XIN8_IsSet() (GpioDataRegs.GPBDAT.bit.GPIO47 == 1)
 
 void BFL_Button_Init()
 {

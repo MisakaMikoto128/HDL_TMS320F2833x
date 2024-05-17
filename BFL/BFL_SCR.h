@@ -70,6 +70,8 @@ extern "C"
      */
     uint32_t BFL_SCRR_Have_Signal(BFL_SCRR_t scrr);
 
+    #define BFL_SCR_SIGNAL_MASK 0x3F
+
 #ifdef __cplusplus
 }
 #endif

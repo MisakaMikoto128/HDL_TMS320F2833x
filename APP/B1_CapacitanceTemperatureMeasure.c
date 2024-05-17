@@ -19,10 +19,11 @@
 #include "APP_Main.h"
 #include <stdlib.h>
 
+static const byte_t request_cmd[] = {0x01, 0x03, 0x00, 0x00, 0x00, 0x03, 0x05, 0xCB};
+
 void B1_CapacitanceTemperatureMeasure_Init()
 {
-    BFL_RS485_Init(RS485_1, 38400, UART_WORD_LEN_8, UART_STOP_BIT_1,
-                   UART_PARITY_NONE); // 隔离 MAX3485
+    BFL_RS485_Init(RS485_1, 38400, UART_WORD_LEN_8, UART_STOP_BIT_1,UART_PARITY_NONE); // 隔离 MAX3485
 
     for (size_t i = 0; i < (sizeof(g_pSysInfo->capTemp) / sizeof(g_pSysInfo->capTemp[0])); i++)
     {
@@ -33,7 +34,7 @@ void B1_CapacitanceTemperatureMeasure_Init()
 void B1_CapacitanceTemperatureMeasure_Poll()
 {
     static PeriodREC_t s_tPollTime = 0;
-    if(!period_query_user(&s_tPollTime, 100))
+    if (!period_query_user(&s_tPollTime, 100))
     {
         return;
     }
@@ -41,14 +42,14 @@ void B1_CapacitanceTemperatureMeasure_Poll()
     switch (g_AppMainInfo.capTempSensorRequestStage)
     {
     case 0:
-        const byte_t request_cmd[] = {0x01, 0x03, 0x00, 0x00, 0x00, 0x03, 0x05, 0xCB};
+
         BFL_RS485_Write(RS485_1, request_cmd, sizeof(request_cmd));
         g_AppMainInfo.capTempSensorRequestStage = 1;
         break;
     case 1:
     {
         g_AppMainInfo.capTempSensorRequestStage = 0;
-        
+
         uint32_t readLen = BFL_RS485_Read(RS485_1, g_AppMainInfo.buffer, sizeof(g_AppMainInfo.buffer));
         if (readLen > 0)
         {
@@ -93,6 +94,6 @@ void B1_CapacitanceTemperatureMeasure_Poll()
     }
     break;
     default:
-    break;
+        break;
     }
 }

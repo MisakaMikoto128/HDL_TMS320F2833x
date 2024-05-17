@@ -39,6 +39,20 @@ extern "C"
 #define SYS_MODE_AUTO 0
 #define SYS_MODE_MANUAL 1
 
+#define CAPACITORS_STATE_CUT_OFF 0
+#define CAPACITORS_STATE_WORKING 1
+#define CAPACITORS_STATE_BYPASS 2
+
+#define LINE_STATE_STOP 0
+#define LINE_STATE_RUNNING 1
+
+#define Have_Serious_Fault() (g_pSysInfo->Serious_Fault == 1)
+#define Have_Minor_Fault() (g_pSysInfo->Minor_Fault == 1)
+#define The_System_Line_State_Is_Running() (g_pSysInfo->Line_State == LINE_STATE_RUNNING)
+#define The_Capacitors_Are_Working() (g_pSysInfo->Capacitors_State == CAPACITORS_STATE_WORKING)
+#define The_Capacitors_Are_Cut_Off() (g_pSysInfo->Capacitors_State == CAPACITORS_STATE_CUT_OFF)
+#define The_Capacitors_Are_Bypass() (g_pSysInfo->Capacitors_State == CAPACITORS_STATE_BYPASS)
+
     typedef struct tagSysInfo_t
     {
         // B1_CapacitanceTemperatureMeasure
@@ -106,6 +120,7 @@ extern "C"
         uint16_t QS1_Fault;
         uint16_t QS2_Fault;
         uint16_t KM1_Fault;
+        uint16_t SCRT_Fault;
 
         uint16_t VT1_A_Fault;
         uint16_t TV2_A_Fault;
@@ -123,9 +138,16 @@ extern "C"
         uint16_t T_V_TVx_ov; // 电容器过压自动恢复时间
         float Tc_ot;         // 电容器过温阈值
         uint16_t T_Tc_ot;    // 电容器过温恢复延时
-        uint16_t T1;         // 闸刀状态反馈信号生效时间
+        uint16_t T1;         // 闸刀状态反馈信号生效时间，单位ms
         uint16_t T2;         // 晶闸管触发信号脉宽
         uint16_t T3;         // 晶闸管状态反馈信号生效时间
+        uint16_t T4;         // 晶闸管导通到闭合VBC延时
+
+        uint16_t Capacitors_State;      // 电容器状态 0:未投入（默认） 1:已经投入 2:旁路
+        uint16_t Capacitors_Exec_State; // 电容器执行的状态 0:未投入（默认） 1:已经投入 2:旁路
+        uint16_t Minor_Fault;           // 轻微故障 0:无故障 1:有故障
+        uint16_t Serious_Fault;         // 严重故障 0:无故障 1:有故障
+        uint16_t Line_State;            // 线路状态 0:停运 1:运行
 
         uint16_t __crc16;
     } SysInfo_t;
@@ -154,6 +176,8 @@ extern "C"
     void APP_Main_Init();
     void APP_Main_Poll();
 
+    void BackGroundTask();
+
     void B0_DeltaPoll();
 
     void B1_ModbusRTUSlaver_Init();
@@ -170,6 +194,39 @@ extern "C"
 
     void B1_VCBStatusGet_Init();
     void B1_VCBStatusGet_DeltaPoll(uint32_t poll_delta);
+    void B1_VCBStatus_Update();
+
+    typedef struct
+    {
+        uint32_t code;
+        uint16_t QF_Fault;
+        uint16_t KM1_Fault;
+    } B2_CmdMakeCapacitorsWork_Result_t;
+    B2_CmdMakeCapacitorsWork_Result_t B2_CmdMakeCapacitorsWork_Exec();
+    void B2_CmdMakeCapacitorsWork_Exec_Solution();
+
+    typedef struct
+    {
+        uint32_t code;
+        uint16_t QF_Fault;
+        uint16_t KM1_Fault;
+        uint16_t SCRT_Fault;
+    } B2_CmdCutOffCapacitors_Result_t;
+    B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec();
+    void B2_CmdCutOffCapacitors_Exec_Solution();
+
+    typedef struct
+    {
+        uint32_t code;
+        uint16_t QF_Fault;
+        uint16_t KM1_Fault;
+        uint16_t SCRT_Fault;
+    } B2_CmdBypassCapacitors_Result_t;
+    B2_CmdBypassCapacitors_Result_t B2_CmdBypassCapacitors_Exec();
+    void B2_CmdBypassCapacitors_Exec_Solution();
+
+    void B3_SysAutoMode_Poll();
+    void B3_SysManualMode_Poll();
 #ifdef __cplusplus
 }
 #endif

@@ -32,7 +32,7 @@ void B1_SysModeGet_DeltaPoll(uint32_t poll_delta)
             if (g_AppMainInfo.modeBtnFilterTimeCnt > 80)
             {
                 g_AppMainInfo.modeBtnPressed = true;
-                g_pSysInfo->SYS_MODE = SYS_MODE_AUTO;
+                g_pSysInfo->SYS_MODE = SYS_MODE_MANUAL;
                 g_AppMainInfo.modeBtnFilterTimeCnt = 0;
             }
         }
@@ -49,7 +49,7 @@ void B1_SysModeGet_DeltaPoll(uint32_t poll_delta)
             if (g_AppMainInfo.modeBtnFilterTimeCnt > 80)
             {
                 g_AppMainInfo.modeBtnPressed = false;
-                g_pSysInfo->SYS_MODE = SYS_MODE_MANUAL;
+                g_pSysInfo->SYS_MODE = SYS_MODE_AUTO;
                 g_AppMainInfo.modeBtnFilterTimeCnt = 0;
             }
         }

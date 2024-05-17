@@ -25,43 +25,79 @@
 #include "ccommon.h"
 #include "log.h"
 #include "period_query.h"
+#include "mtime.h"
 
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
-char buffer[256 + 1];
-
-void InitSpiaGpio();
-void spi_xmit(Uint16 a);
-
-struct APP_Main_Stack_t
-{
-  bool modeBtnPressed;
-};
-
-struct APP_Main_Stack_t g_app_main_stack;
-
 // TODO:利用全局变量初始化为0的特性,但是浮点数还是要手动初始化
 AppMainInfo_t g_AppMainInfo = {0};
 SysInfo_t *g_pSysInfo = &g_AppMainInfo.sysInfo;
 
+void Config_Default_Parameter()
+{
+  memset(&g_AppMainInfo, 0, sizeof(g_AppMainInfo));
+
+  g_pSysInfo->TV1A_ScaleL1 = 1.0f;
+  g_pSysInfo->TV1B_ScaleL1 = 1.0f;
+  g_pSysInfo->TV1C_ScaleL1 = 1.0f;
+  g_pSysInfo->UIAB_ScaleL1 = 1.0f;
+  g_pSysInfo->UOAB_ScaleL1 = 1.0f;
+  g_pSysInfo->TA1A_ScaleL1 = 1.0f;
+  g_pSysInfo->TA1B_ScaleL1 = 1.0f;
+  g_pSysInfo->TA1C_ScaleL1 = 1.0f;
+
+  g_pSysInfo->TV1A_ScaleL2 = 1.0f;
+  g_pSysInfo->TV1B_ScaleL2 = 1.0f;
+  g_pSysInfo->TV1C_ScaleL2 = 1.0f;
+  g_pSysInfo->UIAB_ScaleL2 = 1.0f;
+  g_pSysInfo->UOAB_ScaleL2 = 1.0f;
+  g_pSysInfo->TA1A_ScaleL2 = 1.0f;
+  g_pSysInfo->TA1B_ScaleL2 = 1.0f;
+  g_pSysInfo->TA1C_ScaleL2 = 1.0f;
+
+  g_pSysInfo->I_TA_low_thl = 50;
+  g_pSysInfo->I_TA_low_thh = 55;
+  g_pSysInfo->T_I_TA_Thh = SEC(10) * 10;
+  g_pSysInfo->I_TA_oc = 500;
+  g_pSysInfo->T_I_TA_oc = SEC(10) * 10;
+  g_pSysInfo->V_TVx_ov = 2.0f;
+  g_pSysInfo->T_V_TVx_ov = MINUTE(60);
+  g_pSysInfo->Tc_ot = 80;
+  g_pSysInfo->T_Tc_ot = SEC(10);
+  g_pSysInfo->T1 = MS(1000);
+  g_pSysInfo->T2 = US(2000);
+  g_pSysInfo->T3 = MS(5);
+  g_pSysInfo->T4 = MS(5);
+
+  g_pSysInfo->SYS_MODE = SYS_MODE_AUTO;
+  g_pSysInfo->V_SYS_STOP = 4.0f;
+  g_pSysInfo->V_SYS_UNDER = 8.0f;
+  g_pSysInfo->V_SYS_THH = 10.5f;
+  g_pSysInfo->V_SYS_OV = 12.0f;
+  g_pSysInfo->T_SYS_UNDER_CANCLE = SEC(10);
+}
+
+void Load_Parameter_From_Flash()
+{
+}
+
 void APP_Main_Init()
 {
-
   HDL_CPU_Time_Init();
   BFL_DebugPin_Init();
 
   // MAX232
-  Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1,
-            UART_PARITY_NONE);
+  Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
   BFL_VCB_Seurity_Init();
   BFL_SCR_Init();
 
-  memset(&g_AppMainInfo, 0, sizeof(g_AppMainInfo));
+  Config_Default_Parameter();
+  Load_Parameter_From_Flash();
 
   B1_Measure_Init();
   B1_CapacitanceTemperatureMeasure_Init();
@@ -70,26 +106,30 @@ void APP_Main_Init()
   B1_VCBStatusGet_Init();
 }
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-void timer_callback() { Debug_Printf("timer_callback\n"); }
-float t = 0;
-int cnt = 1;
-Uint16 sdata; // send data
-Uint16 rdata; // received data
-uint32_t signal;
-void APP_Main_Poll()
+void BackGroundTask()
 {
-  BFL_DebugPin_Set(DEBUG_PIN_2);
-
   B0_DeltaPoll();
   B1_CapacitanceTemperatureMeasure_Poll();
   B1_ModbusRTUSlaver_Poll();
   B1_Measure_Poll();
+}
 
-  // HDL_CPU_Time_DelayMs(1000);
+void ForeGroundTask()
+{
+  if (g_pSysInfo->SYS_MODE == SYS_MODE_AUTO)
+  {
+    B3_SysAutoMode_Poll();
+  }
+  else if (g_pSysInfo->SYS_MODE == SYS_MODE_MANUAL)
+  {
+    B3_SysManualMode_Poll();
+  }
+}
 
+void APP_Main_Poll()
+{
+  BFL_DebugPin_Set(DEBUG_PIN_2);
+  BackGroundTask();
+  ForeGroundTask();
   BFL_DebugPin_Reset(DEBUG_PIN_2);
 }

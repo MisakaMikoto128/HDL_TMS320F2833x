@@ -496,10 +496,13 @@ static void BFL_SCRT_Pluse_Transmit_Config(EPWM_INFO *pEpwmx_info,
                                            uint16_t _uiPluseNum,
                                            uint16_t _uiPluseWidth)
 {
+    _disable_interrupts();
     volatile struct EPWM_REGS *EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
     pEpwmx_info->INT_CNT = 0;
     pEpwmx_info->PLUSE_NUM = _uiPluseNum - 1;
     pEpwmx_info->busy = 1;
+    _enable_interrupts();
+
     // 最大值为5000 + 1
     // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
     // 1时，输出的脉冲宽度为5000us。
@@ -556,12 +559,13 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
     case SCRT_ALL:
     {
         volatile struct EPWM_REGS *EPwmRegHandle = NULL;
-
+        _disable_interrupts();
         pEpwmx_info = &epwm1_info;
         EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
         pEpwmx_info->INT_CNT = 0;
         pEpwmx_info->PLUSE_NUM = _uiPluseNum - 1;
         pEpwmx_info->busy = 1;
+        _enable_interrupts();
         // 最大值为5000 + 1
         // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
         // 1时，输出的脉冲宽度为5000us。
@@ -571,11 +575,13 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
                                (EPWM1_PWM_PERIOD * 1000ULL));
         EPwmRegHandle->TBCTR = 0x0000; // Clear counter
 
+        _disable_interrupts();
         pEpwmx_info = &epwm2_info;
         EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
         pEpwmx_info->INT_CNT = 0;
         pEpwmx_info->PLUSE_NUM = _uiPluseNum - 1;
         pEpwmx_info->busy = 1;
+        _enable_interrupts();
         // 最大值为5000 + 1
         // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
         // 1时，输出的脉冲宽度为5000us。
@@ -585,11 +591,13 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
                                (EPWM1_PWM_PERIOD * 1000ULL));
         EPwmRegHandle->TBCTR = 0x0000; // Clear counter
 
+        _disable_interrupts();
         pEpwmx_info = &epwm3_info;
         EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
         pEpwmx_info->INT_CNT = 0;
         pEpwmx_info->PLUSE_NUM = _uiPluseNum - 1;
         pEpwmx_info->busy = 1;
+        _enable_interrupts();
         // 最大值为5000 + 1
         // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
         // 1时，输出的脉冲宽度为5000us。
@@ -606,7 +614,6 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
         EPwm1Regs.ETSEL.bit.INTEN = 1;             // Enable INT
         EPwm3Regs.ETSEL.bit.INTEN = 1;             // Enable INT
     }
-
     break;
     default:
         return;

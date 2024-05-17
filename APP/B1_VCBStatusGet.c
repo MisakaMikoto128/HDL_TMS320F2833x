@@ -23,6 +23,27 @@ void B1_VCBStatusGet_Init()
     BFL_VCB_Seurity_Init();
 }
 
+void B1_VCBStatus_Update()
+{
+    g_pSysInfo->QF_FB = (uint16_t)BFL_VCB_Get_Actual_State(QF_SW);
+    g_pSysInfo->QS1_FB = (uint16_t)BFL_VCB_Get_Actual_State(QS1_SW);
+    g_pSysInfo->QS2_FB = (uint16_t)BFL_VCB_Get_Actual_State(QS2_SW);
+    g_pSysInfo->KM1_FB = (uint16_t)BFL_VCB_Get_Actual_State(KM1_SW);
+
+    if (g_pSysInfo->QF_FB == BFL_VCB_Closed)
+    {
+        g_pSysInfo->Capacitors_State = CAPACITORS_STATE_CUT_OFF;
+    }
+    else if (g_pSysInfo->QF_FB == BFL_VCB_Opened && g_pSysInfo->KM1_FB == BFL_VCB_Opened)
+    {
+        g_pSysInfo->Capacitors_State = CAPACITORS_STATE_WORKING;
+    }
+    else if (g_pSysInfo->QF_FB == BFL_VCB_Opened && g_pSysInfo->KM1_FB == BFL_VCB_Closed)
+    {
+        g_pSysInfo->Capacitors_State = CAPACITORS_STATE_BYPASS;
+    }
+}
+
 void B1_VCBStatusGet_DeltaPoll(uint32_t poll_delta)
 {
     for_Each_VCB_SW_t(vcb)
@@ -35,11 +56,7 @@ void B1_VCBStatusGet_DeltaPoll(uint32_t poll_delta)
             {
                 g_AppMainInfo.VCB_StateLast[vcb] = state;
                 g_AppMainInfo.VCB_StateFilterTimeCnt[vcb] = 0;
-
-                g_pSysInfo->QF_FB = (uint16_t)BFL_VCB_Get_Actual_State(QF_SW);
-                g_pSysInfo->QS1_FB = (uint16_t)BFL_VCB_Get_Actual_State(QS1_SW);
-                g_pSysInfo->QS2_FB = (uint16_t)BFL_VCB_Get_Actual_State(QS2_SW);
-                g_pSysInfo->KM1_FB = (uint16_t)BFL_VCB_Get_Actual_State(KM1_SW);
+                B1_VCBStatus_Update();
             }
         }
         else

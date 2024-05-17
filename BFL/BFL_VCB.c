@@ -123,6 +123,28 @@ struct BFL_BFL_VCB_t g_vcb_list[VCB_SW_NUM];
 #define XIN4_IsSet() (GpioDataRegs.GPBDAT.bit.GPIO43)
 
 #include "HDL_CPU_Time.h"
+
+/**
+ * @brief 设置真空断路器的控制继电器为使真空断路器断开状态。
+ *
+ * @param vcb
+ */
+void BFL_VCB_Relay_Set_As_Switch_Opened(BFL_VCB_SW_t vcb);
+
+/**
+ * @brief 设置真空断路器的控制继电器为使真空断路器闭合状态。
+ *
+ * @param vcb
+ */
+void BFL_VCB_Relay_Set_As_Switch_Closed(BFL_VCB_SW_t vcb);
+
+/**
+ * @brief 设置真空断路器的控制继电器为使真空断路器处于无控制状态。
+ * 这个方法不会改变真空断路器已经设置的状态。
+ * @param vcb
+ */
+void BFL_VCB_Relay_Set_As_Switch_No_Ctrl(BFL_VCB_SW_t vcb);
+
 /**
  * @brief 初始化真空断路控制继电器，使其处于无控制的状态。
  *
