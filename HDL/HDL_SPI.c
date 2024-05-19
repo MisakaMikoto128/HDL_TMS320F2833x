@@ -149,8 +149,9 @@ void HDL_SPI_Init(SPI_ID_t spiID, byte_t dataSize, uint32_t CPOL, uint32_t CPHA)
     1h (R/W) = SPICLK signal delayed by one half-cycle. Polarity
     determined by the CLOCK POLARITY bit.
     */
+    //Register (LOSPCP) -> LSPCLK -> default
     SpiaRegs.SPICTL.bit.CLK_PHASE = CPHA;
-    SpiaRegs.SPIBRR = 0x007F;//波特率=150M(CPU FREQ)/4/SPIBRR
+    SpiaRegs.SPIBRR = 0x0000;//波特率=150M(CPU FREQ)/4/(SPIBRR + 1)
     SpiaRegs.SPICCR.bit.SPISWRESET = 1; // Relinquish SPI from Reset
     SpiaRegs.SPIPRI.bit.FREE = 1; // Set so breakpoints don't disturb xmission
 
@@ -179,6 +180,7 @@ void HDL_SPI_Init(SPI_ID_t spiID, byte_t dataSize, uint32_t CPOL, uint32_t CPHA)
  */
 bool HDL_SPI_WriteRead(SPI_ID_t spiID, byte_t *pTxData, byte_t *pRxData, uint16_t size, uint32_t timeout)
 {
+    UNUSED(spiID);
     if ((pTxData == NULL && pRxData == NULL) || size == 0)
     {
         return false;
@@ -227,6 +229,7 @@ bool HDL_SPI_WriteRead(SPI_ID_t spiID, byte_t *pTxData, byte_t *pRxData, uint16_
         {
             uint16_t tmp = SpiaRegs.SPIRXBUF;
             tmp = 0;
+            UNUSED(tmp);
         }
     }
 __spi_error:
@@ -245,6 +248,7 @@ __spi_error:
  */
 uint32_t HDL_SPI_Write(SPI_ID_t spiID, byte_t *pTxData, uint32_t size, uint32_t timeout)
 {
+    UNUSED(spiID);
     if (pTxData == NULL || size == 0)
     {
         return false;
@@ -286,6 +290,7 @@ uint32_t HDL_SPI_Write(SPI_ID_t spiID, byte_t *pTxData, uint32_t size, uint32_t 
  */
 uint32_t HDL_SPI_Read(SPI_ID_t spiID, byte_t *pRxData, uint16_t size, uint32_t timeout)
 {
+    UNUSED(spiID);
     if (pRxData == NULL || size == 0)
     {
         return false;

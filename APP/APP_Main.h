@@ -149,12 +149,13 @@ extern "C"
         uint16_t Serious_Fault;         // 严重故障 0:无故障 1:有故障
         uint16_t Line_State;            // 线路状态 0:停运 1:运行
 
-        uint16_t __crc16;
+        uint32_t __crc16;
     } SysInfo_t;
 
     typedef struct tagAppMainInfo_t
     {
         SysInfo_t sysInfo;
+        uint16_t sysInfoSize;
         byte_t buffer[256 + 1];
 
         // B1_CapacitanceTemperatureMeasure

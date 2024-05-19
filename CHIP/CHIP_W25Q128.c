@@ -15,6 +15,8 @@
 #include "HDL_CPU_Time.h"
 #include <stddef.h>
 
+int32_t w25q128_write_page_no_erase(uint32_t address, byte_t *buf, uint32_t size);
+
 #define W25Q128_CHIP_ERASE_TIMEOUT_MAX 1000000U
 // W25Q128默认的超时时长，单位ms。至少大于擦除一个扇区的时间50ms。
 #define W25Q128_TIMEOUT_DEFAULT_VALUE 2000U
@@ -126,6 +128,43 @@ int32_t CHIP_W25Q128_Read(uint32_t address, byte_t *data, uint32_t size)
     HDL_SPI_WriteRead(SPI_1, NULL, data, size, W25Q128_TIMEOUT_DEFAULT_VALUE);
     HDL_SPI_CS_SET();
     return 0;
+}
+
+static byte_t g_pageBuf[W25Q128_PAGE_SIZE] = {0};
+/**
+ * @brief 这个方法还不完善。
+ *
+ * @param address
+ * @param data
+ * @param size
+ * @return int32_t
+ */
+int32_t CHIP_W25Q128_Write(uint32_t address, byte_t *data, uint32_t size)
+{
+    uint32_t sector = address / W25Q128_SECTOR_SIZE;
+    int32_t ret = 0;
+    if (sector >= W25Q128_SECTOR_COUNT)
+    {
+        return -1;
+    }
+
+    ret = CHIP_W25Q128_Erase_One_Sector(sector);
+
+    uint32_t writePages = size / W25Q128_PAGE_SIZE;
+    uint32_t remainBytes = size % W25Q128_PAGE_SIZE;
+    for (uint32_t page_idx = 0; page_idx < writePages; page_idx++)
+    {
+        memcpy(g_pageBuf, data + page_idx * W25Q128_PAGE_SIZE, W25Q128_PAGE_SIZE);
+        ret = w25q128_write_page_no_erase(sector * W25Q128_SECTOR_SIZE + page_idx * W25Q128_PAGE_SIZE, g_pageBuf, W25Q128_PAGE_SIZE);
+    }
+
+    if (remainBytes > 0)
+    {
+        memcpy(g_pageBuf, data + writePages * W25Q128_PAGE_SIZE, remainBytes);
+        ret = w25q128_write_page_no_erase(sector * W25Q128_SECTOR_SIZE + writePages * W25Q128_PAGE_SIZE, g_pageBuf, remainBytes);
+    }
+
+    return ret;
 }
 
 /**

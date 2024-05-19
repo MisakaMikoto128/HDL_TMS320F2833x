@@ -24,6 +24,7 @@
 #include "HDL_Uart.h"
 #include "ccommon.h"
 #include "log.h"
+#include "crc.h"
 #include "period_query.h"
 #include "mtime.h"
 
@@ -31,6 +32,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 // TODO:利用全局变量初始化为0的特性,但是浮点数还是要手动初始化
 AppMainInfo_t g_AppMainInfo = {0};
@@ -39,6 +41,7 @@ SysInfo_t *g_pSysInfo = &g_AppMainInfo.sysInfo;
 void Config_Default_Parameter()
 {
   memset(&g_AppMainInfo, 0, sizeof(g_AppMainInfo));
+  g_AppMainInfo.sysInfoSize = sizeof(SysInfo_t);
 
   g_pSysInfo->TV1A_ScaleL1 = 1.0f;
   g_pSysInfo->TV1B_ScaleL1 = 1.0f;
@@ -80,8 +83,62 @@ void Config_Default_Parameter()
   g_pSysInfo->T_SYS_UNDER_CANCLE = SEC(10);
 }
 
-void Load_Parameter_From_Flash()
+#define BFL_ARGUMENT_MAX_SIZE (W25Q128_SECTOR_SIZE)
+byte_t serializedBuffer[sizeof(SysInfo_t) * 2] = {0};
+
+bool APP_Main_Save_SysInfo()
 {
+  byte_t *pSysInfo = (byte_t *)&g_AppMainInfo.sysInfo;
+  // C2000的CPU没有真正的uint8_t类型，不能直接取对象地址字节化
+
+  for (size_t i = 0; i < sizeof(SysInfo_t); i++)
+  {
+    serializedBuffer[i * 2 + 0] = pSysInfo[i] & 0xFF;
+    serializedBuffer[i * 2 + 1] = (pSysInfo[i] >> 8) & 0xFF;
+  }
+  uint32_t crc_len = (sizeof(SysInfo_t) - sizeof(g_AppMainInfo.sysInfo.__crc16)) * 2;
+  uint16_t crc_get = CRC16_Modbus(serializedBuffer, crc_len);
+  g_AppMainInfo.sysInfo.__crc16 = crc_get;
+
+  for (size_t i = 0; i < sizeof(SysInfo_t); i++)
+  {
+    serializedBuffer[i * 2 + 0] = pSysInfo[i] & 0xFF;
+    serializedBuffer[i * 2 + 1] = (pSysInfo[i] >> 8) & 0xFF;
+  }
+  CHIP_W25Q128_Write(0, serializedBuffer, sizeof(serializedBuffer));
+  return true;
+}
+
+bool Load_Parameter_From_Flash()
+{
+  bool ret = false;
+  _Static_assert(sizeof(SysInfo_t) <= BFL_ARGUMENT_MAX_SIZE,
+                 "sizeof(SysInfo_t) need to be smaller than BFL_ARGUMENT_MAX_SIZE");
+
+  SysInfo_t sysInfo;
+  byte_t *pSysInfo = (byte_t *)&sysInfo;
+  memset(serializedBuffer, 0, sizeof(serializedBuffer));
+  CHIP_W25Q128_Read(0, (byte_t *)serializedBuffer, sizeof(serializedBuffer));
+  uint32_t crc_len = (sizeof(SysInfo_t) - sizeof(g_AppMainInfo.sysInfo.__crc16)) * 2;
+  uint16_t crc_get = CRC16_Modbus(serializedBuffer, crc_len);
+  for (size_t i = 0; i < sizeof(SysInfo_t); i++)
+  {
+    byte_t low = serializedBuffer[i * 2 + 0] & 0xFF;
+    byte_t high = serializedBuffer[i * 2 + 1] & 0xFF;
+    pSysInfo[i] = low | (high << 8);
+  }
+
+  if (sysInfo.__crc16 != crc_get)
+  {
+    APP_Main_Save_SysInfo();
+    ret = false;
+    return ret;
+  }
+
+  // 读取成功
+  g_AppMainInfo.sysInfo = sysInfo;
+  ret = true;
+  return ret;
 }
 
 void APP_Main_Init()

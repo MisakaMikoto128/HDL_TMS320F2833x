@@ -47,6 +47,8 @@
         "bfl_debugpin.h": "c",
         "b1_measure.h": "c",
         "crc.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "initializer_list": "c",
+        "utility": "c"
     }
 }
