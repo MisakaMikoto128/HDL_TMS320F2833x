@@ -34,7 +34,7 @@ static bool g_TimerInited = false;
 // after configuration.
 //
 static void ConfigTheCpuTimer(struct CPUTIMER_VARS *Timer, uint16_t TDDR,
-                              uint16_t PSC, Uint32 PRD, int enableInt)
+                              Uint32 PRD, int enableInt)
 {
   //
   // Initialize timer period
@@ -45,10 +45,7 @@ static void ConfigTheCpuTimer(struct CPUTIMER_VARS *Timer, uint16_t TDDR,
   //
   // Set pre-scale counter to divide by Freq (SYSCLKOUT)
   //
-  Timer->RegsAddr->TPRH.bit.PSCH = PSC >> 8; // 1MHz
   Timer->RegsAddr->TPRH.bit.TDDRH = TDDR >> 8;
-
-  Timer->RegsAddr->TPR.bit.PSC = PSC; // 1MHz
   Timer->RegsAddr->TPR.bit.TDDR = TDDR;
 
   // Ftimer = SYSCLKOUT / (PRD + 1) / (TPR + 1)
@@ -113,9 +110,9 @@ void HDL_CPU_Time_Init()
   // Configure CPU-Timer 0, 1, and 2 to interrupt every second:
   // 150MHz CPU Freq, 1 second Period (in uSeconds)
   //
-  ConfigTheCpuTimer(&CpuTimer0, 150 - 1, 0, 1000 - 1, 1);     // 1ms period
-  ConfigTheCpuTimer(&CpuTimer1, 150 - 1, 0, 0xFFFFFFFFUL, 0); // 1us
-  ConfigTheCpuTimer(&CpuTimer2, 150 - 1, 0, 1000 - 1, 0);
+  ConfigTheCpuTimer(&CpuTimer0, 150 - 1, 1000 - 1, 1);     // 1ms period
+  ConfigTheCpuTimer(&CpuTimer1, 150 - 1, 0xFFFFFFFFUL, 0);              // 1us
+  ConfigTheCpuTimer(&CpuTimer2, 150 - 1, 1000 - 1, 0);
 #endif
 
 #if (CPU_FRQ_100MHZ)
@@ -123,9 +120,9 @@ void HDL_CPU_Time_Init()
   // Configure CPU-Timer 0, 1, and 2 to interrupt every second:
   // 100MHz CPU Freq, 1 second Period (in uSeconds)
   //
-  ConfigTheCpuTimer(&CpuTimer0, 100 - 1, 0, 1000, 1); // 1ms period
-  ConfigTheCpuTimer(&CpuTimer1, 100 - 1, 0, 1, 0);    // 1us
-  ConfigTheCpuTimer(&CpuTimer2, 100 - 1, 0, 1000000, 0);
+  ConfigTheCpuTimer(&CpuTimer0, 100 - 1, 1000, 1); // 1ms period
+  ConfigTheCpuTimer(&CpuTimer1, 100 - 1, 1, 0);    // 1us
+  ConfigTheCpuTimer(&CpuTimer2, 100 - 1, 1000000, 0);
 #endif
 
   //
@@ -165,26 +162,34 @@ uint32_t HDL_CPU_Time_GetTick()
 {
   uint32_t count;
 
-  // 禁止中断
-  _disable_interrupts();
-  //
-  // 0 = Disable/ 1 = Enable Timer Interrupt
-  //
-//   CpuTimer0.RegsAddr->TCR.bit.TIE = 0; 
-  //TODO:这样做可以提高性能，避免影响其他的中断，也可以在中断中调用，因为只是获取值，而不是等待
-  //但是实际在其他的中断中循环调用是否会造成问题还有待考证，还有就是
+    // 禁止中断
+    _disable_interrupts();
+    //
+    // 0 = Disable/ 1 = Enable Timer Interrupt
+    //
+  //   CpuTimer0.RegsAddr->TCR.bit.TIE = 0;
+    //TODO:这样做可以提高性能，避免影响其他的中断，也可以在中断中调用，因为只是获取值，而不是等待
+    //但是实际在其他的中断中循环调用是否会造成问题还有待考证，还有就是
 
-  // 读取计数器值
-  count = CpuTimer0.InterruptCount;
+    // 读取计数器值
+    count = CpuTimer0.InterruptCount;
 
-  // 恢复中断
-  _enable_interrupts();
-//   CpuTimer0.RegsAddr->TCR.bit.TIE = 1;
+    // 恢复中断
+    _enable_interrupts();
+  //   CpuTimer0.RegsAddr->TCR.bit.TIE = 1;
 
+  // count = 0xFFFFFFFFUL - CpuTimer0.RegsAddr->TIM.all;
   return count;
 }
 
-void HDL_CPU_Time_ResetTick() { CpuTimer0.InterruptCount = 0; }
+void HDL_CPU_Time_ResetTick()
+{
+  CpuTimer0.InterruptCount = 0;
+  //
+  // Reload all counter register with period value
+  //
+  // CpuTimer0.RegsAddr->TCR.bit.TRB = 1;
+}
 
 uint32_t HDL_CPU_Time_GetUsTick()
 {
@@ -277,11 +282,11 @@ bool HDL_CPU_Time_StartHardTimer(uint16_t _CC, UsTimer_t _uiTimeOut,
     s_TIM1Busy = true;
 
 #if (CPU_FRQ_150MHZ)
-    ConfigTheCpuTimer(&CpuTimer2, 150 - 1, 0, _uiTimeOut - 1, 1);
+    ConfigTheCpuTimer(&CpuTimer2, 150 - 1, _uiTimeOut - 1, 1);
     CpuTimer2Regs.TCR.bit.TSS = 0; // write-only instruction to set TSS bit = 0
 #endif
 #if (CPU_FRQ_100MHZ)
-    ConfigTheCpuTimer(&CpuTimer2, 100 - 1, 0, _uiTimeOut - 1, 0);
+    ConfigTheCpuTimer(&CpuTimer2, 100 - 1, _uiTimeOut - 1, 0);
 #endif
   }
 

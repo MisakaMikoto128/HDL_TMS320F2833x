@@ -32,12 +32,12 @@ typedef uint32_t UsTimer_t;
     void HDL_CPU_Time_Init();
     uint32_t HDL_CPU_Time_GetTick();
     void HDL_CPU_Time_ResetTick();
+    void HDL_CPU_Time_SetCPUTickCallback(CPU_Time_Callback_t _pCallBack);
+    void HDL_CPU_Time_DelayMs(uint32_t DelayMs);
+
     uint32_t HDL_CPU_Time_GetUsTick();
     void HDL_CPU_Time_ResetUsTick();
-    void HDL_CPU_Time_SetCPUTickCallback(CPU_Time_Callback_t _pCallBack);
-
     void HDL_CPU_Time_DelayUs(UsTimer_t DelayUs);
-    void HDL_CPU_Time_DelayMs(uint32_t DelayMs);
     bool HDL_CPU_Time_StartHardTimer(uint16_t _CC, UsTimer_t _uiTimeOut, void *_pCallBack);
     void HDL_CPU_Time_StopHardTimer(uint16_t _CC);
 
