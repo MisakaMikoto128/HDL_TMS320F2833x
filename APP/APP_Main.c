@@ -178,13 +178,20 @@ void Clear_All_Fault()
   APP_Main_NotifyHaveParamNeedToSave();
 }
 
+
+void cb1(void *p)
+{
+    ScibRegs.SCITXBUF = 'X';
+}
+
 void APP_Main_Init()
 {
   HDL_CPU_Time_Init();
   BFL_DebugPin_Init();
 
   // MAX232
-  Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
+  Uart_Init(COM2, 9600, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
+  Uart_SetWriteOverCallback(COM2, cb1, NULL);
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
   BFL_VCB_Seurity_Init();
@@ -195,7 +202,7 @@ void APP_Main_Init()
   Config_PowerOn_Parameter();
 
   Clear_All_Fault();
-  
+
   B1_Measure_Init();
   B1_CapacitanceTemperatureMeasure_Init();
   B1_ModbusRTUSlaver_Init();
@@ -237,8 +244,25 @@ void ForeGroundTask()
   }
 }
 
-void APP_Main_Poll()
+void APP_Main_Poll1()
 {
   BackGroundTask();
   ForeGroundTask();
+}
+
+uint32_t cnt = 1;
+
+uint32_t t = 0;
+void APP_Main_Poll()
+{
+  HDL_CPU_Time_DelayMs(100ULL);
+
+  Uint32 tickA = HDL_CPU_Time_GetUsTick();
+
+  Uart_Write(COM2, (const uint16_t *)"123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789",
+             cnt);
+
+  Uint32 tickB = HDL_CPU_Time_GetUsTick();
+
+  t = (tickB - tickA);
 }
