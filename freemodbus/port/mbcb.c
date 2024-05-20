@@ -46,7 +46,8 @@ byte_t ucRegDiscreteBuf[REG_DISCRETE_SIZE / 8] = {0x01, 0x02};
  */
 uint16_t *eMBGetRegHoldingBufBase(size_t *usLen)
 {
-    if (usLen != NULL) {
+    if (usLen != NULL)
+    {
         *usLen = REG_HOLDING_NREGS;
     }
     return usRegHoldingBuf;
@@ -70,15 +71,19 @@ eMBRegInputCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs)
     eMBErrorCode eStatus = MB_ENOERR;
     int iRegIndex;
 
-    if ((usAddress >= REG_INPUT_START) && (usAddress + usNRegs <= REG_INPUT_START + REG_INPUT_NREGS)) {
+    if ((usAddress >= REG_INPUT_START) && (usAddress + usNRegs <= REG_INPUT_START + REG_INPUT_NREGS))
+    {
         iRegIndex = (int)(usAddress - usRegInputStart);
-        while (usNRegs > 0) {
+        while (usNRegs > 0)
+        {
             *pucRegBuffer++ = (UCHAR)(usRegInputBuf[iRegIndex] >> 8);
             *pucRegBuffer++ = (UCHAR)(usRegInputBuf[iRegIndex] & 0xFF);
             iRegIndex++;
             usNRegs--;
         }
-    } else {
+    }
+    else
+    {
         eStatus = MB_ENOREG;
     }
     return eStatus;
@@ -101,45 +106,34 @@ eMBErrorCode
 eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegisterMode eMode)
 {
     eMBErrorCode eStatus = MB_ENOERR;
-    int iRegIndex        = 0;
+    int iRegIndex = 0;
     if ((usAddress >= REG_HOLDING_START) &&
-        ((usAddress + usNRegs) <= (REG_HOLDING_START + REG_HOLDING_NREGS))) {
+        ((usAddress + usNRegs) <= (REG_HOLDING_START + REG_HOLDING_NREGS)))
+    {
         iRegIndex = (int)(usAddress - 1 - usRegHoldingStart);
-        switch (eMode) {
-            case MB_REG_READ: // 读 MB_REG_READ = 0
-                while (usNRegs > 0) {
-                    *pucRegBuffer++ = (byte_t)(usRegHoldingBuf[iRegIndex] >> 8);
-                    *pucRegBuffer++ = (byte_t)(usRegHoldingBuf[iRegIndex] & 0xFF);
-                    iRegIndex++;
-                    usNRegs--;
-                }
-                // 小端序
-                //  iRegIndex = iRegIndex + usNRegs - 1;
-                //  while (usNRegs > 0) {
-                //      *pucRegBuffer++ = (byte_t)(usRegHoldingBuf[iRegIndex] & 0xFF);
-                //      *pucRegBuffer++ = (byte_t)(usRegHoldingBuf[iRegIndex] >> 8);
-                //      iRegIndex--;
-                //      usNRegs--;
-                //  }
-                break;
-            case MB_REG_WRITE: // 写 MB_REG_WRITE = 0
-                while (usNRegs > 0) {
-                    usRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
-                    usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
-                    iRegIndex++;
-                    usNRegs--;
-                }
-
-                // 小端序
-                //  iRegIndex = iRegIndex + usNRegs - 1;
-                //  while (usNRegs > 0) {
-                //      usRegHoldingBuf[iRegIndex] = *pucRegBuffer++;
-                //      usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++ << 8;
-                //      iRegIndex--;
-                //      usNRegs--;
-                //  }
+        switch (eMode)
+        {
+        case MB_REG_READ: // 读 MB_REG_READ = 0
+            while (usNRegs > 0)
+            {
+                *pucRegBuffer++ = (byte_t)(usRegHoldingBuf[iRegIndex] >> 8);
+                *pucRegBuffer++ = (byte_t)(usRegHoldingBuf[iRegIndex] & 0xFF);
+                iRegIndex++;
+                usNRegs--;
+            }
+            break;
+        case MB_REG_WRITE: // 写 MB_REG_WRITE = 0
+            while (usNRegs > 0)
+            {
+                usRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
+                usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
+                iRegIndex++;
+                usNRegs--;
+            }
         }
-    } else {
+    }
+    else
+    {
         eStatus = MB_ENOREG;
     }
     return eStatus;
@@ -174,31 +168,37 @@ eMBRegCoilsCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNCoils,
 
     // 检查寄存器是否在指定范围内
     if (((int16_t)usAddress >= REG_COILS_START) &&
-        (usAddress + usNCoils <= REG_COILS_START + REG_COILS_SIZE)) {
+        (usAddress + usNCoils <= REG_COILS_START + REG_COILS_SIZE))
+    {
         // 计算寄存器偏移量
         usBitOffset = (int16_t)(usAddress - REG_COILS_START);
-        switch (eMode) {
-                // 读操作
-            case MB_REG_READ:
-                while (iNCoils > 0) {
-                    *pucRegBuffer++ = xMBUtilGetBits(ucRegCoilsBuf, usBitOffset,
-                                                     (byte_t)(iNCoils > 8 ? 8 : iNCoils));
-                    iNCoils -= 8;
-                    usBitOffset += 8;
-                }
-                break;
+        switch (eMode)
+        {
+            // 读操作
+        case MB_REG_READ:
+            while (iNCoils > 0)
+            {
+                *pucRegBuffer++ = xMBUtilGetBits(ucRegCoilsBuf, usBitOffset,
+                                                 (byte_t)(iNCoils > 8 ? 8 : iNCoils));
+                iNCoils -= 8;
+                usBitOffset += 8;
+            }
+            break;
 
-                // 写操作
-            case MB_REG_WRITE:
-                while (iNCoils > 0) {
-                    xMBUtilSetBits(ucRegCoilsBuf, usBitOffset,
-                                   (byte_t)(iNCoils > 8 ? 8 : iNCoils),
-                                   *pucRegBuffer++);
-                    iNCoils -= 8;
-                }
-                break;
+            // 写操作
+        case MB_REG_WRITE:
+            while (iNCoils > 0)
+            {
+                xMBUtilSetBits(ucRegCoilsBuf, usBitOffset,
+                               (byte_t)(iNCoils > 8 ? 8 : iNCoils),
+                               *pucRegBuffer++);
+                iNCoils -= 8;
+            }
+            break;
         }
-    } else {
+    }
+    else
+    {
         eStatus = MB_ENOREG;
     }
     return eStatus;
@@ -226,17 +226,21 @@ eMBRegDiscreteCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNDiscrete)
 
     // 判断寄存器时候再制定范围内
     if (((int16_t)usAddress >= REG_DISCRETE_START) &&
-        (usAddress + usNDiscrete <= REG_DISCRETE_START + REG_DISCRETE_SIZE)) {
+        (usAddress + usNDiscrete <= REG_DISCRETE_START + REG_DISCRETE_SIZE))
+    {
         // 获得偏移量
         usBitOffset = (uint16_t)(usAddress - REG_DISCRETE_START);
 
-        while (iNDiscrete > 0) {
+        while (iNDiscrete > 0)
+        {
             *pucRegBuffer++ = xMBUtilGetBits(ucRegDiscreteBuf, usBitOffset,
                                              (byte_t)(iNDiscrete > 8 ? 8 : iNDiscrete));
             iNDiscrete -= 8;
             usBitOffset += 8;
         }
-    } else {
+    }
+    else
+    {
         eStatus = MB_ENOREG;
     }
     return eStatus;
