@@ -37,7 +37,7 @@ B2_CmdMakeCapacitorsWork_Result_t B2_CmdMakeCapacitorsWork_Exec()
     result.code = CMD_CODE_NO_FAULT;
     result.QF_Fault = BFL_VBC_NO_FAULT;
     result.KM1_Fault = BFL_VBC_NO_FAULT;
-
+    result.SCRT_Fault = SCR_NO_FAULT;
     if (Have_Serious_Fault())
     {
         result.code = CMD_CODE_SYS_IS_IN_SERIOUS_FAULT;
@@ -62,7 +62,7 @@ B2_CmdMakeCapacitorsWork_Result_t B2_CmdMakeCapacitorsWork_Exec()
     {
         BFL_VCB_Set_As_Switch_Opened(QF_SW);
         BFL_VCB_Set_As_Switch_Opened(KM1_SW);
-        async_delay(MS(g_pSysInfo->T1), async_delay_callback, NULL);
+        async_delay(MS(g_pSysInfo->T1_MS), async_delay_callback, NULL);
 
         // 执行持续10ms的检测
         QF_Fault = BFL_VBC_NO_FAULT;
@@ -133,9 +133,20 @@ void B2_CmdMakeCapacitorsWork_Exec_Solution()
     if (result.code == CMD_CODE_EXEC_OCCUR_SERIOUS_FAULT)
     {
         // 更新故障状态
-        g_pSysInfo->Serious_Fault = 1;
-        g_pSysInfo->QF_Fault = result.QF_Fault;
-        g_pSysInfo->KM1_Fault = result.KM1_Fault;
+        if (g_pSysInfo->Serious_Fault == 0 ||
+            g_pSysInfo->QF_Fault != result.QF_Fault ||
+            g_pSysInfo->KM1_Fault != result.KM1_Fault ||
+            g_pSysInfo->SCRT_Fault != result.SCRT_Fault)
+        {
+
+            g_pSysInfo->Serious_Fault = 1;
+            g_pSysInfo->QF_Fault = result.QF_Fault;
+            g_pSysInfo->KM1_Fault = result.KM1_Fault;
+
+            APP_Main_NotifyHaveParamNeedToSave();
+        }
+
+
 
         // TODO: 处理严重故障
         B2_CmdCutOffCapacitors_Exec();

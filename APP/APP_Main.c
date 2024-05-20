@@ -10,6 +10,7 @@
  *
  */
 #include "APP_Main.h"
+#include "B0_DeltaPoll.h"
 #include "BFL_Button.h"
 #include "BFL_Buzz.h"
 #include "BFL_DebugPin.h"
@@ -23,16 +24,16 @@
 #include "HDL_CPU_Time.h"
 #include "HDL_Uart.h"
 #include "ccommon.h"
-#include "log.h"
 #include "crc.h"
-#include "period_query.h"
+#include "log.h"
 #include "mtime.h"
+#include "period_query.h"
 
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 // TODO:利用全局变量初始化为0的特性,但是浮点数还是要手动初始化
 AppMainInfo_t g_AppMainInfo = {0};
@@ -61,34 +62,39 @@ void Config_Default_Parameter()
   g_pSysInfo->TA1B_ScaleL2 = 1.0f;
   g_pSysInfo->TA1C_ScaleL2 = 1.0f;
 
-  g_pSysInfo->I_TA_low_thl = 50;
-  g_pSysInfo->I_TA_low_thh = 55;
-  g_pSysInfo->T_I_TA_Thh = SEC(10) * 10;
-  g_pSysInfo->I_TA_oc = 500;
-  g_pSysInfo->T_I_TA_oc = SEC(10) * 10;
-  g_pSysInfo->V_TVx_ov = 2.0f;
-  g_pSysInfo->T_V_TVx_ov = MINUTE(60);
+  g_pSysInfo->I_TA_low_thl_A = 50;
+  g_pSysInfo->I_TA_low_thh_A = 55;
+  g_pSysInfo->T_I_TA_Thh_SEC = SEC(10);
+  g_pSysInfo->I_TA_oc_A = 500;
+  g_pSysInfo->T_I_TA_oc_SEC = SEC(10);
+  g_pSysInfo->V_TVx_ov_kV = 2.0f;
+  g_pSysInfo->T_V_TVx_ov_min = MINUTE(60);
   g_pSysInfo->Tc_ot = 80;
-  g_pSysInfo->T_Tc_ot = SEC(10);
-  g_pSysInfo->T1 = MS(1000);
-  g_pSysInfo->T2 = US(2000);
-  g_pSysInfo->T3 = MS(5);
-  g_pSysInfo->T4 = MS(5);
+  g_pSysInfo->T_Tc_ot_SEC = SEC(10);
+  g_pSysInfo->T1_MS = MS(1000);
+  g_pSysInfo->T2_US = US(2000);
+  g_pSysInfo->T3_MS = MS(5);
+  g_pSysInfo->T4_MS = MS(5);
+  g_pSysInfo->V_SCR_NORMAL_DIFF_kV = 0.1f;
+  g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC = SEC(3);
+  g_pSysInfo->I_SCR_NORMAL_DIFF_A = 1.0f;
 
-  g_pSysInfo->SYS_MODE = SYS_MODE_AUTO;
-  g_pSysInfo->V_SYS_STOP = 4.0f;
-  g_pSysInfo->V_SYS_UNDER = 8.0f;
-  g_pSysInfo->V_SYS_THH = 10.5f;
-  g_pSysInfo->V_SYS_OV = 12.0f;
-  g_pSysInfo->T_SYS_UNDER_CANCLE = SEC(10);
+  g_pSysInfo->V_SYS_STOP_kV = 4.0f;
+  g_pSysInfo->V_SYS_UNDER_kV = 8.0f;
+  g_pSysInfo->V_SYS_THH_kV = 10.5f;
+  g_pSysInfo->V_SYS_OV_kV = 12.0f;
+  g_pSysInfo->T_SYS_UNDER_CANCLE_SEC = SEC(10);
+  g_pSysInfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC = SEC(5);
 }
 
-#define BFL_ARGUMENT_MAX_SIZE (W25Q128_SECTOR_SIZE)
-byte_t serializedBuffer[sizeof(SysInfo_t) * 2] = {0};
-
+#define BFL_ARGUMENT_MAX_SIZE                         \
+  (sizeof(g_AppMainInfo.buffer) > W25Q128_SECTOR_SIZE \
+       ? W25Q128_SECTOR_SIZE                          \
+       : sizeof(g_AppMainInfo.buffer))
 bool APP_Main_Save_SysInfo()
 {
   byte_t *pSysInfo = (byte_t *)&g_AppMainInfo.sysInfo;
+  byte_t *serializedBuffer = (byte_t *)&g_AppMainInfo.buffer;
   // C2000的CPU没有真正的uint8_t类型，不能直接取对象地址字节化
 
   for (size_t i = 0; i < sizeof(SysInfo_t); i++)
@@ -97,6 +103,7 @@ bool APP_Main_Save_SysInfo()
     serializedBuffer[i * 2 + 1] = (pSysInfo[i] >> 8) & 0xFF;
   }
   uint32_t crc_len = (sizeof(SysInfo_t) - sizeof(g_AppMainInfo.sysInfo.__crc16)) * 2;
+  uint32_t serialized_len = sizeof(SysInfo_t) * 2;
   uint16_t crc_get = CRC16_Modbus(serializedBuffer, crc_len);
   g_AppMainInfo.sysInfo.__crc16 = crc_get;
 
@@ -105,22 +112,26 @@ bool APP_Main_Save_SysInfo()
     serializedBuffer[i * 2 + 0] = pSysInfo[i] & 0xFF;
     serializedBuffer[i * 2 + 1] = (pSysInfo[i] >> 8) & 0xFF;
   }
-  CHIP_W25Q128_Write(0, serializedBuffer, sizeof(serializedBuffer));
+  CHIP_W25Q128_Write(0, serializedBuffer, serialized_len);
   return true;
 }
 
 bool Load_Parameter_From_Flash()
 {
   bool ret = false;
-  _Static_assert(sizeof(SysInfo_t) <= BFL_ARGUMENT_MAX_SIZE,
-                 "sizeof(SysInfo_t) need to be smaller than BFL_ARGUMENT_MAX_SIZE");
+  _Static_assert(
+      sizeof(SysInfo_t) * 2 <= BFL_ARGUMENT_MAX_SIZE,
+      "sizeof(SysInfo_t) need to be smaller than BFL_ARGUMENT_MAX_SIZE");
+  byte_t *serializedBuffer = (byte_t *)&g_AppMainInfo.buffer;
+  uint32_t serialized_len = sizeof(SysInfo_t) * 2;
+  memset(serializedBuffer, 0, serialized_len);
+
+  CHIP_W25Q128_Read(0, (byte_t *)serializedBuffer, serialized_len);
+  uint32_t crc_len = (sizeof(SysInfo_t) - sizeof(g_AppMainInfo.sysInfo.__crc16)) * 2;
+  uint16_t crc_get = CRC16_Modbus(serializedBuffer, crc_len);
 
   SysInfo_t sysInfo;
   byte_t *pSysInfo = (byte_t *)&sysInfo;
-  memset(serializedBuffer, 0, sizeof(serializedBuffer));
-  CHIP_W25Q128_Read(0, (byte_t *)serializedBuffer, sizeof(serializedBuffer));
-  uint32_t crc_len = (sizeof(SysInfo_t) - sizeof(g_AppMainInfo.sysInfo.__crc16)) * 2;
-  uint16_t crc_get = CRC16_Modbus(serializedBuffer, crc_len);
   for (size_t i = 0; i < sizeof(SysInfo_t); i++)
   {
     byte_t low = serializedBuffer[i * 2 + 0] & 0xFF;
@@ -141,6 +152,32 @@ bool Load_Parameter_From_Flash()
   return ret;
 }
 
+void Config_PowerOn_Parameter()
+{
+  g_pSysInfo->SYS_MODE = SYS_MODE_AUTO;
+  g_pSysInfo->Capacitors_State = CAPACITORS_STATE_CUT_OFF;
+  g_pSysInfo->Capacitors_Exec_State = CAPACITORS_STATE_CUT_OFF;
+  g_pSysInfo->Minor_Fault = 0;
+  g_pSysInfo->Line_State = LINE_STATE_STOP;
+
+  // g_pSysInfo->Serious_Fault = 0; //保持
+  // g_pSysInfo->KM1_Fault = BFL_VBC_NO_FAULT;
+  // g_pSysInfo->QF_Fault = BFL_VBC_NO_FAULT;
+  // g_pSysInfo->SCRT_Fault = 0;
+}
+
+void Clear_All_Fault()
+{
+  g_pSysInfo->Serious_Fault = 0;
+  g_pSysInfo->KM1_Fault = BFL_VBC_NO_FAULT;
+  g_pSysInfo->QF_Fault = BFL_VBC_NO_FAULT;
+  g_pSysInfo->SCRT_Fault = 0;
+  g_pSysInfo->VTx_A_Breakdown_Fault = SCR_NO_FAULT;
+  g_pSysInfo->VTx_B_Breakdown_Fault = SCR_NO_FAULT;
+  g_pSysInfo->VTx_C_Breakdown_Fault = SCR_NO_FAULT;
+  APP_Main_NotifyHaveParamNeedToSave();
+}
+
 void APP_Main_Init()
 {
   HDL_CPU_Time_Init();
@@ -155,7 +192,10 @@ void APP_Main_Init()
 
   Config_Default_Parameter();
   Load_Parameter_From_Flash();
+  Config_PowerOn_Parameter();
 
+  Clear_All_Fault();
+  
   B1_Measure_Init();
   B1_CapacitanceTemperatureMeasure_Init();
   B1_ModbusRTUSlaver_Init();
@@ -165,28 +205,40 @@ void APP_Main_Init()
 
 void BackGroundTask()
 {
-  B0_DeltaPoll();
+  BFL_DebugPin_Set(DEBUG_PIN_2);
   B1_CapacitanceTemperatureMeasure_Poll();
   B1_ModbusRTUSlaver_Poll();
   B1_Measure_Poll();
+  B0_DeltaPoll(poll_delta,
+               B1_SysModeGet_DeltaPoll(poll_delta);
+               B1_VCBStatusGet_DeltaPoll(poll_delta););
+  BFL_DebugPin_Reset(DEBUG_PIN_2);
 }
 
+// 正常运行
 void ForeGroundTask()
 {
-  if (g_pSysInfo->SYS_MODE == SYS_MODE_AUTO)
+  B0_DeltaPoll(poll_delta, {
+    if (g_pSysInfo->SYS_MODE == SYS_MODE_AUTO)
+    {
+      B3_SysAutoMode_DeltaPoll(poll_delta);
+    }
+    else if (g_pSysInfo->SYS_MODE == SYS_MODE_MANUAL)
+    {
+      B3_SysManualMode_DeltaPoll(poll_delta);
+    }
+  });
+
+  // 耗时操作，放在前台执行
+  if (APP_Main_HaveParamNeedToSave())
   {
-    B3_SysAutoMode_Poll();
-  }
-  else if (g_pSysInfo->SYS_MODE == SYS_MODE_MANUAL)
-  {
-    B3_SysManualMode_Poll();
+    APP_Main_Save_SysInfo();
+    APP_Main_ClearParamNeedToSave();
   }
 }
 
 void APP_Main_Poll()
 {
-  BFL_DebugPin_Set(DEBUG_PIN_2);
   BackGroundTask();
   ForeGroundTask();
-  BFL_DebugPin_Reset(DEBUG_PIN_2);
 }

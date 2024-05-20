@@ -32,6 +32,7 @@ static void async_delay_callback1(void *arg)
 {
     uint32_t *scrtFb = (uint32_t *)arg;
     *scrtFb |= BFL_SCRR_Have_Signal(SCRR_ALL);
+    BackGroundTask();
 }
 
 static void async_delay_callback2(void *arg)
@@ -59,14 +60,14 @@ B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec()
     uint32_t scrtFb = 0;
     for (int tryCnt = 0; tryCnt < 3; tryCnt++)
     {
-        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 50, US(g_pSysInfo->T2));
+        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 50, US(g_pSysInfo->T2_US));
 
-        async_delay(MS(g_pSysInfo->T4), async_delay_callback1, &scrtFb);
+        async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback1, &scrtFb);
         SCRT_Fault = (~scrtFb) & BFL_SCR_SIGNAL_MASK;
 
         BFL_VCB_Set_As_Switch_Closed(QF_SW);
         BFL_VCB_Set_As_Switch_Closed(KM1_SW);
-        async_delay(MS(g_pSysInfo->T1), async_delay_callback2, NULL);
+        async_delay(MS(g_pSysInfo->T1_MS), async_delay_callback2, NULL);
 
         // 执行持续10ms的检测
         QF_Fault = BFL_VBC_NO_FAULT;
@@ -137,11 +138,20 @@ void B2_CmdCutOffCapacitors_Exec_Solution()
     if (result.code == CMD_CODE_EXEC_OCCUR_SERIOUS_FAULT)
     {
         // 更新故障状态
-        g_pSysInfo->Serious_Fault = 1;
-        g_pSysInfo->QF_Fault = result.QF_Fault;
-        g_pSysInfo->KM1_Fault = result.KM1_Fault;
-        g_pSysInfo->SCRT_Fault = result.SCRT_Fault;
-    }else if (result.code == CMD_CODE_EXEC_SUCCESS)
+        if (g_pSysInfo->Serious_Fault == 0 ||
+            g_pSysInfo->QF_Fault != result.QF_Fault ||
+            g_pSysInfo->KM1_Fault != result.KM1_Fault ||
+            g_pSysInfo->SCRT_Fault != result.SCRT_Fault)
+        {
+            g_pSysInfo->Serious_Fault = 1;
+            g_pSysInfo->QF_Fault = result.QF_Fault;
+            g_pSysInfo->KM1_Fault = result.KM1_Fault;
+            g_pSysInfo->SCRT_Fault = result.SCRT_Fault;
+
+            APP_Main_NotifyHaveParamNeedToSave();
+        }
+    }
+    else if (result.code == CMD_CODE_EXEC_SUCCESS)
     {
         g_pSysInfo->Capacitors_Exec_State = CAPACITORS_STATE_CUT_OFF;
     }

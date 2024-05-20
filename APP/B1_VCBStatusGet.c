@@ -21,6 +21,8 @@
 void B1_VCBStatusGet_Init()
 {
     BFL_VCB_Seurity_Init();
+    BFL_VCB_Set_As_Switch_Closed(QF_SW);
+    BFL_VCB_Set_As_Switch_Closed(KM1_SW);
 }
 
 void B1_VCBStatus_Update()

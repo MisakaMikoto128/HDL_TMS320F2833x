@@ -49,6 +49,10 @@
         "crc.h": "c",
         "stdlib.h": "c",
         "initializer_list": "c",
-        "utility": "c"
+        "utility": "c",
+        "b0_deltapoll.h": "c",
+        "state_duration_timer.h": "c",
+        "mtime.h": "c",
+        "math.h": "c"
     }
 }
