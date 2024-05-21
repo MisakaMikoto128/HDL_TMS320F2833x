@@ -188,6 +188,8 @@ extern "C"
         uint16_t Serious_Fault;         // 严重故障 0:无故障 1:有故障
         uint16_t Line_State;            // 线路状态 0:停运 1:运行
 
+        uint32_t devId;  //设备编号
+        uint16_t devType; //设备型号
         uint32_t __crc16;
     } SysInfo_t;
 

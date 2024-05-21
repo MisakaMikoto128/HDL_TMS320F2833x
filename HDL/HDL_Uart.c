@@ -295,6 +295,8 @@ void Uart_Init(COMID_t comId, uint32_t baud, uint32_t wordLen, uint32_t stopBit,
     pDev->receive_char_ready_callback = NULL;
 }
 
+#define __UART_USING_WRITE_MODE1 1
+#if __UART_USING_WRITE_MODE1 == 1
 uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen)
 {
     // TODO:这里如果cnt = 1,在调试模式好像会占用发送一个字节的时间，暂时无法解决
@@ -304,7 +306,7 @@ uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen)
     {
         return uiBytesWritten;
     }
-    int res = 0;
+    byte_t res = 0;
     COM_Dev_t *pDev = &_gCOMList[comId];
     if (pDev->inited == false)
     {
@@ -312,13 +314,13 @@ uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen)
         return uiBytesWritten;
     }
 
-    for (int i = 0; i < uLen; i++)
+    for (uint32_t i = 0; i < uLen; i++)
     {
         while (true)
         {
             /* 将新数据填入发送缓冲区 */
             DISABLE_INT();
-            res = cqueue_enqueue(&_gCOMList[comId].txQueue, (const CObject_t)&writeBuf[i]);
+            res = cqueue_enqueue(&_gCOMList[comId].txQueue, (CObject_t)(&writeBuf[i]));
             ENABLE_INT();
             if (res > 0)
             {
@@ -338,57 +340,57 @@ uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen)
     pDev->ScixRegs->SCIFFTX.bit.TXFFIENA = 1;
     return uiBytesWritten;
 }
+#else
+uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen)
+{
+    uint32_t cnt = 0;
+    switch (comId)
+    {
+    case COM1:
+    {
+        for (cnt = 0; cnt < uLen; cnt++)
+        {
+            SciaRegs.SCITXBUF = writeBuf[cnt];
+            // 在此做判断，如果发送FIFO缓冲中数据  >=
+            // 16字节，要等待下直到FIFO小于16才能再次向FIFO中存数据
+            while (SciaRegs.SCIFFTX.bit.TXFFST >= 16)
+            {
+            }
+        }
+        //  TX FIFO Interrupt Enable
+        SciaRegs.SCIFFTX.bit.TXFFIENA = 1;
+        // TODO:这里如果cnt = 1,在调试模式好像会占用发送一个字节的时间，暂时无法解决
+    }
 
-// uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen)
-// {
-//     uint32_t cnt = 0;
-//     switch (comId)
-//     {
-//     case COM1:
-//     {
-//         for (cnt = 0; cnt < uLen; cnt++)
-//         {
-//             SciaRegs.SCITXBUF = writeBuf[cnt];
-//             // 在此做判断，如果发送FIFO缓冲中数据  >=
-//             // 16字节，要等待下直到FIFO小于16才能再次向FIFO中存数据
-//             while (SciaRegs.SCIFFTX.bit.TXFFST >= 16)
-//             {
-//             }
-//         }
-//         //  TX FIFO Interrupt Enable
-//         SciaRegs.SCIFFTX.bit.TXFFIENA = 1;
-//         // TODO:这里如果cnt =
-//         1,在调试模式好像会占用发送一个字节的时间，暂时无法解决
-//     }
-
-//     break;
-//     case COM2:
-//         for (cnt = 0; cnt < uLen; cnt++)
-//         {
-//             ScibRegs.SCITXBUF = writeBuf[cnt];
-//             while (ScibRegs.SCIFFTX.bit.TXFFST >= 16)
-//             {
-//             }
-//         }
-//         //  TX FIFO Interrupt Enable
-//         ScibRegs.SCIFFTX.bit.TXFFIENA = 1;
-//         break;
-//     case COM3:
-//         for (cnt = 0; cnt < uLen; cnt++)
-//         {
-//             ScicRegs.SCITXBUF = writeBuf[cnt];
-//             while (ScicRegs.SCIFFTX.bit.TXFFST >= 16)
-//             {
-//             }
-//         }
-//         //  TX FIFO Interrupt Enable
-//         ScicRegs.SCIFFTX.bit.TXFFIENA = 1;
-//         break;
-//     default:
-//         break;
-//     }
-//     return cnt;
-// }
+    break;
+    case COM2:
+        for (cnt = 0; cnt < uLen; cnt++)
+        {
+            ScibRegs.SCITXBUF = writeBuf[cnt];
+            while (ScibRegs.SCIFFTX.bit.TXFFST >= 16)
+            {
+            }
+        }
+        //  TX FIFO Interrupt Enable
+        ScibRegs.SCIFFTX.bit.TXFFIENA = 1;
+        break;
+    case COM3:
+        for (cnt = 0; cnt < uLen; cnt++)
+        {
+            ScicRegs.SCITXBUF = writeBuf[cnt];
+            while (ScicRegs.SCIFFTX.bit.TXFFST >= 16)
+            {
+            }
+        }
+        //  TX FIFO Interrupt Enable
+        ScicRegs.SCIFFTX.bit.TXFFIENA = 1;
+        break;
+    default:
+        break;
+    }
+    return cnt;
+}
+#endif 
 
 /**
  * @brief 串口读操作
@@ -638,7 +640,6 @@ void InitScicGpio(void)
     EDIS;
 }
 
-#include "BFL_DebugPin.h"
 void USART_Callback(COM_Dev_t *pDev)
 {
     /*
@@ -798,9 +799,7 @@ __interrupt void sciaRxFifoIsr(void)
 //
 __interrupt void scibTxFifoIsr(void)
 {
-    BFL_DebugPin_Set(DEBUG_PIN_2);
     USART_Callback(&_gCOMList[COM2]);
-    BFL_DebugPin_Reset(DEBUG_PIN_2);
     ScibRegs.SCIFFTX.bit.TXFFINTCLR = 1; // Clear Interrupt flag
     PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ACK
 }

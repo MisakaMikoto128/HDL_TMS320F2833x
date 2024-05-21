@@ -53,6 +53,7 @@
         "b0_deltapoll.h": "c",
         "state_duration_timer.h": "c",
         "mtime.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "_stdint.h": "c"
     }
 }

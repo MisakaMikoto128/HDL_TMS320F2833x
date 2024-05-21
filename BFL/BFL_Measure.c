@@ -398,8 +398,10 @@ __interrupt void local_DINTCH1_ISR(void)
       pow2_sum += (data * data);
     }
     AdcAvg[i] = (sum * (1.0f / PIONTS_PER_GROUP));
+    
     AdcRMS[i] = sqrtf((pow2_sum * (1.0f / PIONTS_PER_GROUP)));
     AdcVoltRMS[i] = (AdcRMS[i] * (3.0f / 4096));
+    AdcVoltAvg[i] = ((AdcAvg[i] - ZOFFSET) * 3.0f / 4096);
     average_filter_update(&AdcVoltRMSFilter[i], AdcVoltRMS[i]);
 
 #if USING_RMSE == 1
@@ -421,8 +423,6 @@ __interrupt void local_DINTCH1_ISR(void)
       pow2_sum_e += temp * temp;
     }
     AdcRMSE[i] = sqrtf((pow2_sum_e * 1.0f / PIONTS_PER_GROUP));
-
-    AdcVoltAvg[i] = ((AdcAvg[i] - ZOFFSET) * 3.0f / 4096);
     AdcVoltRMSE[i] = (AdcRMSE[i] * 3.0f / 4096);
 #endif
   }

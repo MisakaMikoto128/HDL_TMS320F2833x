@@ -66,7 +66,7 @@ void Config_Default_Parameter()
   g_pSysInfo->I_TA_low_thh_A = 55;
   g_pSysInfo->T_I_TA_Thh_SEC = SEC(10);
   g_pSysInfo->I_TA_oc_A = 500;
-  g_pSysInfo->T_I_TA_oc_SEC = SEC(10);
+  g_pSysInfo->T_I_TA_oc_SEC = SEC(4);
   g_pSysInfo->V_TVx_ov_kV = 2.0f;
   g_pSysInfo->T_V_TVx_ov_min = MINUTE(60);
   g_pSysInfo->Tc_ot = 80;
@@ -85,6 +85,9 @@ void Config_Default_Parameter()
   g_pSysInfo->V_SYS_OV_kV = 12.0f;
   g_pSysInfo->T_SYS_UNDER_CANCLE_SEC = SEC(10);
   g_pSysInfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC = SEC(5);
+
+  g_pSysInfo->devId = 0x123456789UL;
+  g_pSysInfo->devType = 0x123456789UL;
 }
 
 #define BFL_ARGUMENT_MAX_SIZE                         \
@@ -178,12 +181,6 @@ void Clear_All_Fault()
   APP_Main_NotifyHaveParamNeedToSave();
 }
 
-
-void cb1(void *p)
-{
-    ScibRegs.SCITXBUF = 'X';
-}
-
 void APP_Main_Init()
 {
   HDL_CPU_Time_Init();
@@ -191,7 +188,6 @@ void APP_Main_Init()
 
   // MAX232
   Uart_Init(COM2, 9600, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
-  Uart_SetWriteOverCallback(COM2, cb1, NULL);
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
   BFL_VCB_Seurity_Init();
@@ -244,25 +240,8 @@ void ForeGroundTask()
   }
 }
 
-void APP_Main_Poll1()
+void APP_Main_Poll()
 {
   BackGroundTask();
   ForeGroundTask();
-}
-
-uint32_t cnt = 1;
-
-uint32_t t = 0;
-void APP_Main_Poll()
-{
-  HDL_CPU_Time_DelayMs(100ULL);
-
-  Uint32 tickA = HDL_CPU_Time_GetUsTick();
-
-  Uart_Write(COM2, (const uint16_t *)"123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789123456789",
-             cnt);
-
-  Uint32 tickB = HDL_CPU_Time_GetUsTick();
-
-  t = (tickB - tickA);
 }
