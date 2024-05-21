@@ -83,6 +83,9 @@ extern "C"
 #define The_Capacitors_Are_Cut_Off() (g_pSysInfo->Capacitors_State == CAPACITORS_STATE_CUT_OFF)
 #define The_Capacitors_Are_Bypass() (g_pSysInfo->Capacitors_State == CAPACITORS_STATE_BYPASS)
 
+#define XIN1_8_Read() ((GpioDataRegs.GPBDAT.all & 0x0000FF00) >> 8)
+#define XOUT1_4_Read() ((GpioDataRegs.GPCDAT.all & 0x00FF0000) >> 16)
+
     typedef struct tagSysInfo_t
     {
         // B1_CapacitanceTemperatureMeasure
@@ -188,8 +191,9 @@ extern "C"
         uint16_t Serious_Fault;         // 严重故障 0:无故障 1:有故障
         uint16_t Line_State;            // 线路状态 0:停运 1:运行
 
-        uint32_t devId;  //设备编号
-        uint16_t devType; //设备型号
+        uint32_t devId;        // 设备编号
+        uint16_t devType;      // 设备型号
+        uint16_t powerOnTimes; // 设备开机次数
         uint32_t __crc16;
     } SysInfo_t;
 
@@ -299,6 +303,7 @@ extern "C"
 
     void B3_Check_SCR_Serious_Fault(uint32_t poll_delta);
     bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta);
+
 #ifdef __cplusplus
 }
 #endif

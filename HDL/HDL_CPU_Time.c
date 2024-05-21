@@ -270,9 +270,10 @@ bool HDL_CPU_Time_StartHardTimer(uint16_t _CC, UsTimer_t _uiTimeOut,
                                  void *_pCallBack)
 {
 
+  bool ret = false;
   if (s_TIM1Busy)
   {
-    return false;
+    ret = false;
   }
 
   if (_CC == 1)
@@ -288,9 +289,10 @@ bool HDL_CPU_Time_StartHardTimer(uint16_t _CC, UsTimer_t _uiTimeOut,
 #if (CPU_FRQ_100MHZ)
     ConfigTheCpuTimer(&CpuTimer2, 100 - 1, _uiTimeOut - 1, 0);
 #endif
+    ret = true;
   }
 
-  return true;
+  return ret;
 }
 
 /**

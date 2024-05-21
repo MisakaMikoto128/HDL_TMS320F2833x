@@ -50,16 +50,22 @@ void mtime_add_hours(mtime_t *currTime, unsigned int hours);
 void mtime_sub_hours(mtime_t *currTime, unsigned int hours);
 byte_t mtime_is_equal(mtime_t *currTime, mtime_t *targetTime);
 
+
+#define MINUTE(x) ((x) * 1ull)
+#define SEC(x) ((x) * 1ull)
+#define MS(x) ((x) * 1ull)
+#define US(x) ((x) * 1ull)
+
+#define SEC_TO_US(x) ((x) * 1000000ull)
+#define MS_TO_US(x) ((x) * 1000ull)
+
 #define SECOND_TO_MS(x) ((x) * 1000ull)
 #define MINUTE_TO_MS(x) ((x) * 60ull * 1000ull)
 #define HOUR_TO_MS(x) ((x) * 60ull * 60ull * 1000ull)
 #define DAY_TO_MS(x) ((x) * 24ull * 60ull * 60ull * 1000ull)
 
 #define MINUTE_TO_SEC(x) ((x) * 60ull)
-#define MINUTE(x) ((x) * 1ull)
-#define SEC(x) ((x) * 1ull)
-#define MS(x) ((x) * 1ull)
-#define US(x) ((x) * 1ull)
+
 #ifdef __cplusplus
 }
 #endif

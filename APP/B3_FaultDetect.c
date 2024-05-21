@@ -21,7 +21,7 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
             SECOND_TO_MS(g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC),
             (
                 The_Capacitors_Are_Working() &&
-                g_pSysInfo->V_TV1A < g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC &&
+                g_pSysInfo->V_TV1A < g_pSysInfo->V_SCR_NORMAL_DIFF_kV &&
                 g_pSysInfo->I_TA1A > g_pSysInfo->I_SCR_NORMAL_DIFF_A)))
     {
         g_pSysInfo->Serious_Fault = true;
@@ -34,7 +34,7 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
             SECOND_TO_MS(g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC),
             (
                 The_Capacitors_Are_Working() &&
-                g_pSysInfo->V_TV1B < g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC &&
+                g_pSysInfo->V_TV1B < g_pSysInfo->V_SCR_NORMAL_DIFF_kV &&
                 g_pSysInfo->I_TA1B > g_pSysInfo->I_SCR_NORMAL_DIFF_A)))
     {
         g_pSysInfo->Serious_Fault = true;
@@ -47,7 +47,7 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
             SECOND_TO_MS(g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC),
             (
                 The_Capacitors_Are_Working() &&
-                g_pSysInfo->V_TV1C < g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC &&
+                g_pSysInfo->V_TV1C < g_pSysInfo->V_SCR_NORMAL_DIFF_kV &&
                 g_pSysInfo->I_TA1C > g_pSysInfo->I_SCR_NORMAL_DIFF_A)))
     {
         g_pSysInfo->Serious_Fault = true;

@@ -12,6 +12,7 @@
 
 #include "crc.h"
 #include "ccommon.h"
+#include "mtime.h"
 #include "period_query.h"
 #include "BFL_RS485.h"
 #include "HDL_CPU_Time.h"
@@ -34,7 +35,7 @@ void B1_CapacitanceTemperatureMeasure_Init()
 void B1_CapacitanceTemperatureMeasure_Poll()
 {
     static PeriodREC_t s_tPollTime = 0;
-    if (!period_query_user(&s_tPollTime, 100))
+    if (!period_query_user_us(&s_tPollTime, MS_TO_US(100)))
     {
         return;
     }

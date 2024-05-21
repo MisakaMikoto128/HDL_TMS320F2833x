@@ -165,7 +165,8 @@ static void Scix_Init(volatile struct SCI_REGS *ScixRegs, uint32_t baud,
     ScixRegs->SCIFFRX.bit.RXFFIL = 1;   // 接收1个字节产生一次发送中断，如果使能了
 
     ScixRegs->SCIFFCT.all = 0x00;
-    ScixRegs->SCICTL1.all = 0x0023; // Relinquish SCI from Reset
+    ScixRegs->SCICTL1.all = 0x0023;        // Relinquish SCI from Reset
+    ScixRegs->SCICTL1.bit.RXERRINTENA = 1; // Recieve interrupt enable, 485通信时会出现错误
     ScixRegs->SCIFFTX.bit.TXFIFOXRESET = 1;
     ScixRegs->SCIFFRX.bit.RXFIFORESET = 1;
 }
@@ -301,7 +302,7 @@ uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen)
 {
     // TODO:这里如果cnt = 1,在调试模式好像会占用发送一个字节的时间，暂时无法解决
     uint32_t uiBytesWritten = 0;
-
+    uint32_t firstWriteLen = 0;
     if (comId >= COM_NUM || writeBuf == NULL || uLen == 0)
     {
         return uiBytesWritten;
@@ -314,7 +315,11 @@ uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen)
         return uiBytesWritten;
     }
 
-    for (uint32_t i = 0; i < uLen; i++)
+    DISABLE_INT();
+    firstWriteLen = cqueue_in(&pDev->txQueue, (CObject_t)writeBuf, uLen);
+    ENABLE_INT();
+
+    for (uint32_t i = firstWriteLen; i < uLen; i++)
     {
         while (true)
         {
@@ -390,7 +395,7 @@ uint32_t Uart_Write(COMID_t comId, const byte_t *writeBuf, uint32_t uLen)
     }
     return cnt;
 }
-#endif 
+#endif
 
 /**
  * @brief 串口读操作
@@ -714,8 +719,8 @@ __interrupt void sciaTxFifoIsr(void)
     0h (R/W) = Write 0 has no effect on TXFIFINT flag bit, Bit reads back a zero
     1h (R/W) = Write 1 to clear TXFFINT flag in bit 7
     */
-    SciaRegs.SCIFFTX.bit.TXFFINTCLR = 1; // Clear SCI Interrupt flag
-    PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ACK
+    SciaRegs.SCIFFTX.bit.TXFFINTCLR = 1;     // Clear SCI Interrupt flag
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9; // Issue PIE ACK
 }
 
 //
@@ -759,6 +764,15 @@ __interrupt void sciaRxFifoIsr(void)
     */
 
     COM_Dev_t *pDev = &_gCOMList[COM1];
+
+    volatile struct SCI_REGS * ScixRegs = pDev->ScixRegs;
+    if (ScixRegs->SCIRXST.bit.RXERROR == 1)
+    {
+        ScixRegs->SCICTL1.all = 0x0003;
+        ScixRegs->SCICTL1.all = 0x0023;
+        ScixRegs->SCICTL1.bit.RXERRINTENA = 1;
+    }
+
     if (pDev->receive_char_callback != NULL)
     {
         byte_t ret = pDev->ScixRegs->SCIRXBUF.all;
@@ -791,7 +805,7 @@ __interrupt void sciaRxFifoIsr(void)
     SciaRegs.SCIFFRX.bit.RXFFINTCLR =
         1; // 1h (R/W) = Write 1 to clear RXFFINT flag in bit 7
 
-    PieCtrlRegs.PIEACK.all |= 0x100; // Issue PIE ack
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9; // Issue PIE ack
 }
 
 //
@@ -800,8 +814,8 @@ __interrupt void sciaRxFifoIsr(void)
 __interrupt void scibTxFifoIsr(void)
 {
     USART_Callback(&_gCOMList[COM2]);
-    ScibRegs.SCIFFTX.bit.TXFFINTCLR = 1; // Clear Interrupt flag
-    PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ACK
+    ScibRegs.SCIFFTX.bit.TXFFINTCLR = 1;     // Clear Interrupt flag
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9; // Issue PIE ACK
 }
 
 //
@@ -810,6 +824,15 @@ __interrupt void scibTxFifoIsr(void)
 __interrupt void scibRxFifoIsr(void)
 {
     COM_Dev_t *pDev = &_gCOMList[COM2];
+
+    volatile struct SCI_REGS * ScixRegs = pDev->ScixRegs;
+    if (ScixRegs->SCIRXST.bit.RXERROR == 1)
+    {
+        ScixRegs->SCICTL1.all = 0x0003;
+        ScixRegs->SCICTL1.all = 0x0023;
+        ScixRegs->SCICTL1.bit.RXERRINTENA = 1;
+    }
+
     if (pDev->receive_char_callback != NULL)
     {
         byte_t ret = pDev->ScixRegs->SCIRXBUF.all;
@@ -837,9 +860,9 @@ __interrupt void scibRxFifoIsr(void)
     {
     }
 
-    ScibRegs.SCIFFRX.bit.RXFFOVRCLR = 1; // Clear Overflow flag
-    ScibRegs.SCIFFRX.bit.RXFFINTCLR = 1; // Clear Interrupt flag
-    PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ack
+    ScibRegs.SCIFFRX.bit.RXFFOVRCLR = 1;     // Clear Overflow flag
+    ScibRegs.SCIFFRX.bit.RXFFINTCLR = 1;     // Clear Interrupt flag
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9; // Issue PIE ack
 }
 
 //
@@ -850,8 +873,8 @@ __interrupt void scicTxFifoIsr(void)
 
     USART_Callback(&_gCOMList[COM3]);
 
-    ScicRegs.SCIFFTX.bit.TXFFINTCLR = 1; // Clear Interrupt flag
-    PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ACK
+    ScicRegs.SCIFFTX.bit.TXFFINTCLR = 1;     // Clear Interrupt flag
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9; // Issue PIE ACK
 }
 
 //
@@ -859,8 +882,15 @@ __interrupt void scicTxFifoIsr(void)
 //
 __interrupt void scicRxFifoIsr(void)
 {
-
     COM_Dev_t *pDev = &_gCOMList[COM3];
+    volatile struct SCI_REGS * ScixRegs = pDev->ScixRegs;
+    if (ScixRegs->SCIRXST.bit.RXERROR == 1)
+    {
+        ScixRegs->SCICTL1.all = 0x0003;
+        ScixRegs->SCICTL1.all = 0x0023;
+        ScixRegs->SCICTL1.bit.RXERRINTENA = 1;
+    }
+
     if (pDev->receive_char_callback != NULL)
     {
         byte_t ret = pDev->ScixRegs->SCIRXBUF.all;
@@ -888,7 +918,7 @@ __interrupt void scicRxFifoIsr(void)
     {
     }
 
-    ScicRegs.SCIFFRX.bit.RXFFOVRCLR = 1; // Clear Overflow flag
-    ScicRegs.SCIFFRX.bit.RXFFINTCLR = 1; // Clear Interrupt flag
-    PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ack
+    ScicRegs.SCIFFRX.bit.RXFFOVRCLR = 1;     // Clear Overflow flag
+    ScicRegs.SCIFFRX.bit.RXFFINTCLR = 1;     // Clear Interrupt flag
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9; // Issue PIE ack
 }

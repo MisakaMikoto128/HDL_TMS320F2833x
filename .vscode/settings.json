@@ -54,6 +54,8 @@
         "state_duration_timer.h": "c",
         "mtime.h": "c",
         "math.h": "c",
-        "_stdint.h": "c"
+        "_stdint.h": "c",
+        "mbport.h": "c",
+        "mbrtu.h": "c"
     }
 }

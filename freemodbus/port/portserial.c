@@ -30,6 +30,10 @@
 #define RTU_COM COM3
 #define RTU_COM_RS485 RS485_2
 #define SciregUsed ScicRegs
+
+// #define RTU_COM COM2
+// #define RTU_COM_RS485 RS485_2
+// #define SciregUsed ScibRegs
 /* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
 #include "mbport.h"

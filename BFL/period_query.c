@@ -58,3 +58,17 @@ bool period_query_user(PeriodREC_t *period_recorder, PeriodREC_t period)
     }
     return ret;
 }
+
+
+bool period_query_user_us(PeriodREC_t *period_recorder, PeriodREC_t period)
+{
+    bool ret = false;
+    // 这里一定是>=，如果是 > ，那么在1 cpu tick间隔的时候时间上是2cpu tick执行一次。
+    // 这里不允许period为0，不然就会失去调度作用。
+    if ((HDL_CPU_Time_GetUsTick() - *period_recorder) >= period)
+    {
+        *period_recorder = HDL_CPU_Time_GetUsTick();
+        ret = true;
+    }
+    return ret;
+}

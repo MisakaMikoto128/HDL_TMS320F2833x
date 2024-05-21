@@ -86,8 +86,8 @@ void Config_Default_Parameter()
   g_pSysInfo->T_SYS_UNDER_CANCLE_SEC = SEC(10);
   g_pSysInfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC = SEC(5);
 
-  g_pSysInfo->devId = 0x123456789UL;
-  g_pSysInfo->devType = 0x123456789UL;
+  g_pSysInfo->devId = 0x12345678UL;
+  g_pSysInfo->devType = 0x1234U;
 }
 
 #define BFL_ARGUMENT_MAX_SIZE                         \
@@ -151,6 +151,8 @@ bool Load_Parameter_From_Flash()
 
   // 读取成功
   g_AppMainInfo.sysInfo = sysInfo;
+  g_AppMainInfo.sysInfo.powerOnTimes++;
+  APP_Main_Save_SysInfo();
   ret = true;
   return ret;
 }
@@ -187,7 +189,7 @@ void APP_Main_Init()
   BFL_DebugPin_Init();
 
   // MAX232
-  Uart_Init(COM2, 9600, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
+  Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
   BFL_VCB_Seurity_Init();
@@ -206,15 +208,21 @@ void APP_Main_Init()
   B1_VCBStatusGet_Init();
 }
 
+uint32_t g_backGroundTaskMaxRuningTimeUS = 0;
+uint32_t g_A;
+uint32_t g_B;
 void BackGroundTask()
 {
   BFL_DebugPin_Set(DEBUG_PIN_2);
+  g_A = HDL_CPU_Time_GetUsTick();
   B1_CapacitanceTemperatureMeasure_Poll();
   B1_ModbusRTUSlaver_Poll();
   B1_Measure_Poll();
   B0_DeltaPoll(poll_delta,
                B1_SysModeGet_DeltaPoll(poll_delta);
                B1_VCBStatusGet_DeltaPoll(poll_delta););
+  g_B = HDL_CPU_Time_GetUsTick();
+  g_backGroundTaskMaxRuningTimeUS = g_backGroundTaskMaxRuningTimeUS > (g_B - g_A) ? g_backGroundTaskMaxRuningTimeUS : (g_B - g_A);
   BFL_DebugPin_Reset(DEBUG_PIN_2);
 }
 

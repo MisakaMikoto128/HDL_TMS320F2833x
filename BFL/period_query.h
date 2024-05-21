@@ -44,6 +44,7 @@ extern "C"
      * @return false 周期未到。
      */
     bool period_query_user(PeriodREC_t *period_recorder, PeriodREC_t period);
+    bool period_query_user_us(PeriodREC_t *period_recorder, PeriodREC_t period);
 
     typedef struct
     {
@@ -65,6 +66,7 @@ extern "C"
 
 #define if_period_query(period_id, period) if(period_query(period_id, period))
 #define if_period_query_user(period_recorder, period) if(period_query_user(period_recorder, period))
+#define if_period_query_user_us(period_recorder, period) if(period_query_user_us(period_recorder, period))
 #define if_delay_one_times(delay_rec, delay) if(delay_one_times(delay_rec, delay))
 #ifdef __cplusplus
 }

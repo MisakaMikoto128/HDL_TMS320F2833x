@@ -1,30 +1,12 @@
 #include "mb.h"
+#include "mbcb.h"
 #include "CPU_Define.h"
 #include "ccommon.h"
 #include <stdlib.h>
 
-// 输入寄存器起始地址
-#define REG_INPUT_START 0x0000
-// 输入寄存器数量
-#define REG_INPUT_NREGS 8
-// 保持寄存器起始地址
-#define REG_HOLDING_START 0x0000
-// 保持寄存器数量
-#define REG_HOLDING_NREGS 32
-
-// 线圈起始地址
-#define REG_COILS_START 0x0000
-// 线圈数量
-#define REG_COILS_SIZE 16
-
-// 开关寄存器起始地址
-#define REG_DISCRETE_START 0x0000
-// 开关寄存器数量
-#define REG_DISCRETE_SIZE 16
-
 /* Private variables ---------------------------------------------------------*/
 // 输入寄存器内容
-uint16_t usRegInputBuf[REG_INPUT_NREGS] = {0x1234, 0x5678, 0x9abc, 0xdef0, 0x147b, 0x3f8e, 0x147b, 0x3f8e};
+uint16_t usRegInputBuf[REG_INPUT_NREGS] = {0};
 // 输入寄存器起始地址
 uint16_t usRegInputStart = REG_INPUT_START;
 
@@ -32,25 +14,30 @@ uint16_t usRegInputStart = REG_INPUT_START;
 uint16_t usRegHoldingBuf[REG_HOLDING_NREGS] = {0};
 // 保持寄存器起始地址
 uint16_t usRegHoldingStart = REG_HOLDING_START;
+bool boolRegHoldingChanged = false;
 
 // 线圈状态
-byte_t ucRegCoilsBuf[REG_COILS_SIZE / 8] = {0x01, 0x02};
+byte_t ucRegCoilsBuf[REG_COILS_SIZE / 8] = {0};
 // 开关输入状态
-byte_t ucRegDiscreteBuf[REG_DISCRETE_SIZE / 8] = {0x01, 0x02};
+byte_t ucRegDiscreteBuf[REG_DISCRETE_SIZE / 8] = {0};
 
 /**
- * @brief 获取Modbus保持寄存器的起始地址和长度。
- *
- * @param usLen
- * @return uint16_t*
+ * @brief 保持寄存器是否发生变化
+ * 
  */
-uint16_t *eMBGetRegHoldingBufBase(size_t *usLen)
+bool eMBRegHoldingChanged(void)
 {
-    if (usLen != NULL)
-    {
-        *usLen = REG_HOLDING_NREGS;
-    }
-    return usRegHoldingBuf;
+    return boolRegHoldingChanged;
+}
+
+#define eMBRegHoldingSetChanged() (boolRegHoldingChanged = true)
+/**
+ * @brief 清除保持寄存器变化标志。
+ * 
+ */
+void eMBRegHoldingClearChanged(void)
+{
+    boolRegHoldingChanged = false;
 }
 
 /**
