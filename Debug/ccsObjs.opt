@@ -63,6 +63,6 @@
 "./freemodbus/rtu/mbcrc.obj"
 "./freemodbus/rtu/mbrtu.obj"
 "./freemodbus/tcp/mbtcp.obj"
-"../28335_RAM_lnk.cmd"
 "C:/ti/c2000/C2000Ware_5_01_00_00/device_support/f2833x/headers/cmd/DSP2833x_Headers_nonBIOS.cmd"
+"../F28335.cmd"
 -lIQmath_fpu32.lib

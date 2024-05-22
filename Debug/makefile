@@ -4,7 +4,7 @@
 
 SHELL = cmd.exe
 
-CG_TOOL_ROOT := C:/ti/ccs1260/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS
+CG_TOOL_ROOT := C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259
 
 GEN_OPTS__FLAG := 
 GEN_CMDS__FLAG := 
@@ -75,8 +75,8 @@ ORDERED_OBJS += \
 "./freemodbus/rtu/mbcrc.obj" \
 "./freemodbus/rtu/mbrtu.obj" \
 "./freemodbus/tcp/mbtcp.obj" \
-"../28335_RAM_lnk.cmd" \
 "C:/ti/c2000/C2000Ware_5_01_00_00/device_support/f2833x/headers/cmd/DSP2833x_Headers_nonBIOS.cmd" \
+"../F28335.cmd" \
 $(GEN_CMDS__FLAG) \
 -lIQmath_fpu32.lib \
 
@@ -222,7 +222,7 @@ all: Example_2833xCpuTimer.out
 Example_2833xCpuTimer.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: C2000 Linker'
-	"C:/ti/ccs1260/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/bin/cl2000" -v28 -ml -mt --float_support=fpu32 -O4 --opt_for_speed=0 --fp_reassoc=on --advice:performance=all --define=_DEBUG --define=LARGE_MODEL -g --c99 --diag_suppress=10063 --diag_warning=225 --issue_remarks --verbose_diagnostics --quiet -z -m"Example_2833xCpuTimer.map" --stack_size=0x400 --warn_sections -i"C:/ti/ccs1260/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/lib" -i"C:/ti/ccs1260/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include" -i"C:/Users/liuyu/workspace_ccstheia/HDL_2833x" -i"C:/ti/c2000/C2000Ware_5_01_00_00/device_support/f2833x/common/lib" -i"C:/ti/c2000/C2000Ware_5_01_00_00/libraries/math/IQmath/c28/lib" -i"C:/ti/c2000/C2000Ware_5_01_00_00/libraries/math/FPUfastRTS/c28/lib" --priority --reread_libs --issue_remarks --verbose_diagnostics --xml_link_info="Example_2833xCpuTimer_linkInfo.xml" --entry_point=code_start --rom_model -o "Example_2833xCpuTimer.out" $(ORDERED_OBJS)
+	"C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259/bin/cl2000" -v28 -ml -mt --float_support=fpu32 -O4 --opt_for_speed=0 --fp_reassoc=on --advice:performance=all --define=_DEBUG --define=LARGE_MODEL -g --c99 --diag_suppress=10063 --diag_warning=225 --issue_remarks --verbose_diagnostics --quiet -z -m"Example_2833xCpuTimer.map" --stack_size=0x400 --warn_sections -i"C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259/lib" -i"C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259/include" -i"C:/Users/liuyu/workspace_ccstheia/HDL_2833x" -i"C:/ti/c2000/C2000Ware_5_01_00_00/device_support/f2833x/common/lib" -i"C:/ti/c2000/C2000Ware_5_01_00_00/libraries/math/IQmath/c28/lib" -i"C:/ti/c2000/C2000Ware_5_01_00_00/libraries/math/FPUfastRTS/c28/lib" --priority --reread_libs --issue_remarks --verbose_diagnostics --xml_link_info="Example_2833xCpuTimer_linkInfo.xml" --entry_point=code_start --rom_model -o "Example_2833xCpuTimer.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 

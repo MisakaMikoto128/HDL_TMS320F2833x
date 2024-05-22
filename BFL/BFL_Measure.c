@@ -348,6 +348,23 @@ void config_DMA()
 #include <math.h>
 #include <stdint.h>
 #include "BFL_DebugPin.h"
+
+
+#ifdef __LINK_TO_FLASH__
+//
+// Functions that will be run from RAM need to be assigned to
+// a different section.  This section will then be mapped using
+// the linker cmd file.
+//
+#ifdef __TI_COMPILER_VERSION__
+    #if __TI_COMPILER_VERSION__ >= 15009000
+        #pragma CODE_SECTION(local_DINTCH1_ISR, ".TI.ramfunc");
+    #else
+        #pragma CODE_SECTION(local_DINTCH1_ISR, "ramfuncs");
+    #endif
+#endif
+#endif
+
 //
 // local_DINTCH1_ISR - INT7.1(DMA Channel 1)
 //

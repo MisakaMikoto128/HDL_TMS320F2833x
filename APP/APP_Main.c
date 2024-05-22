@@ -189,7 +189,7 @@ void APP_Main_Init()
   BFL_DebugPin_Init();
 
   // MAX232
-  Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
+//   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
   BFL_VCB_Seurity_Init();
@@ -221,8 +221,18 @@ void BackGroundTask()
   B0_DeltaPoll(poll_delta,
                B1_SysModeGet_DeltaPoll(poll_delta);
                B1_VCBStatusGet_DeltaPoll(poll_delta););
+  APP_Main_SysinfoSavePoll();
   g_B = HDL_CPU_Time_GetUsTick();
   g_backGroundTaskMaxRuningTimeUS = g_backGroundTaskMaxRuningTimeUS > (g_B - g_A) ? g_backGroundTaskMaxRuningTimeUS : (g_B - g_A);
+  
+    // static PeriodREC_t s_tPollTime = 0;
+    // if (period_query_user_us(&s_tPollTime, MS_TO_US(100)))
+    // {
+    // Uart_Write(COM2, "aaaaa", 4);
+    // }
+
+
+  
   BFL_DebugPin_Reset(DEBUG_PIN_2);
 }
 
@@ -239,17 +249,24 @@ void ForeGroundTask()
       B3_SysManualMode_DeltaPoll(poll_delta);
     }
   });
-
-  // 耗时操作，放在前台执行
-  if (APP_Main_HaveParamNeedToSave())
-  {
-    APP_Main_Save_SysInfo();
-    APP_Main_ClearParamNeedToSave();
-  }
 }
 
 void APP_Main_Poll()
 {
   BackGroundTask();
   ForeGroundTask();
+}
+
+void APP_Main_SysinfoSavePoll()
+{
+  static PeriodREC_t s_tPollTime1 = 0;
+  if_period_query_user_us(&s_tPollTime1, SEC_TO_US(1))
+  {
+    // 耗时操作，放在前台执行
+    if (APP_Main_HaveParamNeedToSave())
+    {
+      APP_Main_Save_SysInfo();
+      APP_Main_ClearParamNeedToSave();
+    }
+  }
 }

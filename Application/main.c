@@ -106,6 +106,23 @@ void main(void)
     //
     InitPieVectTable();
 
+#ifdef __LINK_TO_FLASH__
+    //
+    // Copy time critical code and Flash setup code to RAM
+    // This includes the following ISR functions: epwm1_timer_isr(), 
+    // epwm2_timer_isr(), epwm3_timer_isr and and InitFlash();
+    // The  RamfuncsLoadStart, RamfuncsLoadEnd, and RamfuncsRunStart
+    // symbols are created by the linker. Refer to the F28335.cmd file.
+    //
+    memcpy(&RamfuncsRunStart, &RamfuncsLoadStart, (Uint32)&RamfuncsLoadSize);
+
+    //
+    // Call Flash Initialization to setup flash waitstates
+    // This function must reside in RAM
+    //
+    InitFlash();
+#endif
+
     //
     // Enable CPU and PIE interrupts
     // This example function is found in the DSP2833x_PieCtrl.c file.

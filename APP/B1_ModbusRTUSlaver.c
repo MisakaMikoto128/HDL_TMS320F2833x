@@ -50,6 +50,7 @@ void B1_ModbusRTUSlaver_Poll()
         {
             SyncModbusRegToSysinfo();
             eMBRegHoldingClearChanged();
+            APP_Main_NotifyHaveParamNeedToSave();
         }
         SyncSysinfoToModbusReg();
     }
