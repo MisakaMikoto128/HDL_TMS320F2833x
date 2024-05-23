@@ -23,7 +23,7 @@ byte_t ucRegDiscreteBuf[REG_DISCRETE_SIZE / 8] = {0};
 
 /**
  * @brief 保持寄存器是否发生变化
- * 
+ *
  */
 bool eMBRegHoldingChanged(void)
 {
@@ -33,7 +33,7 @@ bool eMBRegHoldingChanged(void)
 #define eMBRegHoldingSetChanged() (boolRegHoldingChanged = true)
 /**
  * @brief 清除保持寄存器变化标志。
- * 
+ *
  */
 void eMBRegHoldingClearChanged(void)
 {
@@ -58,9 +58,9 @@ eMBRegInputCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs)
     eMBErrorCode eStatus = MB_ENOERR;
     int iRegIndex;
 
-    if ((usAddress >= REG_INPUT_START) && (usAddress + usNRegs <= REG_INPUT_START + REG_INPUT_NREGS))
+    if ((usAddress >= REG_INPUT_START) && (usAddress + usNRegs <= REG_INPUT_END + 1))
     {
-        iRegIndex = (int)(usAddress - usRegInputStart);
+        iRegIndex = (int)(usAddress - 1 - usRegInputStart);
         while (usNRegs > 0)
         {
             *pucRegBuffer++ = (UCHAR)(usRegInputBuf[iRegIndex] >> 8);
@@ -76,6 +76,7 @@ eMBRegInputCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs)
     return eStatus;
 }
 
+void SyncModbusRegToSysinfo();
 /**
  * @brief 对应功能码有：
  * 06 写保持寄存器 eMBFuncWriteHoldingRegister
@@ -95,7 +96,7 @@ eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegist
     eMBErrorCode eStatus = MB_ENOERR;
     int iRegIndex = 0;
     if ((usAddress >= REG_HOLDING_START) &&
-        ((usAddress + usNRegs) <= (REG_HOLDING_START + REG_HOLDING_NREGS)))
+        ((usAddress + usNRegs) <= (REG_HOLDING_END + 1)))
     {
         iRegIndex = (int)(usAddress - 1 - usRegHoldingStart);
         switch (eMode)
@@ -117,6 +118,9 @@ eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegist
                 iRegIndex++;
                 usNRegs--;
             }
+
+            SyncModbusRegToSysinfo();
+            eMBRegHoldingSetChanged();
         }
     }
     else
@@ -155,10 +159,10 @@ eMBRegCoilsCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNCoils,
 
     // 检查寄存器是否在指定范围内
     if (((int16_t)usAddress >= REG_COILS_START) &&
-        (usAddress + usNCoils <= REG_COILS_START + REG_COILS_SIZE))
+        (usAddress + usNCoils <= REG_COILS_END + 1))
     {
         // 计算寄存器偏移量
-        usBitOffset = (int16_t)(usAddress - REG_COILS_START);
+        usBitOffset = (int16_t)(usAddress - 1 - REG_COILS_START);
         switch (eMode)
         {
             // 读操作
@@ -213,10 +217,10 @@ eMBRegDiscreteCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNDiscrete)
 
     // 判断寄存器时候再制定范围内
     if (((int16_t)usAddress >= REG_DISCRETE_START) &&
-        (usAddress + usNDiscrete <= REG_DISCRETE_START + REG_DISCRETE_SIZE))
+        (usAddress + usNDiscrete <= REG_DISCRETE_END + 1))
     {
         // 获得偏移量
-        usBitOffset = (uint16_t)(usAddress - REG_DISCRETE_START);
+        usBitOffset = (uint16_t)(usAddress - 1 - REG_DISCRETE_START);
 
         while (iNDiscrete > 0)
         {

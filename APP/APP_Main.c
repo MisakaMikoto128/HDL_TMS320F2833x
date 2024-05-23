@@ -209,6 +209,7 @@ void APP_Main_Init()
 }
 
 uint32_t g_backGroundTaskMaxRuningTimeUS = 0;
+uint32_t g_backGroundTaskRuningTimeUS = 0;
 uint32_t g_A;
 uint32_t g_B;
 void BackGroundTask()
@@ -223,16 +224,13 @@ void BackGroundTask()
                B1_VCBStatusGet_DeltaPoll(poll_delta););
   APP_Main_SysinfoSavePoll();
   g_B = HDL_CPU_Time_GetUsTick();
-  g_backGroundTaskMaxRuningTimeUS = g_backGroundTaskMaxRuningTimeUS > (g_B - g_A) ? g_backGroundTaskMaxRuningTimeUS : (g_B - g_A);
-  
+  g_backGroundTaskRuningTimeUS = g_B - g_A;
+  g_backGroundTaskMaxRuningTimeUS = g_backGroundTaskMaxRuningTimeUS > g_backGroundTaskRuningTimeUS ? g_backGroundTaskMaxRuningTimeUS : (g_B - g_A);
     // static PeriodREC_t s_tPollTime = 0;
     // if (period_query_user_us(&s_tPollTime, MS_TO_US(100)))
     // {
     // Uart_Write(COM2, "aaaaa", 4);
     // }
-
-
-  
   BFL_DebugPin_Reset(DEBUG_PIN_2);
 }
 

@@ -77,8 +77,8 @@ extern byte_t ucRegDiscreteBuf[REG_DISCRETE_SIZE / 8];
 #define FLOAT_TO_UINT16_SCALE(x, scale) ((uint16_t)((x) * (scale)))
 #define HIGH_16_BITS(x) ((uint16_t)(((x) >> 16) & 0xFFFF))
 #define LOW_16_BITS(x) ((uint16_t)((x) & 0xFFFF))
-#define USING_TWO_REG_TO_FLOAT(reg_index, idx, scale) \
-    ((float)(((uint32_t)usRegHoldingBuf[idx] << 16) | (uint32_t)usRegHoldingBuf[idx + 1]) * (float)(scale))
+#define USING_TWO_REG_TO_FLOAT(regBuf, idx, scale) \
+    ((float)(((uint32_t)((regBuf)[idx]) << 16) | (uint32_t)((regBuf)[idx + 1])) * (float)(scale))
 
 /**
  * @brief 将系统信息同步到Modbus寄存器中。
@@ -89,16 +89,16 @@ void SyncSysinfoToModbusReg()
     // 保持寄存器同步
     SysInfo_t *pSysinfo = g_pSysInfo;
 
-    usRegHoldingBuf[0] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1A_ScaleL1, 1000);
-    usRegHoldingBuf[1] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1B_ScaleL1, 1000);
-    usRegHoldingBuf[2] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1C_ScaleL1, 1000);
-    usRegHoldingBuf[3] = FLOAT_TO_UINT16_SCALE(pSysinfo->UIAB_ScaleL1, 1000);
-    usRegHoldingBuf[4] = FLOAT_TO_UINT16_SCALE(pSysinfo->UOAB_ScaleL1, 1000);
-    usRegHoldingBuf[5] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1A_ScaleL1, 1000);
-    usRegHoldingBuf[6] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1B_ScaleL1, 1000);
-    usRegHoldingBuf[7] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1C_ScaleL1, 1000);
-    usRegHoldingBuf[8] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1A_ScaleL2, 1000);
-    usRegHoldingBuf[9] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1B_ScaleL2, 1000);
+    usRegHoldingBuf[0 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1A_ScaleL1, 1000);
+    usRegHoldingBuf[1 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1B_ScaleL1, 1000);
+    usRegHoldingBuf[2 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1C_ScaleL1, 1000);
+    usRegHoldingBuf[3 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->UIAB_ScaleL1, 1000);
+    usRegHoldingBuf[4 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->UOAB_ScaleL1, 1000);
+    usRegHoldingBuf[5 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1A_ScaleL1, 1000);
+    usRegHoldingBuf[6 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1B_ScaleL1, 1000);
+    usRegHoldingBuf[7 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1C_ScaleL1, 1000);
+    usRegHoldingBuf[8 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1A_ScaleL2, 1000);
+    usRegHoldingBuf[9 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1B_ScaleL2, 1000);
     usRegHoldingBuf[10] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1C_ScaleL2, 1000);
     usRegHoldingBuf[11] = FLOAT_TO_UINT16_SCALE(pSysinfo->UIAB_ScaleL2, 1000);
     usRegHoldingBuf[12] = FLOAT_TO_UINT16_SCALE(pSysinfo->UOAB_ScaleL2, 1000);
@@ -125,7 +125,7 @@ void SyncSysinfoToModbusReg()
     usRegHoldingBuf[32] = pSysinfo->T_I_TA_oc_SEC;
     usRegHoldingBuf[33] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TVx_ov_kV, 1000);
     usRegHoldingBuf[34] = pSysinfo->T_V_TVx_ov_min;
-    usRegHoldingBuf[35] = pSysinfo->T_Tc_ot_SEC;
+    usRegHoldingBuf[35] = pSysinfo->Tc_ot;
     usRegHoldingBuf[36] = pSysinfo->T_Tc_ot_SEC;
     usRegHoldingBuf[37] = pSysinfo->T1_MS;
     usRegHoldingBuf[38] = pSysinfo->T2_US;
@@ -140,20 +140,21 @@ void SyncSysinfoToModbusReg()
     usRegHoldingBuf[47] = 'L';
     usRegHoldingBuf[48] = 'Y';
     usRegHoldingBuf[49] = 'L';
+    usRegHoldingBuf[51] = pSysinfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC;
 
-    usRegInputBuf[0] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_TV1A, 1000));
-    usRegInputBuf[1] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_TV1B, 1000));
-    usRegInputBuf[2] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_TV1C, 1000));
-    usRegInputBuf[3] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_UIAB, 1000));
-    usRegInputBuf[4] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_UIAB, 1000));
-    usRegInputBuf[5] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_UOAB, 1000));
-    usRegInputBuf[6] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_UOAB, 1000));
-    usRegInputBuf[7] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1A, 1000));
-    usRegInputBuf[8] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1A, 1000));
-    usRegInputBuf[9] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1B, 1000));
-    usRegInputBuf[10] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1B, 1000));
-    usRegInputBuf[11] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1C, 1000));
-    usRegInputBuf[12] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1C, 1000));
+    usRegInputBuf[0] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1A, 1000);
+    usRegInputBuf[1] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1B, 1000);
+    usRegInputBuf[2] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1C, 1000);
+    usRegInputBuf[3] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_UIAB, 1000));
+    usRegInputBuf[4] = LOW_16_BITS (FLOAT_TO_UINT32_SCALE(pSysinfo->V_UIAB, 1000));
+    usRegInputBuf[5] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_UOAB, 1000));
+    usRegInputBuf[6] = LOW_16_BITS (FLOAT_TO_UINT32_SCALE(pSysinfo->V_UOAB, 1000));
+    usRegInputBuf[7] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1A, 1000));
+    usRegInputBuf[8] = LOW_16_BITS (FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1A, 1000));
+    usRegInputBuf[9] =  HIGH_16_BITS (FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1B, 1000));
+    usRegInputBuf[10] = LOW_16_BITS (FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1B, 1000));
+    usRegInputBuf[11] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1C, 1000));
+    usRegInputBuf[12] = LOW_16_BITS (FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1C, 1000));
 
     usRegInputBuf[17] = pSysinfo->capTemp[Tc_A_IDX];
     usRegInputBuf[18] = pSysinfo->capTemp[Tc_B_IDX];
@@ -216,14 +217,14 @@ void SyncSysinfoToModbusReg()
     usRegInputBuf[44] = 0;
 
     float *AdcVoltRMS_Filted = &g_pSysInfo->measure.AdcVoltRMS_Filted[0];
-    usRegInputBuf[45] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[V_TV1A_ADC_IDX], 1000);
-    usRegInputBuf[46] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[V_TV1B_ADC_IDX], 1000);
-    usRegInputBuf[47] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[V_TV1C_ADC_IDX], 1000);
-    usRegInputBuf[48] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[V_UIAB_ADC_IDX], 1000);
-    usRegInputBuf[49] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[V_UOAB_ADC_IDX], 1000);
-    usRegInputBuf[50] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[I_TA1A_ADC_IDX], 1000);
-    usRegInputBuf[51] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[I_TA1B_ADC_IDX], 1000);
-    usRegInputBuf[52] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[I_TA1C_ADC_IDX], 1000);
+    usRegInputBuf[45] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[V_TV1A_ADC_IDX], 10000);
+    usRegInputBuf[46] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[V_TV1B_ADC_IDX], 10000);
+    usRegInputBuf[47] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[V_TV1C_ADC_IDX], 10000);
+    usRegInputBuf[48] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[V_UIAB_ADC_IDX], 10000);
+    usRegInputBuf[49] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[V_UOAB_ADC_IDX], 10000);
+    usRegInputBuf[50] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[I_TA1A_ADC_IDX], 10000);
+    usRegInputBuf[51] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[I_TA1B_ADC_IDX], 10000);
+    usRegInputBuf[52] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[I_TA1C_ADC_IDX], 10000);
     usRegInputBuf[53] = 0;
     usRegInputBuf[54] = 0;
 }
@@ -276,4 +277,7 @@ void SyncModbusRegToSysinfo()
     pSysinfo->I_SCR_NORMAL_DIFF_A = (float)usRegHoldingBuf[43] * 0.001f;
     pSysinfo->devId = (((uint32_t)usRegHoldingBuf[44] << 16) | (uint32_t)usRegHoldingBuf[45]);
     pSysinfo->devType = usRegHoldingBuf[46];
+
+    pSysinfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC = usRegHoldingBuf[52];
+
 }
