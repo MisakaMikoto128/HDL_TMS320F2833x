@@ -251,6 +251,7 @@ extern "C"
     void APP_Main_Poll();
     bool APP_Main_Save_SysInfo();
     void APP_Main_SysinfoSavePoll();
+    void APP_Main_Clear_All_Fault();
 
     void BackGroundTask();
 

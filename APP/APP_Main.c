@@ -164,14 +164,9 @@ void Config_PowerOn_Parameter()
   g_pSysInfo->Capacitors_Exec_State = CAPACITORS_STATE_CUT_OFF;
   g_pSysInfo->Minor_Fault = 0;
   g_pSysInfo->Line_State = LINE_STATE_STOP;
-
-  // g_pSysInfo->Serious_Fault = 0; //保持
-  // g_pSysInfo->KM1_Fault = BFL_VBC_NO_FAULT;
-  // g_pSysInfo->QF_Fault = BFL_VBC_NO_FAULT;
-  // g_pSysInfo->SCRT_Fault = 0;
 }
 
-void Clear_All_Fault()
+void APP_Main_Clear_All_Fault()
 {
   g_pSysInfo->Serious_Fault = 0;
   g_pSysInfo->KM1_Fault = BFL_VBC_NO_FAULT;
@@ -199,7 +194,7 @@ void APP_Main_Init()
   Load_Parameter_From_Flash();
   Config_PowerOn_Parameter();
 
-  Clear_All_Fault();
+  APP_Main_Clear_All_Fault();
 
   B1_Measure_Init();
   B1_CapacitanceTemperatureMeasure_Init();

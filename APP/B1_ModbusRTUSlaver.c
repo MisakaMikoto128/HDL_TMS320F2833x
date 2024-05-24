@@ -24,6 +24,7 @@
 
 void SyncSysinfoToModbusReg();
 void SyncModbusRegToSysinfo();
+void MBCmdHandler(uint16_t cmdReg);
 
 void B1_ModbusRTUSlaver_Init()
 {
@@ -48,7 +49,6 @@ void B1_ModbusRTUSlaver_Poll()
     {
         if (eMBRegHoldingChanged())
         {
-            SyncModbusRegToSysinfo();
             eMBRegHoldingClearChanged();
             APP_Main_NotifyHaveParamNeedToSave();
         }
@@ -89,16 +89,16 @@ void SyncSysinfoToModbusReg()
     // 保持寄存器同步
     SysInfo_t *pSysinfo = g_pSysInfo;
 
-    usRegHoldingBuf[0 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1A_ScaleL1, 1000);
-    usRegHoldingBuf[1 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1B_ScaleL1, 1000);
-    usRegHoldingBuf[2 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1C_ScaleL1, 1000);
-    usRegHoldingBuf[3 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->UIAB_ScaleL1, 1000);
-    usRegHoldingBuf[4 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->UOAB_ScaleL1, 1000);
-    usRegHoldingBuf[5 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1A_ScaleL1, 1000);
-    usRegHoldingBuf[6 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1B_ScaleL1, 1000);
-    usRegHoldingBuf[7 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1C_ScaleL1, 1000);
-    usRegHoldingBuf[8 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1A_ScaleL2, 1000);
-    usRegHoldingBuf[9 ] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1B_ScaleL2, 1000);
+    usRegHoldingBuf[0] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1A_ScaleL1, 1000);
+    usRegHoldingBuf[1] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1B_ScaleL1, 1000);
+    usRegHoldingBuf[2] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1C_ScaleL1, 1000);
+    usRegHoldingBuf[3] = FLOAT_TO_UINT16_SCALE(pSysinfo->UIAB_ScaleL1, 1000);
+    usRegHoldingBuf[4] = FLOAT_TO_UINT16_SCALE(pSysinfo->UOAB_ScaleL1, 1000);
+    usRegHoldingBuf[5] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1A_ScaleL1, 1000);
+    usRegHoldingBuf[6] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1B_ScaleL1, 1000);
+    usRegHoldingBuf[7] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1C_ScaleL1, 1000);
+    usRegHoldingBuf[8] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1A_ScaleL2, 1000);
+    usRegHoldingBuf[9] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1B_ScaleL2, 1000);
     usRegHoldingBuf[10] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1C_ScaleL2, 1000);
     usRegHoldingBuf[11] = FLOAT_TO_UINT16_SCALE(pSysinfo->UIAB_ScaleL2, 1000);
     usRegHoldingBuf[12] = FLOAT_TO_UINT16_SCALE(pSysinfo->UOAB_ScaleL2, 1000);
@@ -146,15 +146,15 @@ void SyncSysinfoToModbusReg()
     usRegInputBuf[1] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1B, 1000);
     usRegInputBuf[2] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1C, 1000);
     usRegInputBuf[3] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_UIAB, 1000));
-    usRegInputBuf[4] = LOW_16_BITS (FLOAT_TO_UINT32_SCALE(pSysinfo->V_UIAB, 1000));
+    usRegInputBuf[4] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_UIAB, 1000));
     usRegInputBuf[5] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_UOAB, 1000));
-    usRegInputBuf[6] = LOW_16_BITS (FLOAT_TO_UINT32_SCALE(pSysinfo->V_UOAB, 1000));
+    usRegInputBuf[6] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_UOAB, 1000));
     usRegInputBuf[7] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1A, 1000));
-    usRegInputBuf[8] = LOW_16_BITS (FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1A, 1000));
-    usRegInputBuf[9] =  HIGH_16_BITS (FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1B, 1000));
-    usRegInputBuf[10] = LOW_16_BITS (FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1B, 1000));
+    usRegInputBuf[8] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1A, 1000));
+    usRegInputBuf[9] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1B, 1000));
+    usRegInputBuf[10] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1B, 1000));
     usRegInputBuf[11] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1C, 1000));
-    usRegInputBuf[12] = LOW_16_BITS (FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1C, 1000));
+    usRegInputBuf[12] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1C, 1000));
 
     usRegInputBuf[17] = pSysinfo->capTemp[Tc_A_IDX];
     usRegInputBuf[18] = pSysinfo->capTemp[Tc_B_IDX];
@@ -280,4 +280,52 @@ void SyncModbusRegToSysinfo()
 
     pSysinfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC = usRegHoldingBuf[52];
 
+    // 指令解析
+    uint16_t cmdReg = usRegHoldingBuf[49];
+    usRegHoldingBuf[49] = 0;
+    MBCmdHandler(cmdReg);
+}
+
+#include "BFL_VCB.h"
+#include "BFL_SCR.h"
+#include "BFL_Buzz.h"
+void MBCmdHandler(uint16_t cmdReg)
+{
+/*
+无指令	0
+控制电容器投入	1
+控制电容器切除	2
+控制电容器旁路	3
+单独控制QF闭合	4
+单独控制KM1闭合	5
+单独控制QS1闭合	6
+单独控制QS2闭合	7
+单此发送晶闸管导通指令	8
+清除严重故障	9
+打开蜂鸣器	10
+关闭蜂鸣器	11
+*/
+#define MB_CMD_NONE 0
+#define MB_SRC_SCRT_PLUSE_TRANSMIT 8
+#define MB_CMD_SERIOUS_FAUIL_CLEAR 9
+#define MB_CMD_OPEN_BUZZ 10
+#define MB_CMD_CLOSE_BUZZ 11
+
+    switch (cmdReg)
+    {
+    case MB_SRC_SCRT_PLUSE_TRANSMIT:
+        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 50, US(g_pSysInfo->T2_US));
+        break;
+    case MB_CMD_SERIOUS_FAUIL_CLEAR:
+        APP_Main_Clear_All_Fault();
+        break;
+    case MB_CMD_OPEN_BUZZ:
+        BFL_Buzz_On();
+        break;
+    case MB_CMD_CLOSE_BUZZ:
+        BFL_Buzz_Off();
+        break;
+    default:
+        break;
+    }
 }
