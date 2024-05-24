@@ -39,9 +39,13 @@
 AppMainInfo_t g_AppMainInfo = {0};
 SysInfo_t *g_pSysInfo = &g_AppMainInfo.sysInfo;
 
-void Config_Default_Parameter()
+void AppMainInfo_Init()
 {
   memset(&g_AppMainInfo, 0, sizeof(g_AppMainInfo));
+}
+
+void Config_Default_Parameter()
+{
   g_AppMainInfo.sysInfoSize = sizeof(SysInfo_t);
 
   g_pSysInfo->TV1A_ScaleL1 = 1.0f;
@@ -157,6 +161,12 @@ bool Load_Parameter_From_Flash()
   return ret;
 }
 
+void APP_Main_EraseFlashParamData()
+{
+  Config_Default_Parameter();
+  CHIP_W25Q128_Erase_One_Sector(0);
+}
+
 void Config_PowerOn_Parameter()
 {
   g_pSysInfo->SYS_MODE = SYS_MODE_AUTO;
@@ -184,12 +194,13 @@ void APP_Main_Init()
   BFL_DebugPin_Init();
 
   // MAX232
-//   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
+  //   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
   BFL_VCB_Seurity_Init();
   BFL_SCR_Init();
 
+  AppMainInfo_Init();
   Config_Default_Parameter();
   Load_Parameter_From_Flash();
   Config_PowerOn_Parameter();
@@ -221,11 +232,11 @@ void BackGroundTask()
   g_B = HDL_CPU_Time_GetUsTick();
   g_backGroundTaskRuningTimeUS = g_B - g_A;
   g_backGroundTaskMaxRuningTimeUS = g_backGroundTaskMaxRuningTimeUS > g_backGroundTaskRuningTimeUS ? g_backGroundTaskMaxRuningTimeUS : (g_B - g_A);
-    // static PeriodREC_t s_tPollTime = 0;
-    // if (period_query_user_us(&s_tPollTime, MS_TO_US(100)))
-    // {
-    // Uart_Write(COM2, "aaaaa", 4);
-    // }
+  // static PeriodREC_t s_tPollTime = 0;
+  // if (period_query_user_us(&s_tPollTime, MS_TO_US(100)))
+  // {
+  // Uart_Write(COM2, "aaaaa", 4);
+  // }
   BFL_DebugPin_Reset(DEBUG_PIN_2);
 }
 

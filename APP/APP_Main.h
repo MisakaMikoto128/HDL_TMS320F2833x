@@ -252,6 +252,7 @@ extern "C"
     bool APP_Main_Save_SysInfo();
     void APP_Main_SysinfoSavePoll();
     void APP_Main_Clear_All_Fault();
+    void APP_Main_EraseFlashParamData();
 
     void BackGroundTask();
 

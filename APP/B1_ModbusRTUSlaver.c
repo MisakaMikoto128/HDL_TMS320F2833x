@@ -140,7 +140,7 @@ void SyncSysinfoToModbusReg()
     usRegHoldingBuf[47] = 'L';
     usRegHoldingBuf[48] = 'Y';
     usRegHoldingBuf[49] = 'L';
-    usRegHoldingBuf[51] = pSysinfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC;
+    usRegHoldingBuf[52] = pSysinfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC;
 
     usRegInputBuf[0] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1A, 1000);
     usRegInputBuf[1] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1B, 1000);
@@ -304,12 +304,14 @@ void MBCmdHandler(uint16_t cmdReg)
 清除严重故障	9
 打开蜂鸣器	10
 关闭蜂鸣器	11
+清除Flash保存的参数	12
 */
 #define MB_CMD_NONE 0
 #define MB_SRC_SCRT_PLUSE_TRANSMIT 8
 #define MB_CMD_SERIOUS_FAUIL_CLEAR 9
 #define MB_CMD_OPEN_BUZZ 10
 #define MB_CMD_CLOSE_BUZZ 11
+#define MB_CMD_ERASE_FLASH_PARAM_DATA 12
 
     switch (cmdReg)
     {
@@ -324,6 +326,9 @@ void MBCmdHandler(uint16_t cmdReg)
         break;
     case MB_CMD_CLOSE_BUZZ:
         BFL_Buzz_Off();
+        break;
+    case MB_CMD_ERASE_FLASH_PARAM_DATA:
+        APP_Main_EraseFlashParamData();
         break;
     default:
         break;
