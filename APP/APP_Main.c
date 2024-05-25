@@ -21,6 +21,7 @@
 #include "CHIP_W25Q128.h"
 #include "CPU_Define.h"
 #include "DSP2833x_Device.h"
+#include "HDL_IWDG.h"
 #include "HDL_CPU_Time.h"
 #include "HDL_Uart.h"
 #include "ccommon.h"
@@ -192,6 +193,7 @@ void APP_Main_Init()
 {
   HDL_CPU_Time_Init();
   BFL_DebugPin_Init();
+  HDL_IWDG_Init(SECOND_TO_MS(1));
 
   // MAX232
   //   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
@@ -222,6 +224,7 @@ void BackGroundTask()
 {
   BFL_DebugPin_Set(DEBUG_PIN_2);
   g_A = HDL_CPU_Time_GetUsTick();
+  HDL_IWDG_Feed();
   B1_CapacitanceTemperatureMeasure_Poll();
   B1_ModbusRTUSlaver_Poll();
   B1_Measure_Poll();
@@ -237,6 +240,7 @@ void BackGroundTask()
   // {
   // Uart_Write(COM2, "aaaaa", 4);
   // }
+
   BFL_DebugPin_Reset(DEBUG_PIN_2);
 }
 

@@ -41,6 +41,7 @@
 "./HDL/HDL_CAN.obj"
 "./HDL/HDL_CPU_Time.obj"
 "./HDL/HDL_GPIO.obj"
+"./HDL/HDL_IWDG.obj"
 "./HDL/HDL_SPI.obj"
 "./HDL/HDL_Uart.obj"
 "./LIB/average_filter.obj"
