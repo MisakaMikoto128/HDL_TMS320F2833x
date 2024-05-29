@@ -89,11 +89,11 @@ void SyncSysinfoToModbusReg()
     // 保持寄存器同步
     SysInfo_t *pSysinfo = g_pSysInfo;
 
-    usRegHoldingBuf[0] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1A_ScaleL1, 1000);
-    usRegHoldingBuf[1] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1B_ScaleL1, 1000);
-    usRegHoldingBuf[2] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1C_ScaleL1, 1000);
-    usRegHoldingBuf[3] = FLOAT_TO_UINT16_SCALE(pSysinfo->UIAB_ScaleL1, 1000);
-    usRegHoldingBuf[4] = FLOAT_TO_UINT16_SCALE(pSysinfo->UOAB_ScaleL1, 1000);
+    usRegHoldingBuf[0] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1A_ScaleL1, 10);
+    usRegHoldingBuf[1] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1B_ScaleL1, 10);
+    usRegHoldingBuf[2] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1C_ScaleL1, 10);
+    usRegHoldingBuf[3] = FLOAT_TO_UINT16_SCALE(pSysinfo->UIAB_ScaleL1, 10);
+    usRegHoldingBuf[4] = FLOAT_TO_UINT16_SCALE(pSysinfo->UOAB_ScaleL1, 10);
     usRegHoldingBuf[5] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1A_ScaleL1, 1000);
     usRegHoldingBuf[6] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1B_ScaleL1, 1000);
     usRegHoldingBuf[7] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1C_ScaleL1, 1000);
@@ -237,11 +237,11 @@ void SyncModbusRegToSysinfo()
 {
     SysInfo_t *pSysinfo = g_pSysInfo;
 
-    pSysinfo->TV1A_ScaleL1 = (float)usRegHoldingBuf[0] * 0.001f;
-    pSysinfo->TV1B_ScaleL1 = (float)usRegHoldingBuf[1] * 0.001f;
-    pSysinfo->TV1C_ScaleL1 = (float)usRegHoldingBuf[2] * 0.001f;
-    pSysinfo->UIAB_ScaleL1 = (float)usRegHoldingBuf[3] * 0.001f;
-    pSysinfo->UOAB_ScaleL1 = (float)usRegHoldingBuf[4] * 0.001f;
+    pSysinfo->TV1A_ScaleL1 = (float)usRegHoldingBuf[0] * 0.1f;
+    pSysinfo->TV1B_ScaleL1 = (float)usRegHoldingBuf[1] * 0.1f;
+    pSysinfo->TV1C_ScaleL1 = (float)usRegHoldingBuf[2] * 0.1f;
+    pSysinfo->UIAB_ScaleL1 = (float)usRegHoldingBuf[3] * 0.1f;
+    pSysinfo->UOAB_ScaleL1 = (float)usRegHoldingBuf[4] * 0.1f;
     pSysinfo->TA1A_ScaleL1 = (float)usRegHoldingBuf[5] * 0.001f;
     pSysinfo->TA1B_ScaleL1 = (float)usRegHoldingBuf[6] * 0.001f;
     pSysinfo->TA1C_ScaleL1 = (float)usRegHoldingBuf[7] * 0.001f;
