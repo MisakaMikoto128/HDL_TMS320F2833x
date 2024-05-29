@@ -27,13 +27,19 @@
 #include "BFL_RS485.h"
 #include "ccommon.h"
 #include <stddef.h>
+
+#define USING_COM3
+
+#ifdef USING_COM2
+#define RTU_COM COM2
+#define RTU_COM_RS485 RS485_NONE
+#define SciregUsed ScibRegs
+#else
  #define RTU_COM COM3
  #define RTU_COM_RS485 RS485_2
  #define SciregUsed ScicRegs
+#endif 
 
-//#define RTU_COM COM2
-//#define RTU_COM_RS485 RS485_NONE
-//#define SciregUsed ScibRegs
 /* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
 #include "mbport.h"
@@ -111,8 +117,11 @@ BOOL xMBPortSerialInit(UCHAR ucPort, ULONG ulBaudRate, UCHAR ucDataBits, eMBPari
         break;
     }
 
-     BFL_RS485_Init(RTU_COM_RS485, ulBaudRate, UART_WORD_LEN_8, stopBit, parity);
-//    Uart_Init(RTU_COM, ulBaudRate, UART_WORD_LEN_8, stopBit, parity);
+#ifdef USING_COM2
+    Uart_Init(RTU_COM, ulBaudRate, UART_WORD_LEN_8, stopBit, parity);
+#else
+    BFL_RS485_Init(RTU_COM_RS485, ulBaudRate, UART_WORD_LEN_8, stopBit, parity);
+#endif
 
     // 因为我使用的这个库已经自己实现了接收完成中断，所以这里没有单独列出中断函数来,按照文章说明的意思来即可
     Uart_RegisterReceiveReadyCharCallback(RTU_COM, serialReceiveOneByteISR);
