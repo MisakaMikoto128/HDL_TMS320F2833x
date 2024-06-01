@@ -65,7 +65,10 @@ void B3_SysAutoMode_DeltaPoll(uint32_t poll_delta)
     }
     else
     {
-        B2_CmdCutOffCapacitors_Exec_Solution();
+        // B2_CmdCutOffCapacitors_Exec_Solution();
+        BFL_VCB_Set_As_Switch_Closed(QF_SW);
+        BFL_VCB_Set_As_Switch_Closed(KM1_SW);
+        g_pSysInfo->Capacitors_Exec_State = CAPACITORS_STATE_CUT_OFF;
     }
 
     B3_Check_Minor_Fault_Exist(poll_delta);
