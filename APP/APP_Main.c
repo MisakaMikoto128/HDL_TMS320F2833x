@@ -21,8 +21,8 @@
 #include "CHIP_W25Q128.h"
 #include "CPU_Define.h"
 #include "DSP2833x_Device.h"
-#include "HDL_IWDG.h"
 #include "HDL_CPU_Time.h"
+#include "HDL_IWDG.h"
 #include "HDL_Uart.h"
 #include "ccommon.h"
 #include "crc.h"
@@ -39,24 +39,21 @@
 // TODO:利用全局变量初始化为0的特性,但是浮点数还是要手动初始化
 AppMainInfo_t g_AppMainInfo = {0};
 SysInfo_t *g_pSysInfo = &g_AppMainInfo.sysInfo;
-
-void AppMainInfo_Init()
-{
-  memset(&g_AppMainInfo, 0, sizeof(g_AppMainInfo));
-}
+#define __DEBUG_MODE 1
+void AppMainInfo_Init() { memset(&g_AppMainInfo, 0, sizeof(g_AppMainInfo)); }
 
 void Config_Default_Parameter()
 {
   g_AppMainInfo.sysInfoSize = sizeof(SysInfo_t);
 
-  g_pSysInfo->TV1A_ScaleL1 = 1.0f;
-  g_pSysInfo->TV1B_ScaleL1 = 1.0f;
-  g_pSysInfo->TV1C_ScaleL1 = 1.0f;
-  g_pSysInfo->UIAB_ScaleL1 = 1.0f;
-  g_pSysInfo->UOAB_ScaleL1 = 1.0f;
-  g_pSysInfo->TA1A_ScaleL1 = 1.0f;
-  g_pSysInfo->TA1B_ScaleL1 = 1.0f;
-  g_pSysInfo->TA1C_ScaleL1 = 1.0f;
+  g_pSysInfo->TV1A_ScaleL1 = 1411.800048828125f;
+  g_pSysInfo->TV1B_ScaleL1 = 1411.800048828125f;
+  g_pSysInfo->TV1C_ScaleL1 = 1411.800048828125f;
+  g_pSysInfo->UIAB_ScaleL1 = 1411.800048828125f;
+  g_pSysInfo->UOAB_ScaleL1 = 1411.800048828125f;
+  g_pSysInfo->TA1A_ScaleL1 = 6.2300004959106445f;
+  g_pSysInfo->TA1B_ScaleL1 = 6.2300004959106445f;
+  g_pSysInfo->TA1C_ScaleL1 = 6.2300004959106445f;
 
   g_pSysInfo->TV1A_ScaleL2 = 1.0f;
   g_pSysInfo->TV1B_ScaleL2 = 1.0f;
@@ -110,7 +107,8 @@ bool APP_Main_Save_SysInfo()
     serializedBuffer[i * 2 + 0] = pSysInfo[i] & 0xFF;
     serializedBuffer[i * 2 + 1] = (pSysInfo[i] >> 8) & 0xFF;
   }
-  uint32_t crc_len = (sizeof(SysInfo_t) - sizeof(g_AppMainInfo.sysInfo.__crc16)) * 2;
+  uint32_t crc_len =
+      (sizeof(SysInfo_t) - sizeof(g_AppMainInfo.sysInfo.__crc16)) * 2;
   uint32_t serialized_len = sizeof(SysInfo_t) * 2;
   uint16_t crc_get = CRC16_Modbus(serializedBuffer, crc_len);
   g_AppMainInfo.sysInfo.__crc16 = crc_get;
@@ -135,7 +133,8 @@ bool Load_Parameter_From_Flash()
   memset(serializedBuffer, 0, serialized_len);
 
   CHIP_W25Q128_Read(0, (byte_t *)serializedBuffer, serialized_len);
-  uint32_t crc_len = (sizeof(SysInfo_t) - sizeof(g_AppMainInfo.sysInfo.__crc16)) * 2;
+  uint32_t crc_len =
+      (sizeof(SysInfo_t) - sizeof(g_AppMainInfo.sysInfo.__crc16)) * 2;
   uint16_t crc_get = CRC16_Modbus(serializedBuffer, crc_len);
 
   SysInfo_t sysInfo;
@@ -196,7 +195,8 @@ void APP_Main_Init()
   HDL_IWDG_Init(SECOND_TO_MS(1));
 
   // MAX232
-  //   Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE);
+  // Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1,
+  // UART_PARITY_NONE);
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
   BFL_VCB_Seurity_Init();
@@ -207,7 +207,9 @@ void APP_Main_Init()
   Load_Parameter_From_Flash();
   Config_PowerOn_Parameter();
 
+#if __DEBUG_MODE == 1
   APP_Main_Clear_All_Fault();
+#endif
 
   B1_Measure_Init();
   B1_CapacitanceTemperatureMeasure_Init();
@@ -222,26 +224,41 @@ uint32_t g_A;
 uint32_t g_B;
 void BackGroundTask()
 {
+  // Test Begin
   BFL_DebugPin_Set(DEBUG_PIN_2);
   g_A = HDL_CPU_Time_GetUsTick();
+  // Test Begin End
+
   HDL_IWDG_Feed();
   B1_CapacitanceTemperatureMeasure_Poll();
   B1_ModbusRTUSlaver_Poll();
   B1_Measure_Poll();
-  B0_DeltaPoll(poll_delta,
-               B1_SysModeGet_DeltaPoll(poll_delta);
+  B0_DeltaPoll(poll_delta, B1_SysModeGet_DeltaPoll(poll_delta);
                B1_VCBStatusGet_DeltaPoll(poll_delta););
   APP_Main_SysinfoSavePoll();
+
+  // B2_CmdBypassCapacitors_Test();
+
+  // Test End
   g_B = HDL_CPU_Time_GetUsTick();
   g_backGroundTaskRuningTimeUS = g_B - g_A;
-  g_backGroundTaskMaxRuningTimeUS = g_backGroundTaskMaxRuningTimeUS > g_backGroundTaskRuningTimeUS ? g_backGroundTaskMaxRuningTimeUS : (g_B - g_A);
-  // static PeriodREC_t s_tPollTime = 0;
-  // if (period_query_user_us(&s_tPollTime, MS_TO_US(100)))
-  // {
-  // Uart_Write(COM2, "aaaaa", 4);
-  // }
+  g_backGroundTaskMaxRuningTimeUS =
+      g_backGroundTaskMaxRuningTimeUS > g_backGroundTaskRuningTimeUS
+          ? g_backGroundTaskMaxRuningTimeUS
+          : (g_B - g_A);
 
   BFL_DebugPin_Reset(DEBUG_PIN_2);
+  // Test End End
+}
+
+void BackGroundTask_WhenInSRCPoll()
+{
+  HDL_IWDG_Feed();
+  B1_CapacitanceTemperatureMeasure_Poll();
+  B1_ModbusRTUSlaver_Poll();
+  B1_Measure_Poll();
+  B0_DeltaPoll(poll_delta, B1_SysModeGet_DeltaPoll(poll_delta);
+               B1_VCBStatusGet_DeltaPoll(poll_delta););
 }
 
 // 正常运行

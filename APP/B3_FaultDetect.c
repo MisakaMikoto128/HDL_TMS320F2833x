@@ -154,7 +154,11 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
         CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OT);
     }
 
-    if (g_pSysInfo->V_UIAB < g_pSysInfo->V_SYS_UNDER_kV)
+    if (CheckConditionDurationMet(
+            &g_AppMainInfo.satifyT_SYS_UNDER_SEC,
+            poll_delta,
+            SECOND_TO_MS(3),
+            (g_pSysInfo->V_UIAB < g_pSysInfo->V_SYS_UNDER_kV)))
     {
         // 直接触发系统欠压
         SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_UNDERVOLTAGE);

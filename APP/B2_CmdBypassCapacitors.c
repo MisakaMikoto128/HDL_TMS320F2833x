@@ -14,6 +14,7 @@
 #include "BFL_SCR.h"
 #include "async_delay.h"
 #include "mtime.h"
+#include "period_query.h"
 #include <stddef.h>
 #define FUALT_LEVEL_NO_FAULT 0
 #define FUALT_LEVEL_MINOR_FAULT 1
@@ -33,13 +34,28 @@ static void async_delay_callback1(void *arg)
 {
     uint32_t *scrtFb = (uint32_t *)arg;
     *scrtFb |= BFL_SCRR_Have_Signal(SCRR_ALL);
-    BackGroundTask();
+    BackGroundTask_WhenInSRCPoll();
 }
 
 static void async_delay_callback2(void *arg)
 {
     UNUSED(arg);
     BackGroundTask();
+}
+
+uint16_t SCRT_Fault1 = 0;
+uint32_t scrtFb1 = 0;
+PeriodREC_t s_t1;
+void B2_CmdBypassCapacitors_Test()
+{
+    if (period_query_user_us(&s_t1, MS_TO_US(500)))
+    {
+        SCRT_Fault1 = 0;
+        scrtFb1 = 0;
+        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 50, US(g_pSysInfo->T2_US));
+        async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback1, &scrtFb1);
+        SCRT_Fault1 = (~scrtFb1) & BFL_SCR_SIGNAL_MASK;
+    }
 }
 
 B2_CmdBypassCapacitors_Result_t B2_CmdBypassCapacitors_Exec()
@@ -142,9 +158,17 @@ void B2_CmdBypassCapacitors_Exec_Solution()
             g_pSysInfo->SCRT_Fault != result.SCRT_Fault)
         {
             g_pSysInfo->Serious_Fault = 1;
-            g_pSysInfo->QF_Fault = result.QF_Fault;
-            g_pSysInfo->KM1_Fault = result.KM1_Fault;
-            g_pSysInfo->SCRT_Fault = result.SCRT_Fault;
+            if (result.QF_Fault != BFL_VBC_NO_FAULT)
+            {
+                g_pSysInfo->QF_Fault = result.QF_Fault;
+            }
+
+            if (result.KM1_Fault != BFL_VBC_NO_FAULT)
+            {
+                g_pSysInfo->KM1_Fault = result.KM1_Fault;
+            }
+
+            g_pSysInfo->SCRT_Fault |= result.SCRT_Fault;
 
             APP_Main_NotifyHaveParamNeedToSave();
         }

@@ -165,21 +165,22 @@ uint32_t BFL_SCRR_Have_Signal(BFL_SCRR_t scrr)
     switch (scrr)
     {
     case SCRR1A:
-        return SCRR1A_IsSet();
+        return SCRR1A_IsSet() == 0;
     case SCRR1B:
-        return SCRR1B_IsSet();
+        return SCRR1B_IsSet() == 0;
     case SCRR2A:
-        return SCRR2A_IsSet();
+        return SCRR2A_IsSet() == 0;
     case SCRR2B:
-        return SCRR2B_IsSet();
+        return SCRR2B_IsSet() == 0;
     case SCRR3A:
-        return SCRR3A_IsSet();
+        return SCRR3A_IsSet() == 0;
     case SCRR3B:
-        return SCRR3B_IsSet();
+        return SCRR3B_IsSet() == 0;
     case SCRR_ALL:
     {
         uint32_t _uiRet = 0;
         _uiRet = SCRA_ALL_Read();
+        _uiRet = (~_uiRet) & BFL_SCR_SIGNAL_MASK;
         return _uiRet;
     }
     }
@@ -197,6 +198,30 @@ uint32_t BFL_SCRR_Have_Signal(BFL_SCRR_t scrr)
 //
 // InitEPwm1Example -
 //
+
+void EPwmx_ActionInit(volatile struct EPWM_REGS *EPwmxRegsHandle)
+{
+    // //
+    // // Set actions
+    // //
+    // EPwmxRegsHandle->AQCTLA.bit.ZRO = AQ_CLEAR; // Set PWM1A on Zero
+    // EPwmxRegsHandle->AQCTLA.bit.CAU = AQ_SET;   // Clear PWM1A on event A, up count
+    // EPwmxRegsHandle->AQCTLA.bit.CBU = AQ_CLEAR; // Clear PWM1A on event B, up count
+
+    // EPwmxRegsHandle->AQCTLB.bit.ZRO = AQ_CLEAR; // Set PWM1B on Zero
+    // EPwmxRegsHandle->AQCTLB.bit.CAU = AQ_SET;   // Clear PWM1B on event A, up count
+    // EPwmxRegsHandle->AQCTLB.bit.CBU = AQ_CLEAR; // Clear PWM1B on event B, up count
+    // Set actions
+    //
+    EPwmxRegsHandle->AQCTLA.bit.ZRO = AQ_SET;   // Set PWM1A on Zero
+    EPwmxRegsHandle->AQCTLA.bit.CAU = AQ_CLEAR; // Clear PWM1A on event A, up count
+    EPwmxRegsHandle->AQCTLA.bit.CBU = AQ_SET;   // Clear PWM1A on event B, up count
+
+    EPwmxRegsHandle->AQCTLB.bit.ZRO = AQ_SET;   // Set PWM1B on Zero
+    EPwmxRegsHandle->AQCTLB.bit.CAU = AQ_CLEAR; // Clear PWM1B on event A, up count
+    EPwmxRegsHandle->AQCTLB.bit.CBU = AQ_SET;   // Clear PWM1B on event B, up count
+}
+
 void InitEPwm1Example()
 {
     volatile struct EPWM_REGS *EPwmxRegsHandle = &EPwm1Regs;
@@ -241,16 +266,7 @@ void InitEPwm1Example()
         EPWM1_TIMER_TBPRD >> 1;                     // Set compare A value
     EPwmxRegsHandle->CMPB = EPWM1_TIMER_TBPRD >> 1; // Set Compare B value
 
-    //
-    // Set actions
-    //
-    EPwmxRegsHandle->AQCTLA.bit.ZRO = AQ_CLEAR; // Set PWM1A on Zero
-    EPwmxRegsHandle->AQCTLA.bit.CAU = AQ_SET;   // Clear PWM1A on event A, up count
-    EPwmxRegsHandle->AQCTLA.bit.CBU = AQ_CLEAR; // Clear PWM1A on event B, up count
-
-    EPwmxRegsHandle->AQCTLB.bit.ZRO = AQ_CLEAR; // Set PWM1B on Zero
-    EPwmxRegsHandle->AQCTLB.bit.CAU = AQ_SET;   // Clear PWM1B on event A, up count
-    EPwmxRegsHandle->AQCTLB.bit.CBU = AQ_CLEAR; // Clear PWM1B on event B, up count
+    EPwmx_ActionInit(EPwmxRegsHandle);
 
     //
     // Interrupt where we will change the Compare Values
@@ -313,14 +329,7 @@ void InitEPwm2Example()
         EPWM1_TIMER_TBPRD >> 1;                     // Set compare A value
     EPwmxRegsHandle->CMPB = EPWM1_TIMER_TBPRD >> 1; // Set Compare B value
 
-    //
-    // Set actions
-    //
-    EPwmxRegsHandle->AQCTLA.bit.ZRO = AQ_CLEAR; // Set PWM1A on Zero
-    EPwmxRegsHandle->AQCTLA.bit.CAU = AQ_SET;   // Clear PWM1A on event A, up count
-
-    EPwmxRegsHandle->AQCTLB.bit.ZRO = AQ_CLEAR; // Set PWM1B on Zero
-    EPwmxRegsHandle->AQCTLB.bit.CBU = AQ_SET;   // Clear PWM1B on event B, up count
+    EPwmx_ActionInit(EPwmxRegsHandle);
 
     //
     // Interrupt where we will change the Compare Values
@@ -383,14 +392,7 @@ void InitEPwm3Example(void)
         EPWM1_TIMER_TBPRD >> 1;                     // Set compare A value
     EPwmxRegsHandle->CMPB = EPWM1_TIMER_TBPRD >> 1; // Set Compare B value
 
-    //
-    // Set actions
-    //
-    EPwmxRegsHandle->AQCTLA.bit.ZRO = AQ_CLEAR; // Set PWM1A on Zero
-    EPwmxRegsHandle->AQCTLA.bit.CAU = AQ_SET;   // Clear PWM1A on event A, up count
-
-    EPwmxRegsHandle->AQCTLB.bit.ZRO = AQ_CLEAR; // Set PWM1B on Zero
-    EPwmxRegsHandle->AQCTLB.bit.CBU = AQ_SET;   // Clear PWM1B on event B, up count
+    EPwmx_ActionInit(EPwmxRegsHandle);
 
     //
     // Interrupt where we will change the Compare Values

@@ -23,7 +23,7 @@ void B3_SysAutoMode_DeltaPoll(uint32_t poll_delta)
         g_pSysInfo->Line_State = LINE_STATE_RUNNING;
     }
     else if (CheckConditionDurationMet(
-                 &g_AppMainInfo.satifyLineStateRunningTimeCnt,
+                 &g_AppMainInfo.dissatifyLineStateRunningTimeCnt,
                  poll_delta, SECOND_TO_MS(5),
                  (g_pSysInfo->V_UIAB < g_pSysInfo->V_SYS_STOP_kV)))
     {

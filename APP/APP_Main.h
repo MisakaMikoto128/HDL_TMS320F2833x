@@ -149,6 +149,7 @@ extern "C"
         uint16_t T_SYS_SATIFY_CAPACITORS_WAORK_SEC; // 电容器满足投入条件有效持续时间
 
         // 只能在指令执行过程中检查VBC状态
+        // 严重故障1
         uint16_t QF_Fault;
         uint16_t QS1_Fault;
         uint16_t QS2_Fault;
@@ -160,8 +161,9 @@ extern "C"
             bit3对应SCRR2A，bit4对应SCRR1B，bit5对应SCRR1A。
             0:正常 1:触发故障
          */
+        // 严重故障2
         uint16_t SCRT_Fault;
-
+        // 严重故障3
         uint16_t VTx_A_Breakdown_Fault; // A相晶闸管击穿故障，0:正常 2:击穿
         uint16_t VTx_B_Breakdown_Fault; // B相晶闸管击穿故障，0:正常 2:击穿
         uint16_t VTx_C_Breakdown_Fault; // C相晶闸管击穿故障，0:正常 2:击穿
@@ -224,8 +226,11 @@ extern "C"
 
         // B3_SysAutoMode
         StateDurationCnt_t satifyLineStateRunningTimeCnt;
+        StateDurationCnt_t dissatifyLineStateRunningTimeCnt;
         StateDurationCnt_t satifyLineStateStopTimeCnt;
+        StateDurationCnt_t dissatifyLineStateStopTimeCnt;
         StateDurationCnt_t satifyCapacitorsWorkTimeCnt;
+        StateDurationCnt_t dissatifyCapacitorsWorkTimeCnt;
 
         // B3_Check_Minor_Fault_Exist
         StateDurationCnt_t satifyT_I_TA_Thl;
@@ -237,6 +242,7 @@ extern "C"
         StateDurationCnt_t satifyT_Tc_ot;
         StateDurationCnt_t satifyT_Tc_ot_cancle;
         StateDurationCnt_t satifyT_SYS_UNDER_CANCLE_SEC;
+        StateDurationCnt_t satifyT_SYS_UNDER_SEC;
 
         // B3_Check_SCR_Serious_Fault
         StateDurationCnt_t satifySCRA_SeriousFaultTimeCnt;
@@ -255,6 +261,7 @@ extern "C"
     void APP_Main_EraseFlashParamData();
 
     void BackGroundTask();
+    void BackGroundTask_WhenInSRCPoll();
 
     void B1_ModbusRTUSlaver_Init();
     void B1_ModbusRTUSlaver_Poll();
@@ -300,6 +307,7 @@ extern "C"
         uint16_t SCRT_Fault;
     } B2_CmdBypassCapacitors_Result_t;
     B2_CmdBypassCapacitors_Result_t B2_CmdBypassCapacitors_Exec();
+    void B2_CmdBypassCapacitors_Test();
     void B2_CmdBypassCapacitors_Exec_Solution();
 
     void B3_SysAutoMode_DeltaPoll(uint32_t poll_delta);

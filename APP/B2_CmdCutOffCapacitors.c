@@ -32,7 +32,7 @@ static void async_delay_callback1(void *arg)
 {
     uint32_t *scrtFb = (uint32_t *)arg;
     *scrtFb |= BFL_SCRR_Have_Signal(SCRR_ALL);
-    BackGroundTask();
+    BackGroundTask_WhenInSRCPoll();
 }
 
 static void async_delay_callback2(void *arg)
@@ -144,9 +144,17 @@ void B2_CmdCutOffCapacitors_Exec_Solution()
             g_pSysInfo->SCRT_Fault != result.SCRT_Fault)
         {
             g_pSysInfo->Serious_Fault = 1;
-            g_pSysInfo->QF_Fault = result.QF_Fault;
-            g_pSysInfo->KM1_Fault = result.KM1_Fault;
-            g_pSysInfo->SCRT_Fault = result.SCRT_Fault;
+            if (result.QF_Fault != BFL_VBC_NO_FAULT)
+            {
+                g_pSysInfo->QF_Fault = result.QF_Fault;
+            }
+
+            if (result.KM1_Fault != BFL_VBC_NO_FAULT)
+            {
+                g_pSysInfo->KM1_Fault = result.KM1_Fault;
+            }
+
+            g_pSysInfo->SCRT_Fault |= result.SCRT_Fault;
 
             APP_Main_NotifyHaveParamNeedToSave();
         }
