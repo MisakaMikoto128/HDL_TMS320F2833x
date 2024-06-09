@@ -86,7 +86,7 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
                  &g_AppMainInfo.satifyT_I_TA_Thl_cancle,
                  poll_delta,
                  SECOND_TO_MS(g_pSysInfo->T_I_TA_Thh_SEC),
-                 (I_TA1_MAX > g_pSysInfo->I_TA_low_thh_A)))
+                 (I_TA1_MAX > g_pSysInfo->I_TA_low_thl_A)))
     {
         // 线路轻载取消
         CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_LIGHT_LOAD);
