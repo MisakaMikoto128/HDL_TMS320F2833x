@@ -9,3 +9,4 @@ Debug/*/*.mk
 .launches/*
 *.mk
 Debug/makefile
+.vscode/settings.json

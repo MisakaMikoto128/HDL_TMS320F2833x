@@ -23,6 +23,7 @@
 "./APP/B2_CmdCutOffCapacitors.obj"
 "./APP/B2_CmdMakeCapacitorsWork.obj"
 "./APP/B3_FaultDetect.obj"
+"./APP/B3_RTUPush.obj"
 "./APP/B3_SysAutoMode.obj"
 "./APP/B3_SysManualMode.obj"
 "./Application/main.obj"

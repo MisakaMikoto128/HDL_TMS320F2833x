@@ -194,9 +194,6 @@ void APP_Main_Init()
   BFL_DebugPin_Init();
   HDL_IWDG_Init(SECOND_TO_MS(1));
 
-  // MAX232
-  // Uart_Init(COM2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1,
-  // UART_PARITY_NONE);
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
   BFL_VCB_Seurity_Init();
@@ -216,6 +213,7 @@ void APP_Main_Init()
   B1_ModbusRTUSlaver_Init();
   B1_SysModeGet_Init();
   B1_VCBStatusGet_Init();
+  B3_RTUPush_Init();
 }
 
 uint32_t g_backGroundTaskMaxRuningTimeUS = 0;
@@ -236,7 +234,7 @@ void BackGroundTask()
   B0_DeltaPoll(poll_delta, B1_SysModeGet_DeltaPoll(poll_delta);
                B1_VCBStatusGet_DeltaPoll(poll_delta););
   APP_Main_SysinfoSavePoll();
-
+  B3_RTUPush_Poll();
   // B2_CmdBypassCapacitors_Test();
 
   // Test End

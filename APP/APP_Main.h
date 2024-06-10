@@ -316,6 +316,8 @@ extern "C"
     void B3_Check_SCR_Serious_Fault(uint32_t poll_delta);
     bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta);
 
+    void B3_RTUPush_Init();
+    void B3_RTUPush_Poll();
 #ifdef __cplusplus
 }
 #endif

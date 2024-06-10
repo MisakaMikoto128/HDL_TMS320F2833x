@@ -28,7 +28,7 @@
 #include "ccommon.h"
 #include <stddef.h>
 
-#define USING_COM3
+#define USING_COM2
 
 #ifdef USING_COM2
 #define RTU_COM COM2

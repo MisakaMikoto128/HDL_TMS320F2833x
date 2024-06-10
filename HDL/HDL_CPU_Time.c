@@ -191,9 +191,9 @@ void HDL_CPU_Time_ResetTick()
   // CpuTimer0.RegsAddr->TCR.bit.TRB = 1;
 }
 
-uint32_t HDL_CPU_Time_GetUsTick()
+UsTimer_t HDL_CPU_Time_GetUsTick()
 {
-  uint32_t ret = 0xFFFFFFFFUL - CpuTimer1.RegsAddr->TIM.all;
+  UsTimer_t ret = 0xFFFFFFFFUL - CpuTimer1.RegsAddr->TIM.all;
   return ret;
 }
 

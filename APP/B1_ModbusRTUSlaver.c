@@ -266,7 +266,7 @@ void SyncModbusRegToSysinfo()
     pSysinfo->T_I_TA_oc_SEC = usRegHoldingBuf[32];
     pSysinfo->V_TVx_ov_kV = (float)usRegHoldingBuf[33] * 0.001f;
     pSysinfo->T_V_TVx_ov_min = usRegHoldingBuf[34];
-    pSysinfo->T_Tc_ot_SEC = usRegHoldingBuf[35];
+    pSysinfo->Tc_ot = usRegHoldingBuf[35];
     pSysinfo->T_Tc_ot_SEC = usRegHoldingBuf[36];
     pSysinfo->T1_MS = usRegHoldingBuf[37];
     pSysinfo->T2_US = usRegHoldingBuf[38];

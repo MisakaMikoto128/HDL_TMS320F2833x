@@ -18,7 +18,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
-
+#include "HDL_Uart.h"
 typedef enum
 {
     RS485_1 = 0, // SCI-A,隔离 MAX3485

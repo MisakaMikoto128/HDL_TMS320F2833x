@@ -91,7 +91,7 @@ static byte_t m_Com2TxBuf[COM2_TX_BUF_SIZE] = {0};
 // 串口3相关变量
 #define COM3_RX_BUF_SIZE 80
 static byte_t m_Com3RxBuf[COM3_RX_BUF_SIZE] = {0};
-#define COM3_TX_BUF_SIZE 32
+#define COM3_TX_BUF_SIZE 256
 static byte_t m_Com3TxBuf[COM3_TX_BUF_SIZE] = {0};
 
 static void Scix_Init(volatile struct SCI_REGS *ScixRegs, uint32_t baud,
