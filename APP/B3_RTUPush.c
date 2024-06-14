@@ -42,7 +42,7 @@ void B3_RTUPush_Init()
 void B3_RTUPush_Poll()
 {
     static PeriodREC_t s_tPollTime = 0;
-    if (!period_query_user_us(&s_tPollTime, MS_TO_US(200)))
+    if (!period_query_user_us(&s_tPollTime, MS_TO_US(500)))
     {
         return;
     }
