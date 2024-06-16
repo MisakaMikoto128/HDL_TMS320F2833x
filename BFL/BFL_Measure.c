@@ -154,6 +154,7 @@ void BFL_Measure_Read(BFL_Measure_t *pMeasure)
     pMeasure->AdcVoltRMS[i] = AdcVoltRMS[i];
     pMeasure->AdcVoltAvg[i] = AdcVoltAvg[i];
     pMeasure->AdcVoltRMS_Filted[i] = AdcVoltRMSFilter[i].average;
+    pMeasure->AdcVoltRMS_Filted_Chunk[i] = AdcVoltRMSFilter[i].average > 0.00201f ? AdcVoltRMSFilter[i].average : 0;
     pMeasure->AdcVoltAvg_Filted[i] = AdcVoltRMSFilter[i].average;
   }
   _enable_interrupts();

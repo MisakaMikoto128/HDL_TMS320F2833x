@@ -22,9 +22,10 @@
 
 static const byte_t request_cmd[] = {0x01, 0x03, 0x00, 0x00, 0x00, 0x03, 0x05, 0xCB};
 
+#define TEMP_RS485 RS485_2
 void B1_CapacitanceTemperatureMeasure_Init()
 {
-    BFL_RS485_Init(RS485_1, 38400, UART_WORD_LEN_8, UART_STOP_BIT_1,UART_PARITY_NONE); // 隔离 MAX3485
+    BFL_RS485_Init(TEMP_RS485, 38400, UART_WORD_LEN_8, UART_STOP_BIT_1,UART_PARITY_NONE); // 隔离 MAX3485
 
     for (size_t i = 0; i < (sizeof(g_pSysInfo->capTemp) / sizeof(g_pSysInfo->capTemp[0])); i++)
     {
@@ -44,14 +45,14 @@ void B1_CapacitanceTemperatureMeasure_Poll()
     {
     case 0:
 
-        BFL_RS485_Write(RS485_1, request_cmd, sizeof(request_cmd));
+        BFL_RS485_Write(TEMP_RS485, request_cmd, sizeof(request_cmd));
         g_AppMainInfo.capTempSensorRequestStage = 1;
         break;
     case 1:
     {
         g_AppMainInfo.capTempSensorRequestStage = 0;
 
-        uint32_t readLen = BFL_RS485_Read(RS485_1, g_AppMainInfo.buffer, sizeof(g_AppMainInfo.buffer));
+        uint32_t readLen = BFL_RS485_Read(TEMP_RS485, g_AppMainInfo.buffer, sizeof(g_AppMainInfo.buffer));
         if (readLen > 0)
         {
             g_pSysInfo->capTempSensorTransmitConnect = true;

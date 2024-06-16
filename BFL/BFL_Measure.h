@@ -28,6 +28,7 @@ extern "C"
         float AdcVoltAvg[BFL_MEASURE_CHANNEL_NUM];
 
         float AdcVoltRMS_Filted[BFL_MEASURE_CHANNEL_NUM];
+        float AdcVoltRMS_Filted_Chunk[BFL_MEASURE_CHANNEL_NUM];
         float AdcVoltAvg_Filted[BFL_MEASURE_CHANNEL_NUM];
     } BFL_Measure_t;
 

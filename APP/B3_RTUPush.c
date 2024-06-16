@@ -33,10 +33,12 @@ extern byte_t ucRegCoilsBuf[REG_COILS_SIZE / 8];
 // 开关输入状态
 extern byte_t ucRegDiscreteBuf[REG_DISCRETE_SIZE / 8];
 
+#define RTU_RS485 RS485_1
+
 void B3_RTUPush_Init()
 {
-    BFL_RS485_Init(RS485_2, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE); // 非隔离 MAX3485
-    BFL_RS485_Take_Bus(RS485_2);
+    BFL_RS485_Init(RTU_RS485, 115200, UART_WORD_LEN_8, UART_STOP_BIT_1, UART_PARITY_NONE); // 非隔离 MAX3485
+    BFL_RS485_Take_Bus(RTU_RS485);
 }
 
 void B3_RTUPush_Poll()
@@ -50,13 +52,32 @@ void B3_RTUPush_Poll()
     static const byte_t sendNum = 12;
     static byte_t sendId = 0;
 
-    byte_t rtuDataBufSend[16 + 4 + 2] = {0};
+    byte_t rtuDataBufSend[16 + 4 + 2 + 16] = {0};
     rtuDataBufSend[0] = 0x55;
     rtuDataBufSend[1] = 0xAA;
-    rtuDataBufSend[2] = 0x00;
-    rtuDataBufSend[3] = 18;
+    rtuDataBufSend[2] = sizeof(rtuDataBufSend) - 4;;
+    rtuDataBufSend[3] = 0x00;
 
-    byte_t *rtuDataBuf = rtuDataBufSend + 4;
+    byte_t *rtuHeaderDataBuf = rtuDataBufSend + 4;
+    uint64_t devId = 0x0807060504030201ULL;
+    rtuHeaderDataBuf[0] = 0x01;
+    rtuHeaderDataBuf[1] = 0;
+    rtuHeaderDataBuf[2] = 0;
+    rtuHeaderDataBuf[3] = 0;
+    rtuHeaderDataBuf[4] = 0;
+    rtuHeaderDataBuf[5] = 0;
+    rtuHeaderDataBuf[6] = 0;
+    rtuHeaderDataBuf[7] = (devId >> (0*8) ) & 0xFF;
+    rtuHeaderDataBuf[8] = (devId >> (1*8) ) & 0xFF;
+    rtuHeaderDataBuf[9] = (devId >> (2*8) ) & 0xFF;
+    rtuHeaderDataBuf[10]= (devId >> (3*8) ) & 0xFF;
+    rtuHeaderDataBuf[11]= (devId >> (4*8) ) & 0xFF;
+    rtuHeaderDataBuf[12]= (devId >> (5*8) ) & 0xFF;
+    rtuHeaderDataBuf[13]= (devId >> (6*8) ) & 0xFF;
+    rtuHeaderDataBuf[14]= (devId >> (7*8) ) & 0xFF;
+    rtuHeaderDataBuf[15]= 0;
+
+    byte_t *rtuDataBuf = rtuDataBufSend + 4 + 16;
 
     rtuDataBuf[0] = funcCodeStart + sendId;
     rtuDataBuf[1] = 0;
@@ -255,5 +276,5 @@ void B3_RTUPush_Poll()
     crc = CRC16_Modbus(rtuDataBufSend, sizeof(rtuDataBufSend) - 2);
     rtuDataBufSend[sizeof(rtuDataBufSend) - 2] = (crc >> 8) & 0xFF;
     rtuDataBufSend[sizeof(rtuDataBufSend) - 1] = crc & 0xFF;
-    BFL_RS485_Write(RS485_2, rtuDataBufSend, sizeof(rtuDataBufSend));
+    BFL_RS485_Write(RTU_RS485, rtuDataBufSend, sizeof(rtuDataBufSend));
 } // B3_RTUPush_Poll

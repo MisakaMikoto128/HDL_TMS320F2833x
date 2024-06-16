@@ -35,9 +35,9 @@
 #define RTU_COM_RS485 RS485_NONE
 #define SciregUsed ScibRegs
 #else
- #define RTU_COM COM3
- #define RTU_COM_RS485 RS485_2
- #define SciregUsed ScicRegs
+ #define RTU_COM COM1
+ #define RTU_COM_RS485 RS485_1
+ #define SciregUsed SciaRegs
 #endif 
 
 /* ----------------------- Modbus includes ----------------------------------*/
