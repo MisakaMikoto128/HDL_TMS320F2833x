@@ -10,67 +10,93 @@
  *
  */
 #include "APP_Main.h"
-#include "mtime.h"
 #include "math.h"
+#include "mtime.h"
+
+volatile int debugVar = 0;
+
+void DebugTest()
+{
+  if (debugVar == 1)
+  {
+    debugVar = 0;
+    B2_CmdCutOffCapacitors_Exec_Solution();
+  }
+
+  if (debugVar == 2)
+  {
+    debugVar = 0;
+    B2_CmdBypassCapacitors_Exec_Solution();
+  }
+
+  if (debugVar == 3)
+  {
+    debugVar = 0;
+    B2_CmdMakeCapacitorsWork_Exec_Solution();
+  }
+}
 
 void B3_SysAutoMode_DeltaPoll(uint32_t poll_delta)
 {
-    if (CheckConditionDurationMet(
-            &g_AppMainInfo.satifyLineStateRunningTimeCnt,
-            poll_delta, SECOND_TO_MS(5),
-            (g_pSysInfo->V_UIAB > g_pSysInfo->V_SYS_STOP_kV)))
-    {
-        g_pSysInfo->Line_State = LINE_STATE_RUNNING;
-    }
-    else if (CheckConditionDurationMet(
-                 &g_AppMainInfo.dissatifyLineStateRunningTimeCnt,
-                 poll_delta, SECOND_TO_MS(5),
-                 (g_pSysInfo->V_UIAB < g_pSysInfo->V_SYS_STOP_kV)))
-    {
-        g_pSysInfo->Line_State = LINE_STATE_STOP;
-    }
+  DebugTest();
 
-    if (g_pSysInfo->Line_State == LINE_STATE_RUNNING)
+  if (CheckConditionDurationMet(
+          &g_AppMainInfo.satifyLineStateRunningTimeCnt, poll_delta,
+          SECOND_TO_MS(5), (g_pSysInfo->V_UIAB > g_pSysInfo->V_SYS_STOP_kV)))
+  {
+    g_pSysInfo->Line_State = LINE_STATE_RUNNING;
+  }
+  else if (CheckConditionDurationMet(
+               &g_AppMainInfo.dissatifyLineStateRunningTimeCnt, poll_delta,
+               SECOND_TO_MS(5),
+               (g_pSysInfo->V_UIAB < g_pSysInfo->V_SYS_STOP_kV)))
+  {
+    g_pSysInfo->Line_State = LINE_STATE_STOP;
+  }
+
+  if (g_pSysInfo->Line_State == LINE_STATE_RUNNING)
+  {
+    if (Have_Serious_Fault())
     {
-        if (Have_Serious_Fault())
-        {
-            B2_CmdCutOffCapacitors_Exec_Solution();
-        }
-        else
-        {
-            if (Have_Minor_Fault())
-            {
-                B2_CmdBypassCapacitors_Exec_Solution();
-            }
-            else
-            {
-                if (CheckConditionDurationMet(
-                        &g_AppMainInfo.satifyCapacitorsWorkTimeCnt,
-                        poll_delta, SECOND_TO_MS(g_pSysInfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC),
-                        (g_pSysInfo->V_UIAB > g_pSysInfo->V_SYS_UNDER_kV && g_pSysInfo->V_UIAB < g_pSysInfo->V_SYS_THH_kV)))
-                {
-                    B2_CmdMakeCapacitorsWork_Exec_Solution();
-                }
-                else if (fmaxf(g_pSysInfo->V_UIAB, g_pSysInfo->V_UOAB) > g_pSysInfo->V_SYS_OV_kV)
-                {
-                    // 系统过压，直接切除
-                    B2_CmdCutOffCapacitors_Exec_Solution();
-                }
-                else
-                {
-                    // pass
-                }
-            }
-        }
+      B2_CmdCutOffCapacitors_Exec_Solution();
     }
     else
     {
-        // B2_CmdCutOffCapacitors_Exec_Solution();
-        BFL_VCB_Set_As_Switch_Closed(QF_SW);
-        BFL_VCB_Set_As_Switch_Closed(KM1_SW);
-        g_pSysInfo->Capacitors_Exec_State = CAPACITORS_STATE_CUT_OFF;
-    }
+      if (Have_Minor_Fault())
+      {
+        B2_CmdBypassCapacitors_Exec_Solution();
+      }
+      else
+      {
+        float I_TA1_MAX = 0;
+        I_TA1_MAX = fmaxf(g_pSysInfo->I_TA1A, g_pSysInfo->I_TA1B);
+        I_TA1_MAX = fmaxf(I_TA1_MAX, g_pSysInfo->I_TA1C);
 
-    B3_Check_Minor_Fault_Exist(poll_delta);
-    B3_Check_SCR_Serious_Fault(poll_delta);
+        if (CheckConditionDurationMet(
+                &g_AppMainInfo.satifyCapacitorsWorkTimeCnt, poll_delta,
+                SECOND_TO_MS(g_pSysInfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC),
+                (g_pSysInfo->V_UIAB > g_pSysInfo->V_SYS_UNDER_kV &&
+                 g_pSysInfo->V_UIAB < g_pSysInfo->V_SYS_THH_kV &&
+                 I_TA1_MAX > g_pSysInfo->I_TA_low_thl_A &&
+                 I_TA1_MAX < g_pSysInfo->I_TA_oc_A)))
+        {
+          B2_CmdMakeCapacitorsWork_Exec_Solution();
+        }
+        else
+        {
+          // pass
+        }
+      }
+    }
+  }
+  else
+  {
+    // B2_CmdCutOffCapacitors_Exec_Solution();
+    BFL_VCB_Set_As_Switch_Closed(QF_SW);
+    BFL_VCB_Set_As_Switch_Closed(KM1_SW);
+    g_pSysInfo->Capacitors_Exec_State = CAPACITORS_STATE_CUT_OFF;
+  }
+
+  B3_Check_Minor_Fault_Exist(poll_delta);
+  B3_Check_SCR_Serious_Fault(poll_delta);
 }
