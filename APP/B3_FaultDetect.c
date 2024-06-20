@@ -15,44 +15,45 @@
 
 void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
 {
-    if (CheckConditionDurationMet(
-            &g_AppMainInfo.satifySCRA_SeriousFaultTimeCnt,
-            poll_delta,
-            SECOND_TO_MS(g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC),
-            (
-                The_Capacitors_Are_Working() &&
-                g_pSysInfo->V_TV1A < g_pSysInfo->V_SCR_NORMAL_DIFF_kV &&
-                g_pSysInfo->I_TA1A > g_pSysInfo->I_SCR_NORMAL_DIFF_A)))
-    {
-        g_pSysInfo->Serious_Fault = true;
-        g_pSysInfo->VTx_A_Breakdown_Fault = SCR_FAULT_BRANCH_BREAKDOWN;
-    }
+    // if (CheckConditionDurationMet(
+    //         &g_AppMainInfo.satifySCRA_SeriousFaultTimeCnt,
+    //         poll_delta,
+    //         SECOND_TO_MS(g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC),
+    //         (
+    //             The_Capacitors_Are_Working() &&
+    //             g_pSysInfo->V_TV1A < g_pSysInfo->V_SCR_NORMAL_DIFF_kV &&
+    //             g_pSysInfo->I_TA1A > g_pSysInfo->I_SCR_NORMAL_DIFF_A)))
+    // {
+    //     g_pSysInfo->Serious_Fault = true;
+    //     g_pSysInfo->VTx_A_Breakdown_Fault = SCR_FAULT_BRANCH_BREAKDOWN;
+    // }
 
-    if (CheckConditionDurationMet(
-            &g_AppMainInfo.satifySCRB_SeriousFaultTimeCnt,
-            poll_delta,
-            SECOND_TO_MS(g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC),
-            (
-                The_Capacitors_Are_Working() &&
-                g_pSysInfo->V_TV1B < g_pSysInfo->V_SCR_NORMAL_DIFF_kV &&
-                g_pSysInfo->I_TA1B > g_pSysInfo->I_SCR_NORMAL_DIFF_A)))
-    {
-        g_pSysInfo->Serious_Fault = true;
-        g_pSysInfo->VTx_B_Breakdown_Fault = SCR_FAULT_BRANCH_BREAKDOWN;
-    }
+    // if (CheckConditionDurationMet(
+    //         &g_AppMainInfo.satifySCRB_SeriousFaultTimeCnt,
+    //         poll_delta,
+    //         SECOND_TO_MS(g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC),
+    //         (
+    //             The_Capacitors_Are_Working() &&
+    //             g_pSysInfo->V_TV1B < g_pSysInfo->V_SCR_NORMAL_DIFF_kV &&
+    //             g_pSysInfo->I_TA1B > g_pSysInfo->I_SCR_NORMAL_DIFF_A)))
+    // {
+    //     g_pSysInfo->Serious_Fault = true;
+    //     g_pSysInfo->VTx_B_Breakdown_Fault = SCR_FAULT_BRANCH_BREAKDOWN;
+    // }
 
-    if (CheckConditionDurationMet(
-            &g_AppMainInfo.satifySCRC_SeriousFaultTimeCnt,
-            poll_delta,
-            SECOND_TO_MS(g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC),
-            (
-                The_Capacitors_Are_Working() &&
-                g_pSysInfo->V_TV1C < g_pSysInfo->V_SCR_NORMAL_DIFF_kV &&
-                g_pSysInfo->I_TA1C > g_pSysInfo->I_SCR_NORMAL_DIFF_A)))
-    {
-        g_pSysInfo->Serious_Fault = true;
-        g_pSysInfo->VTx_C_Breakdown_Fault = SCR_FAULT_BRANCH_BREAKDOWN;
-    }
+    // if (CheckConditionDurationMet(
+    //         &g_AppMainInfo.satifySCRC_SeriousFaultTimeCnt,
+    //         poll_delta,
+    //         SECOND_TO_MS(g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC),
+    //         (
+    //             The_Capacitors_Are_Working() &&
+    //             g_pSysInfo->V_TV1C < g_pSysInfo->V_SCR_NORMAL_DIFF_kV &&
+    //             g_pSysInfo->I_TA1C > g_pSysInfo->I_SCR_NORMAL_DIFF_A)))
+    // {
+    //     g_pSysInfo->Serious_Fault = true;
+    //     g_pSysInfo->VTx_C_Breakdown_Fault = SCR_FAULT_BRANCH_BREAKDOWN;
+    // }
+    return;
 }
 
 /**
@@ -173,14 +174,26 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
         CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_UNDERVOLTAGE);
     }
 
-    if (fmaxf(g_pSysInfo->V_UIAB, g_pSysInfo->V_UOAB) > g_pSysInfo->V_SYS_OV_kV)
+    // 系统过压
+    if (CheckConditionDurationMet(
+            &g_AppMainInfo.satifyT_V_ov_SEC,
+            poll_delta,
+            SECOND_TO_MS(3),
+            (fmaxf(g_pSysInfo->V_UIAB, g_pSysInfo->V_UOAB) > g_pSysInfo->V_SYS_OV_kV)))
     {
         // 检测到系统过压
         g_pSysInfo->UxAB_OV_Fault = 1;
+        SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OV);
     }
-    else
+    else if (CheckConditionDurationMet(
+                 &g_AppMainInfo.satifyT_V_ov_cancle_SEC,
+                 poll_delta,
+                 SECOND_TO_MS(3),
+                 (fmaxf(g_pSysInfo->V_UIAB, g_pSysInfo->V_UOAB) < g_pSysInfo->V_SYS_OV_kV)))
     {
+        // 系统过压压取消
         g_pSysInfo->UxAB_OV_Fault = 0;
+        CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OV);
     }
 
     return Have_Minor_Fault();
