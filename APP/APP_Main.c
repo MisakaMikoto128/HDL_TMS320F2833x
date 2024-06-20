@@ -192,7 +192,7 @@ void APP_Main_Init()
 {
   HDL_CPU_Time_Init();
   BFL_DebugPin_Init();
-  HDL_IWDG_Init(SECOND_TO_MS(1));
+//   HDL_IWDG_Init(SECOND_TO_MS(1));
 
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
@@ -205,7 +205,7 @@ void APP_Main_Init()
   Config_PowerOn_Parameter();
 
 #if __DEBUG_MODE == 1
-  APP_Main_Clear_All_Fault();
+//   APP_Main_Clear_All_Fault();
 #endif
 
   B1_Measure_Init();

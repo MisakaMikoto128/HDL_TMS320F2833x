@@ -20,8 +20,8 @@
 typedef struct
 {
     volatile struct EPWM_REGS *EPwmRegHandle;
-    Uint16 INT_CNT;
-    Uint16 PLUSE_NUM;
+    volatile Uint16 INT_CNT;
+    volatile Uint16 PLUSE_NUM;
     Uint16 T_INT; // 中断周期，单位ms
     Uint16 busy;
 } EPWM_INFO;
@@ -71,6 +71,8 @@ void BFL_SCR_Init()
     GpioCtrlRegs.GPADIR.bit.GPIO8 = 0;
     // Disable the internal pullup on the specified pin.
     GpioCtrlRegs.GPAPUD.bit.GPIO8 = 1;
+    // // Enable the internal pullup on the specified pin.
+    // GpioCtrlRegs.GPAPUD.bit.GPIO8 = 0;
     // Qualification using 3 samples
     GpioCtrlRegs.GPAQSEL1.bit.GPIO8 = 0x01;
 
@@ -152,7 +154,8 @@ void BFL_SCR_Init()
 }
 
 /**
- * @brief
+ * @brief 是否由光信号输入。
+ * 有光信号输入时IO电平为低电平，没有光信号输入时默认拉高。
  *
  * @param scrr 输入通道。
  * @return > 0 有光信号输入进来。为SCRR_ALL时有效位mask为0x3F。
