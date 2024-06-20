@@ -71,6 +71,9 @@ extern "C"
 // 线路欠压
 #define MINOR_FAULT_LINE_UNDERVOLTAGE_MASK 0x0020
 #define MINOR_FAULT_LINE_UNDERVOLTAGE 0x0020
+// 线路欠压
+#define MINOR_FAULT_LINE_OV_MASK 0x0040
+#define MINOR_FAULT_LINE_OV 0x0040
 
 #define SET_MINOR_FAULT(value, mask) (value |= mask)
 #define CLEAR_MINOR_FAULT(value, mask) (value &= ~mask)
@@ -243,6 +246,8 @@ extern "C"
         StateDurationCnt_t satifyT_Tc_ot_cancle;
         StateDurationCnt_t satifyT_SYS_UNDER_CANCLE_SEC;
         StateDurationCnt_t satifyT_SYS_UNDER_SEC;
+        StateDurationCnt_t satifyT_V_ov_SEC;
+        StateDurationCnt_t satifyT_V_ov_cancle_SEC;
 
         // B3_Check_SCR_Serious_Fault
         StateDurationCnt_t satifySCRA_SeriousFaultTimeCnt;
