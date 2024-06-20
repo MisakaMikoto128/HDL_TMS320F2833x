@@ -33,8 +33,10 @@
 static void async_delay_callback1(void *arg)
 {
     uint32_t *scrtFb = (uint32_t *)arg;
-    *scrtFb |= BFL_SCRR_Have_Signal(SCRR_ALL);
-    BackGroundTask_WhenInSRCPoll();
+    uint32_t haveSignal = BFL_SCRR_Have_Signal(SCRR_ALL);
+    uint32_t haveFault = (~haveSignal) & BFL_SCR_SIGNAL_MASK;
+    *scrtFb |= haveFault;
+    // BackGroundTask_WhenInSRCPoll();
 }
 
 static void async_delay_callback2(void *arg)
@@ -52,9 +54,9 @@ void B2_CmdBypassCapacitors_Test()
     {
         SCRT_Fault1 = 0;
         scrtFb1 = 0;
-        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 50, US(g_pSysInfo->T2_US));
+        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 20, US(g_pSysInfo->T2_US));
         async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback1, &scrtFb1);
-        SCRT_Fault1 = (~scrtFb1) & BFL_SCR_SIGNAL_MASK;
+        SCRT_Fault1 = scrtFb1;
     }
 }
 
@@ -94,9 +96,9 @@ B2_CmdBypassCapacitors_Result_t B2_CmdBypassCapacitors_Exec()
     uint32_t scrtFb = 0;
     for (int tryCnt = 0; tryCnt < 3; tryCnt++)
     {
-        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 50, US(g_pSysInfo->T2_US));
+        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 20, US(g_pSysInfo->T2_US));
         async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback1, &scrtFb);
-        SCRT_Fault = (~scrtFb) & BFL_SCR_SIGNAL_MASK;
+        SCRT_Fault = scrtFb;
 
         BFL_VCB_Set_As_Switch_Closed(KM1_SW);
         async_delay(MS(g_pSysInfo->T1_MS), async_delay_callback2, NULL);
@@ -109,9 +111,9 @@ B2_CmdBypassCapacitors_Result_t B2_CmdBypassCapacitors_Exec()
 
             if (KM1_State == BFL_VCB_Opened)
             {
-                KM1_Fault = BFL_VBC_CANT_OPEN;
+                KM1_Fault = BFL_VBC_CANT_CLOSE;
             }
-            else
+            else if(KM1_State == BFL_VCB_Closed)
             {
                 KM1_Fault = BFL_VBC_NO_FAULT;
                 break;

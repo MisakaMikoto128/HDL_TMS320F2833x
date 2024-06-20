@@ -31,8 +31,10 @@
 static void async_delay_callback1(void *arg)
 {
     uint32_t *scrtFb = (uint32_t *)arg;
-    *scrtFb |= BFL_SCRR_Have_Signal(SCRR_ALL);
-    BackGroundTask_WhenInSRCPoll();
+    uint32_t haveSignal = BFL_SCRR_Have_Signal(SCRR_ALL);
+    uint32_t haveFault = (~haveSignal) & BFL_SCR_SIGNAL_MASK;
+    *scrtFb |= haveFault;
+    // BackGroundTask_WhenInSRCPoll();
 }
 
 static void async_delay_callback2(void *arg)
@@ -48,7 +50,7 @@ B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec()
     result.QF_Fault = BFL_VBC_NO_FAULT;
     result.KM1_Fault = BFL_VBC_NO_FAULT;
 
-    if (!The_Capacitors_Are_Working())
+    if ((The_Capacitors_Are_Working() == false) && (The_Capacitors_Are_Bypass() == false))
     {
         result.code = CMD_CODE_SYS_CAPACITORS_ARE_NOT_WORKING;
         return result;
@@ -60,10 +62,16 @@ B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec()
     uint32_t scrtFb = 0;
     for (int tryCnt = 0; tryCnt < 3; tryCnt++)
     {
-        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 50, US(g_pSysInfo->T2_US));
+        BFL_VCB_STATE_t QF_State = BFL_VCB_Get_Actual_State(QF_SW);
+        BFL_VCB_STATE_t KM1_State = BFL_VCB_Get_Actual_State(KM1_SW);
 
-        async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback1, &scrtFb);
-        SCRT_Fault = (~scrtFb) & BFL_SCR_SIGNAL_MASK;
+        if(!(QF_State == BFL_VCB_Closed || KM1_State == BFL_VCB_Closed))
+        {
+            BFL_SCRT_Pluse_Transmit(SCRT_ALL, 20, US(g_pSysInfo->T2_US));
+            async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback1, &scrtFb);
+            SCRT_Fault = scrtFb;
+        }        
+
 
         BFL_VCB_Set_As_Switch_Closed(QF_SW);
         BFL_VCB_Set_As_Switch_Closed(KM1_SW);
@@ -86,7 +94,7 @@ B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec()
 
             if (QF_State == BFL_VCB_Opened)
             {
-                QF_Fault = BFL_VBC_CANT_OPEN;
+                QF_Fault = BFL_VBC_CANT_CLOSE;
             }
             else
             {
@@ -95,7 +103,7 @@ B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec()
 
             if (KM1_State == BFL_VCB_Opened)
             {
-                KM1_Fault = BFL_VBC_CANT_OPEN;
+                KM1_Fault = BFL_VBC_CANT_CLOSE;
             }
             else
             {
