@@ -82,7 +82,8 @@ void Config_Default_Parameter()
   g_pSysInfo->I_SCR_NORMAL_DIFF_A = 1.0f;
   g_pSysInfo->I_TA_quick_oc_A = 500;
   g_pSysInfo->T_I_TA_quick_oc_MS = MS(200);
-
+  g_pSysInfo->T_V_SYS_OV_SEC = SEC(2);
+  
   g_pSysInfo->V_SYS_STOP_kV = 4.0f;
   g_pSysInfo->V_SYS_UNDER_kV = 8.0f;
   g_pSysInfo->V_SYS_THH_kV = 10.5f;

@@ -207,7 +207,7 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
     if (CheckConditionDurationMet(
             &g_AppMainInfo.satifyT_V_ov_SEC,
             poll_delta,
-            SECOND_TO_MS(3),
+            SECOND_TO_MS(g_pSysInfo->T_V_SYS_OV_SEC),
             (fmaxf(g_pSysInfo->V_UIAB, g_pSysInfo->V_UOAB) > g_pSysInfo->V_SYS_OV_kV)))
     {
         // 检测到系统过压
@@ -216,10 +216,10 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
     else if (CheckConditionDurationMet(
                  &g_AppMainInfo.satifyT_V_ov_cancle_SEC,
                  poll_delta,
-                 SECOND_TO_MS(3),
+                 SECOND_TO_MS(g_pSysInfo->T_V_SYS_OV_SEC),
                  (fmaxf(g_pSysInfo->V_UIAB, g_pSysInfo->V_UOAB) < g_pSysInfo->V_SYS_OV_kV)))
     {
-        // 系统过压压取消
+        // 系统过压取消
         CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OV);
     }
 

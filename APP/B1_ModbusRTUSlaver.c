@@ -143,6 +143,7 @@ void SyncSysinfoToModbusReg()
     usRegHoldingBuf[52] = pSysinfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC;
     usRegHoldingBuf[53] = FLOAT_TO_UINT16_SCALE(pSysinfo->I_TA_quick_oc_A, 10);
     usRegHoldingBuf[54] = pSysinfo->T_I_TA_quick_oc_MS;
+    usRegHoldingBuf[55] = pSysinfo->T_V_SYS_OV_SEC;
 
     usRegInputBuf[0] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1A, 1000);
     usRegInputBuf[1] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1B, 1000);
@@ -299,6 +300,7 @@ void SyncModbusRegToSysinfo()
     pSysinfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC = usRegHoldingBuf[52];
     pSysinfo->I_TA_quick_oc_A = (float)usRegHoldingBuf[53] * 0.1f;
     pSysinfo->T_I_TA_quick_oc_MS = usRegInputBuf[54];
+    pSysinfo->T_V_SYS_OV_SEC = usRegInputBuf[55];
 
     // 指令解析
     uint16_t cmdReg = usRegHoldingBuf[49];
