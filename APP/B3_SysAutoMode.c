@@ -77,7 +77,6 @@ void B3_SysAutoMode_DeltaPoll(uint32_t poll_delta)
                 SECOND_TO_MS(g_pSysInfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC),
                 (g_pSysInfo->V_UIAB > g_pSysInfo->V_SYS_UNDER_kV &&
                  g_pSysInfo->V_UIAB < g_pSysInfo->V_SYS_THH_kV &&
-                 I_TA1_MAX > g_pSysInfo->I_TA_low_thl_A &&
                  I_TA1_MAX < g_pSysInfo->I_TA_oc_A)))
         {
           B2_CmdMakeCapacitorsWork_Exec_Solution();
@@ -100,3 +99,5 @@ void B3_SysAutoMode_DeltaPoll(uint32_t poll_delta)
   B3_Check_Minor_Fault_Exist(poll_delta);
   B3_Check_SCR_Serious_Fault(poll_delta);
 }
+
+

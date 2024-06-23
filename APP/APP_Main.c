@@ -67,10 +67,10 @@ void Config_Default_Parameter()
   g_pSysInfo->I_TA_low_thl_A = 50;
   g_pSysInfo->I_TA_low_thh_A = 55;
   g_pSysInfo->T_I_TA_Thh_SEC = SEC(10);
-  g_pSysInfo->I_TA_oc_A = 500;
+  g_pSysInfo->I_TA_oc_A = 200;
   g_pSysInfo->T_I_TA_oc_SEC = SEC(4);
   g_pSysInfo->V_TVx_ov_kV = 2.0f;
-  g_pSysInfo->T_V_TVx_ov_min = MINUTE(60);
+  g_pSysInfo->T_V_TVx_ov_SEC = SEC(60);
   g_pSysInfo->Tc_ot = 80;
   g_pSysInfo->T_Tc_ot_SEC = SEC(10);
   g_pSysInfo->T1_MS = MS(1000);
@@ -80,6 +80,8 @@ void Config_Default_Parameter()
   g_pSysInfo->V_SCR_NORMAL_DIFF_kV = 0.1f;
   g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC = SEC(3);
   g_pSysInfo->I_SCR_NORMAL_DIFF_A = 1.0f;
+  g_pSysInfo->I_TA_quick_oc_A = 500;
+  g_pSysInfo->T_I_TA_quick_oc_MS = MS(200);
 
   g_pSysInfo->V_SYS_STOP_kV = 4.0f;
   g_pSysInfo->V_SYS_UNDER_kV = 8.0f;

@@ -97,14 +97,14 @@ void SyncSysinfoToModbusReg()
     usRegHoldingBuf[5] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1A_ScaleL1, 1000);
     usRegHoldingBuf[6] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1B_ScaleL1, 1000);
     usRegHoldingBuf[7] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1C_ScaleL1, 1000);
-    usRegHoldingBuf[8] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1A_ScaleL2, 1000);
-    usRegHoldingBuf[9] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1B_ScaleL2, 1000);
-    usRegHoldingBuf[10] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1C_ScaleL2, 1000);
-    usRegHoldingBuf[11] = FLOAT_TO_UINT16_SCALE(pSysinfo->UIAB_ScaleL2, 1000);
-    usRegHoldingBuf[12] = FLOAT_TO_UINT16_SCALE(pSysinfo->UOAB_ScaleL2, 1000);
-    usRegHoldingBuf[13] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1A_ScaleL2, 1000);
-    usRegHoldingBuf[14] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1B_ScaleL2, 1000);
-    usRegHoldingBuf[15] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1C_ScaleL2, 1000);
+    usRegHoldingBuf[8] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1A_ScaleL2, 100);
+    usRegHoldingBuf[9] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1B_ScaleL2, 100);
+    usRegHoldingBuf[10] = FLOAT_TO_UINT16_SCALE(pSysinfo->TV1C_ScaleL2, 100);
+    usRegHoldingBuf[11] = FLOAT_TO_UINT16_SCALE(pSysinfo->UIAB_ScaleL2, 100);
+    usRegHoldingBuf[12] = FLOAT_TO_UINT16_SCALE(pSysinfo->UOAB_ScaleL2, 100);
+    usRegHoldingBuf[13] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1A_ScaleL2, 100);
+    usRegHoldingBuf[14] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1B_ScaleL2, 100);
+    usRegHoldingBuf[15] = FLOAT_TO_UINT16_SCALE(pSysinfo->TA1C_ScaleL2, 100);
 
     usRegHoldingBuf[16] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_SYS_STOP_kV, 1000));
     usRegHoldingBuf[17] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->V_SYS_STOP_kV, 1000));
@@ -124,7 +124,7 @@ void SyncSysinfoToModbusReg()
     usRegHoldingBuf[31] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA_oc_A, 1000));
     usRegHoldingBuf[32] = pSysinfo->T_I_TA_oc_SEC;
     usRegHoldingBuf[33] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TVx_ov_kV, 1000);
-    usRegHoldingBuf[34] = pSysinfo->T_V_TVx_ov_min;
+    usRegHoldingBuf[34] = pSysinfo->T_V_TVx_ov_SEC;
     usRegHoldingBuf[35] = pSysinfo->Tc_ot;
     usRegHoldingBuf[36] = pSysinfo->T_Tc_ot_SEC;
     usRegHoldingBuf[37] = pSysinfo->T1_MS;
@@ -141,6 +141,8 @@ void SyncSysinfoToModbusReg()
     usRegHoldingBuf[48] = 'Y';
     usRegHoldingBuf[49] = 'L';
     usRegHoldingBuf[52] = pSysinfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC;
+    usRegHoldingBuf[53] = FLOAT_TO_UINT16_SCALE(pSysinfo->I_TA_quick_oc_A, 10);
+    usRegHoldingBuf[54] = pSysinfo->T_I_TA_quick_oc_MS;
 
     usRegInputBuf[0] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1A, 1000);
     usRegInputBuf[1] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1B, 1000);
@@ -156,10 +158,15 @@ void SyncSysinfoToModbusReg()
     usRegInputBuf[11] = HIGH_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1C, 1000));
     usRegInputBuf[12] = LOW_16_BITS(FLOAT_TO_UINT32_SCALE(pSysinfo->I_TA1C, 1000));
 
-    usRegInputBuf[17] = pSysinfo->capTemp[Tc_A_IDX];
-    usRegInputBuf[18] = pSysinfo->capTemp[Tc_B_IDX];
-    usRegInputBuf[19] = pSysinfo->capTemp[Tc_C_IDX];
     uint16_t reg = 0;
+
+    reg = (((int16_t)(pSysinfo->capTemp[Tc_A1_IDX]) & 0xFF) << 8) | ((int16_t)(pSysinfo->capTemp[Tc_A2_IDX]) & 0xFF);
+    usRegInputBuf[17] = reg;
+    reg = (((int16_t)(pSysinfo->capTemp[Tc_A3_IDX]) & 0xFF) << 8);
+    usRegInputBuf[18] = reg;
+    reg = (((int16_t)(pSysinfo->capTemp[Tc_B1_IDX]) & 0xFF) << 8) | ((int16_t)(pSysinfo->capTemp[Tc_B2_IDX]) & 0xFF);
+    usRegInputBuf[19] = reg;
+
     reg |= ((pSysinfo->SYS_MODE) & 0x01) << 0;
     reg |= ((pSysinfo->Line_State) & 0x01) << 1;
     reg |= ((pSysinfo->Capacitors_State) & 0x03) << 3;
@@ -191,13 +198,19 @@ void SyncSysinfoToModbusReg()
     reg |= ((state) & 0x03) << 4;
     state = BFL_VCB_Get_Setting_State(KM1_SW);
     usRegInputBuf[29] = reg;
-    usRegInputBuf[30] = pSysinfo->UxAB_OV_Fault;
+    usRegInputBuf[30] = pSysinfo->I_TA_quick_oc_Fault;
     usRegInputBuf[31] = pSysinfo->powerOnTimes;
     reg = 0;
     reg |= ((pSysinfo->capTempSensorTransmitConnect) & 0x01) << 0;
-    reg |= ((pSysinfo->capTempSensorFault[Tc_A_IDX]) & 0x01) << 8;
-    reg |= ((pSysinfo->capTempSensorFault[Tc_B_IDX]) & 0x01) << 9;
-    reg |= ((pSysinfo->capTempSensorFault[Tc_C_IDX]) & 0x01) << 10;
+    reg |= ((pSysinfo->capTempSensorFault[Tc_A1_IDX]) & 0x01) << 15;
+    reg |= ((pSysinfo->capTempSensorFault[Tc_A2_IDX]) & 0x01) << 14;
+    reg |= ((pSysinfo->capTempSensorFault[Tc_A3_IDX]) & 0x01) << 13;
+    reg |= ((pSysinfo->capTempSensorFault[Tc_B1_IDX]) & 0x01) << 12;
+    reg |= ((pSysinfo->capTempSensorFault[Tc_B2_IDX]) & 0x01) << 11;
+    reg |= ((pSysinfo->capTempSensorFault[Tc_B3_IDX]) & 0x01) << 10;
+    reg |= ((pSysinfo->capTempSensorFault[Tc_C1_IDX]) & 0x01) << 9;
+    reg |= ((pSysinfo->capTempSensorFault[Tc_C2_IDX]) & 0x01) << 8;
+    reg |= ((pSysinfo->capTempSensorFault[Tc_C3_IDX]) & 0x01) << 7;
     usRegInputBuf[32] = reg;
     reg = 0;
     reg = XIN1_8_Read();
@@ -227,6 +240,11 @@ void SyncSysinfoToModbusReg()
     usRegInputBuf[52] = FLOAT_TO_UINT16_SCALE(AdcVoltRMS_Filted[I_TA1C_ADC_IDX], 10000);
     usRegInputBuf[53] = 0;
     usRegInputBuf[54] = 0;
+    reg = (((int16_t)(pSysinfo->capTemp[Tc_B3_IDX]) & 0xFF) << 8);
+    usRegInputBuf[55] = reg;
+    reg = (((int16_t)(pSysinfo->capTemp[Tc_C1_IDX]) & 0xFF) << 8) | ((int16_t)(pSysinfo->capTemp[Tc_C2_IDX]) & 0xFF);
+    usRegInputBuf[56] = reg;
+    reg = (((int16_t)(pSysinfo->capTemp[Tc_C3_IDX]) & 0xFF) << 8);
 }
 
 /**
@@ -245,14 +263,14 @@ void SyncModbusRegToSysinfo()
     pSysinfo->TA1A_ScaleL1 = (float)usRegHoldingBuf[5] * 0.001f;
     pSysinfo->TA1B_ScaleL1 = (float)usRegHoldingBuf[6] * 0.001f;
     pSysinfo->TA1C_ScaleL1 = (float)usRegHoldingBuf[7] * 0.001f;
-    pSysinfo->TV1A_ScaleL2 = (float)usRegHoldingBuf[8] * 0.001f;
-    pSysinfo->TV1B_ScaleL2 = (float)usRegHoldingBuf[9] * 0.001f;
-    pSysinfo->TV1C_ScaleL2 = (float)usRegHoldingBuf[10] * 0.001f;
-    pSysinfo->UIAB_ScaleL2 = (float)usRegHoldingBuf[11] * 0.001f;
-    pSysinfo->UOAB_ScaleL2 = (float)usRegHoldingBuf[12] * 0.001f;
-    pSysinfo->TA1A_ScaleL2 = (float)usRegHoldingBuf[13] * 0.001f;
-    pSysinfo->TA1B_ScaleL2 = (float)usRegHoldingBuf[14] * 0.001f;
-    pSysinfo->TA1C_ScaleL2 = (float)usRegHoldingBuf[15] * 0.001f;
+    pSysinfo->TV1A_ScaleL2 = (float)usRegHoldingBuf[8] * 0.01f;
+    pSysinfo->TV1B_ScaleL2 = (float)usRegHoldingBuf[9] * 0.01f;
+    pSysinfo->TV1C_ScaleL2 = (float)usRegHoldingBuf[10] * 0.01f;
+    pSysinfo->UIAB_ScaleL2 = (float)usRegHoldingBuf[11] * 0.01f;
+    pSysinfo->UOAB_ScaleL2 = (float)usRegHoldingBuf[12] * 0.01f;
+    pSysinfo->TA1A_ScaleL2 = (float)usRegHoldingBuf[13] * 0.01f;
+    pSysinfo->TA1B_ScaleL2 = (float)usRegHoldingBuf[14] * 0.01f;
+    pSysinfo->TA1C_ScaleL2 = (float)usRegHoldingBuf[15] * 0.01f;
 
     pSysinfo->V_SYS_STOP_kV = USING_TWO_REG_TO_FLOAT(usRegHoldingBuf, 16, 0.001f);
     pSysinfo->V_SYS_UNDER_kV = USING_TWO_REG_TO_FLOAT(usRegHoldingBuf, 18, 0.001f);
@@ -265,7 +283,7 @@ void SyncModbusRegToSysinfo()
     pSysinfo->I_TA_oc_A = USING_TWO_REG_TO_FLOAT(usRegHoldingBuf, 30, 0.001f);
     pSysinfo->T_I_TA_oc_SEC = usRegHoldingBuf[32];
     pSysinfo->V_TVx_ov_kV = (float)usRegHoldingBuf[33] * 0.001f;
-    pSysinfo->T_V_TVx_ov_min = usRegHoldingBuf[34];
+    pSysinfo->T_V_TVx_ov_SEC = usRegHoldingBuf[34];
     pSysinfo->Tc_ot = usRegHoldingBuf[35];
     pSysinfo->T_Tc_ot_SEC = usRegHoldingBuf[36];
     pSysinfo->T1_MS = usRegHoldingBuf[37];
@@ -279,6 +297,8 @@ void SyncModbusRegToSysinfo()
     pSysinfo->devType = usRegHoldingBuf[46];
 
     pSysinfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC = usRegHoldingBuf[52];
+    pSysinfo->I_TA_quick_oc_A = (float)usRegHoldingBuf[53] * 0.1f;
+    pSysinfo->T_I_TA_quick_oc_MS = usRegInputBuf[54];
 
     // 指令解析
     uint16_t cmdReg = usRegHoldingBuf[49];
@@ -316,7 +336,7 @@ void MBCmdHandler(uint16_t cmdReg)
     switch (cmdReg)
     {
     case MB_SRC_SCRT_PLUSE_TRANSMIT:
-        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 50, US(g_pSysInfo->T2_US));
+        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 20, US(g_pSysInfo->T2_US));
         break;
     case MB_CMD_SERIOUS_FAUIL_CLEAR:
         APP_Main_Clear_All_Fault();

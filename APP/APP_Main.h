@@ -24,9 +24,16 @@ extern "C"
 #include "BFL_VCB.h"
 #include "state_duration_timer.h"
 
-#define Tc_A_IDX 0
-#define Tc_B_IDX 1
-#define Tc_C_IDX 2
+#define Tc_A1_IDX 0
+#define Tc_A2_IDX 1
+#define Tc_A3_IDX 2
+#define Tc_B1_IDX 3
+#define Tc_B2_IDX 4
+#define Tc_B3_IDX 5
+#define Tc_C1_IDX 6
+#define Tc_C2_IDX 7
+#define Tc_C3_IDX 8
+#define Tc_NUM 9
 
 #define V_TV1A_ADC_IDX 0
 #define V_TV1B_ADC_IDX 1
@@ -56,7 +63,7 @@ extern "C"
 // 线路轻载
 #define MINOR_FAULT_LINE_LIGHT_LOAD_MASK 0x0001
 #define MINOR_FAULT_LINE_LIGHT_LOAD 0x0001
-// 线路过载
+// 线路过流
 #define MINOR_FAULT_LINE_OVERLOAD_MASK 0x0002
 #define MINOR_FAULT_LINE_OVERLOAD 0x0002
 // 线路谐振
@@ -71,7 +78,7 @@ extern "C"
 // 线路欠压
 #define MINOR_FAULT_LINE_UNDERVOLTAGE_MASK 0x0020
 #define MINOR_FAULT_LINE_UNDERVOLTAGE 0x0020
-// 线路欠压
+// 线路过压1段
 #define MINOR_FAULT_LINE_OV_MASK 0x0040
 #define MINOR_FAULT_LINE_OV 0x0040
 
@@ -92,8 +99,8 @@ extern "C"
     typedef struct tagSysInfo_t
     {
         // B1_CapacitanceTemperatureMeasure
-        float capTemp[3];                  // 电容温度
-        bool capTempSensorFault[3];        // 电容温度传感器故障 true:故障 false:正常
+        float capTemp[Tc_NUM];             // 电容温度
+        bool capTempSensorFault[Tc_NUM];   // 电容温度传感器故障 true:故障 false:正常
         bool capTempSensorTransmitConnect; // 电容温度传感器传输连接 true:连接 false:断开
 
         // B1_Measure
@@ -146,10 +153,10 @@ extern "C"
         uint16_t KM1_FB; // KM1反馈信号
 
         float V_SYS_STOP_kV;                        // 系统停运电压
-        float V_SYS_UNDER_kV;                       // 系统投入电压下限（欠压值）
+        float V_SYS_UNDER_kV;                       // 系统欠压电压（欠压值）
         float V_SYS_THH_kV;                         // 系统投入电压上限
-        float V_SYS_OV_kV;                          // 系统切除电压（过压保护电压)
-        uint16_t T_SYS_SATIFY_CAPACITORS_WAORK_SEC; // 电容器满足投入条件有效持续时间
+        float V_SYS_OV_kV;                          // 系统过压保护电压（过压保护电压)
+        uint16_t T_SYS_SATIFY_CAPACITORS_WAORK_SEC; // 电容器满足投入条件有效持续时间：电容器投入延时
 
         // 只能在指令执行过程中检查VBC状态
         // 严重故障1
@@ -170,14 +177,15 @@ extern "C"
         uint16_t VTx_A_Breakdown_Fault; // A相晶闸管击穿故障，0:正常 2:击穿
         uint16_t VTx_B_Breakdown_Fault; // B相晶闸管击穿故障，0:正常 2:击穿
         uint16_t VTx_C_Breakdown_Fault; // C相晶闸管击穿故障，0:正常 2:击穿
+        uint16_t I_TA_quick_oc_Fault;   // 线路快速过流故障，0:正常 1:过流
 
         float I_TA_low_thl_A;               // 线路轻载电流触发阈值
         float I_TA_low_thh_A;               // 线路轻载电流恢复阈值
-        uint16_t T_I_TA_Thh_SEC;            // 轻载电流恢复延时
-        float I_TA_oc_A;                    // 线路过载电流阈值
+        uint16_t T_I_TA_Thh_SEC;            // 轻载触发恢复延时
+        float I_TA_oc_A;                    // 线路过载电流阈值:过流电流
         uint16_t T_I_TA_oc_SEC;             // 线路过载触发延时
         float V_TVx_ov_kV;                  // 电容器过压阈值
-        uint16_t T_V_TVx_ov_min;            // 电容器过压自动恢复时间
+        uint16_t T_V_TVx_ov_SEC;            // 电容过压延时时间
         float Tc_ot;                        // 电容器过温阈值
         uint16_t T_Tc_ot_SEC;               // 电容器过温恢复延时
         uint16_t T1_MS;                     // 闸刀状态反馈信号生效时间，单位ms
@@ -187,8 +195,9 @@ extern "C"
         float V_SCR_NORMAL_DIFF_kV;         // 晶闸管在电容器投入工作期间的正常压差
         uint16_t T_V_SCR_ABNORMAL_DIFF_SEC; // 晶闸管击穿条件判断生效时间，必须在电容器投入工作期间判断
         float I_SCR_NORMAL_DIFF_A;          // 晶闸管击穿条件判断有效电流条件
-        uint16_t UxAB_OV_Fault;             // 进线或者出线电压是否过压 0:正常 1:过压
         uint16_t T_SYS_UNDER_CANCLE_SEC;    // 系统欠压取消时间
+        float I_TA_quick_oc_A;              // 线路速断电流阈值
+        uint16_t T_I_TA_quick_oc_MS;        // 线路过流速断延时
 
         uint16_t Capacitors_State;      // 电容器状态 0:未投入（默认） 1:已经投入 2:旁路
         uint16_t Capacitors_Exec_State; // 电容器执行的状态 0:未投入（默认） 1:已经投入 2:旁路
@@ -248,6 +257,7 @@ extern "C"
         StateDurationCnt_t satifyT_SYS_UNDER_SEC;
         StateDurationCnt_t satifyT_V_ov_SEC;
         StateDurationCnt_t satifyT_V_ov_cancle_SEC;
+        StateDurationCnt_t satifyT_I_TA_quick_oc_MS;
 
         // B3_Check_SCR_Serious_Fault
         StateDurationCnt_t satifySCRA_SeriousFaultTimeCnt;

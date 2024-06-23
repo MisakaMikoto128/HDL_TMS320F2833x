@@ -13,6 +13,28 @@
 #include "mtime.h"
 #include "math.h"
 
+float getMaxCapTemp()
+{
+    float Tc_MAX = -273.15f;
+    int capTempSize = sizeof(g_pSysInfo->capTemp) / sizeof(g_pSysInfo->capTemp[0]);
+    for (int i = 0; i < capTempSize; i++)
+    {
+        if (g_pSysInfo->capTemp[i] > Tc_MAX)
+        {
+            Tc_MAX = g_pSysInfo->capTemp[i];
+        }
+    }
+    return Tc_MAX;
+}
+
+float getI_TA1_MAX()
+{
+    float I_TA1_MAX = 0;
+    I_TA1_MAX = fmaxf(g_pSysInfo->I_TA1A, g_pSysInfo->I_TA1B);
+    I_TA1_MAX = fmaxf(I_TA1_MAX, g_pSysInfo->I_TA1C);
+    return I_TA1_MAX;
+}
+
 void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
 {
     // if (CheckConditionDurationMet(
@@ -53,6 +75,19 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
     //     g_pSysInfo->Serious_Fault = true;
     //     g_pSysInfo->VTx_C_Breakdown_Fault = SCR_FAULT_BRANCH_BREAKDOWN;
     // }
+
+    float I_TA1_MAX = getI_TA1_MAX();
+    if (CheckConditionDurationMet(
+            &g_AppMainInfo.satifyT_I_TA_quick_oc_MS,
+            poll_delta,
+            MS(g_pSysInfo->T_I_TA_quick_oc_MS),
+            (I_TA1_MAX > g_pSysInfo->I_TA_quick_oc_A)))
+    {
+        // 线路过载直接触发
+        g_pSysInfo->Serious_Fault = true;
+        g_pSysInfo->I_TA_quick_oc_Fault = 1;
+    }
+
     return;
 }
 
@@ -71,8 +106,7 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
     I_TA1_MAX = fmaxf(I_TA1_MAX, g_pSysInfo->I_TA1C);
     V_TV1x_MAX = fmaxf(g_pSysInfo->V_TV1A, g_pSysInfo->V_TV1B);
     V_TV1x_MAX = fmaxf(V_TV1x_MAX, g_pSysInfo->V_TV1C);
-    Tc_MAX = fmaxf(g_pSysInfo->capTemp[Tc_A_IDX], g_pSysInfo->capTemp[Tc_B_IDX]);
-    Tc_MAX = fmaxf(Tc_MAX, g_pSysInfo->capTemp[Tc_C_IDX]);
+    Tc_MAX = getMaxCapTemp();
 
     if (CheckConditionDurationMet(
             &g_AppMainInfo.satifyT_I_TA_Thl,
@@ -93,18 +127,13 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
         CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_LIGHT_LOAD);
     }
 
-    if (I_TA1_MAX > g_pSysInfo->I_TA_oc_A * 2)
+    if (CheckConditionDurationMet(
+            &g_AppMainInfo.satifyT_I_TA_oc,
+            poll_delta,
+            SECOND_TO_MS(g_pSysInfo->T_I_TA_oc_SEC),
+            (I_TA1_MAX > g_pSysInfo->I_TA_oc_A)))
     {
-        // 线路过载直接触发
-        SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OVERLOAD);
-    }
-    else if (CheckConditionDurationMet(
-                 &g_AppMainInfo.satifyT_I_TA_oc,
-                 poll_delta,
-                 SECOND_TO_MS(g_pSysInfo->T_I_TA_oc_SEC),
-                 (I_TA1_MAX > g_pSysInfo->I_TA_oc_A)))
-    {
-        // 线路过载触发
+        // 线路过流触发
         SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OVERLOAD);
     }
     else if (CheckConditionDurationMet(
@@ -113,14 +142,14 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
                  SECOND_TO_MS(g_pSysInfo->T_I_TA_oc_SEC),
                  (I_TA1_MAX < g_pSysInfo->I_TA_oc_A)))
     {
-        // 线路过载取消
+        // 线路过流取消
         CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OVERLOAD);
     }
 
     if (CheckConditionDurationMet(
             &g_AppMainInfo.satifyT_V_TVx_ov,
             poll_delta,
-            MS(60),
+            SECOND_TO_MS(g_pSysInfo->T_V_TVx_ov_SEC),
             (V_TV1x_MAX > g_pSysInfo->V_TVx_ov_kV)))
     {
         // 电容器过压故障触发
@@ -129,7 +158,7 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
     else if (CheckConditionDurationMet(
                  &g_AppMainInfo.satifyT_V_TVx_ov_cancle,
                  poll_delta,
-                 MINUTE_TO_MS(g_pSysInfo->T_V_TVx_ov_min),
+                 SECOND_TO_MS(g_pSysInfo->T_V_TVx_ov_SEC),
                  (V_TV1x_MAX < g_pSysInfo->V_TVx_ov_kV)))
     {
         // 电容器过压故障取消
@@ -182,7 +211,6 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
             (fmaxf(g_pSysInfo->V_UIAB, g_pSysInfo->V_UOAB) > g_pSysInfo->V_SYS_OV_kV)))
     {
         // 检测到系统过压
-        g_pSysInfo->UxAB_OV_Fault = 1;
         SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OV);
     }
     else if (CheckConditionDurationMet(
@@ -192,7 +220,6 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
                  (fmaxf(g_pSysInfo->V_UIAB, g_pSysInfo->V_UOAB) < g_pSysInfo->V_SYS_OV_kV)))
     {
         // 系统过压压取消
-        g_pSysInfo->UxAB_OV_Fault = 0;
         CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OV);
     }
 
