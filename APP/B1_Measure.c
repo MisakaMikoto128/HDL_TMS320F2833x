@@ -53,13 +53,13 @@ void B1_Measure_Poll()
         g_pSysInfo->VL1rms_TA1B = g_pSysInfo->TA1B_ScaleL1 * pMeasure->AdcVoltRMS_Filted_Chunk[I_TA1B_ADC_IDX];
         g_pSysInfo->VL1rms_TA1C = g_pSysInfo->TA1C_ScaleL1 * pMeasure->AdcVoltRMS_Filted_Chunk[I_TA1C_ADC_IDX];
 
-        g_pSysInfo->V_TV1A = g_pSysInfo->VL1rms_TV1A * g_pSysInfo->TV1A_ScaleL2;
-        g_pSysInfo->V_TV1B = g_pSysInfo->VL1rms_TV1B * g_pSysInfo->TV1B_ScaleL2;
-        g_pSysInfo->V_TV1C = g_pSysInfo->VL1rms_TV1C * g_pSysInfo->TV1C_ScaleL2;
-        g_pSysInfo->V_UIAB = g_pSysInfo->VL1rms_UIAB * g_pSysInfo->UIAB_ScaleL2;
-        g_pSysInfo->V_UOAB = g_pSysInfo->VL1rms_UOAB * g_pSysInfo->UOAB_ScaleL2;
-        g_pSysInfo->I_TA1A = g_pSysInfo->VL1rms_TA1A * g_pSysInfo->TA1A_ScaleL2;
-        g_pSysInfo->I_TA1B = g_pSysInfo->VL1rms_TA1B * g_pSysInfo->TA1B_ScaleL2;
-        g_pSysInfo->I_TA1C = g_pSysInfo->VL1rms_TA1C * g_pSysInfo->TA1C_ScaleL2;
+        g_pSysInfo->V_TV1A = g_pSysInfo->VL1rms_TV1A * g_pSysInfo->TV1A_ScaleL2 * 0.001f;
+        g_pSysInfo->V_TV1B = g_pSysInfo->VL1rms_TV1B * g_pSysInfo->TV1B_ScaleL2 * 0.001f;
+        g_pSysInfo->V_TV1C = g_pSysInfo->VL1rms_TV1C * g_pSysInfo->TV1C_ScaleL2 * 0.001f;
+        g_pSysInfo->V_UIAB = g_pSysInfo->VL1rms_UIAB * g_pSysInfo->UIAB_ScaleL2 * 0.001f;
+        g_pSysInfo->V_UOAB = g_pSysInfo->VL1rms_UOAB * g_pSysInfo->UOAB_ScaleL2 * 0.001f;
+        g_pSysInfo->I_TA1A = g_pSysInfo->VL1rms_TA1A * g_pSysInfo->TA1A_ScaleL2 * 0.001f;
+        g_pSysInfo->I_TA1B = g_pSysInfo->VL1rms_TA1B * g_pSysInfo->TA1B_ScaleL2 * 0.001f;
+        g_pSysInfo->I_TA1C = g_pSysInfo->VL1rms_TA1C * g_pSysInfo->TA1C_ScaleL2 * 0.001f;
     }
 }
