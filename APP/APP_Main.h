@@ -198,8 +198,8 @@ extern "C"
         uint16_t T_SYS_UNDER_CANCLE_SEC;    // 系统欠压取消时间
         float I_TA_quick_oc_A;              // 线路速断电流阈值
         uint16_t T_I_TA_quick_oc_MS;        // 线路过流速断延时
-        uint16_t T_V_SYS_OV_SEC;            //系统过压保护延时时间
-        
+        uint16_t T_V_SYS_OV_SEC;            // 系统过压保护延时时间
+
         uint16_t Capacitors_State;      // 电容器状态 0:未投入（默认） 1:已经投入 2:旁路
         uint16_t Capacitors_Exec_State; // 电容器执行的状态 0:未投入（默认） 1:已经投入 2:旁路
         uint16_t Minor_Fault;           // 轻微故障 0:无故障 1:有故障
@@ -275,6 +275,8 @@ extern "C"
     void APP_Main_SysinfoSavePoll();
     void APP_Main_Clear_All_Fault();
     void APP_Main_EraseFlashParamData();
+    float getMaxCapTemp();
+    float getI_TA1_MAX();
 
     void BackGroundTask();
     void BackGroundTask_WhenInSRCPoll();

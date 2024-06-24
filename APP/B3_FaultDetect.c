@@ -13,28 +13,6 @@
 #include "mtime.h"
 #include "math.h"
 
-float getMaxCapTemp()
-{
-    float Tc_MAX = -273.15f;
-    int capTempSize = sizeof(g_pSysInfo->capTemp) / sizeof(g_pSysInfo->capTemp[0]);
-    for (int i = 0; i < capTempSize; i++)
-    {
-        if (g_pSysInfo->capTemp[i] > Tc_MAX)
-        {
-            Tc_MAX = g_pSysInfo->capTemp[i];
-        }
-    }
-    return Tc_MAX;
-}
-
-float getI_TA1_MAX()
-{
-    float I_TA1_MAX = 0;
-    I_TA1_MAX = fmaxf(g_pSysInfo->I_TA1A, g_pSysInfo->I_TA1B);
-    I_TA1_MAX = fmaxf(I_TA1_MAX, g_pSysInfo->I_TA1C);
-    return I_TA1_MAX;
-}
-
 void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
 {
     // if (CheckConditionDurationMet(

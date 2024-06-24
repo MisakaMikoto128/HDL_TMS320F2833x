@@ -119,6 +119,10 @@ B2_CmdMakeCapacitorsWork_Result_t B2_CmdMakeCapacitorsWork_Exec()
         result.code = CMD_CODE_EXEC_SUCCESS;
     }
 
+    // 关闭控制
+    BFL_VCB_Set_As_Switch_No_Ctrl(KM1_SW);
+    BFL_VCB_Set_As_Switch_No_Ctrl(QF_SW);
+    
     return result;
 }
 
@@ -152,8 +156,6 @@ void B2_CmdMakeCapacitorsWork_Exec_Solution()
 
             APP_Main_NotifyHaveParamNeedToSave();
         }
-
-
 
         // TODO: 处理严重故障
         B2_CmdCutOffCapacitors_Exec();

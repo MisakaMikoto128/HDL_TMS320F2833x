@@ -73,7 +73,7 @@ void Config_Default_Parameter()
   g_pSysInfo->T_V_TVx_ov_SEC = SEC(60);
   g_pSysInfo->Tc_ot = 80;
   g_pSysInfo->T_Tc_ot_SEC = SEC(10);
-  g_pSysInfo->T1_MS = MS(1000);
+  g_pSysInfo->T1_MS = MS(1500);
   g_pSysInfo->T2_US = US(2000);
   g_pSysInfo->T3_MS = MS(5);
   g_pSysInfo->T4_MS = MS(5);
@@ -83,7 +83,7 @@ void Config_Default_Parameter()
   g_pSysInfo->I_TA_quick_oc_A = 500;
   g_pSysInfo->T_I_TA_quick_oc_MS = MS(200);
   g_pSysInfo->T_V_SYS_OV_SEC = SEC(2);
-  
+
   g_pSysInfo->V_SYS_STOP_kV = 4.0f;
   g_pSysInfo->V_SYS_UNDER_kV = 8.0f;
   g_pSysInfo->V_SYS_THH_kV = 10.5f;
@@ -195,7 +195,7 @@ void APP_Main_Init()
 {
   HDL_CPU_Time_Init();
   BFL_DebugPin_Init();
-//   HDL_IWDG_Init(SECOND_TO_MS(1));
+  HDL_IWDG_Init(SECOND_TO_MS(1));
 
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
@@ -295,4 +295,26 @@ void APP_Main_SysinfoSavePoll()
       APP_Main_ClearParamNeedToSave();
     }
   }
+}
+
+float getMaxCapTemp()
+{
+    float Tc_MAX = -273.15f;
+    int capTempSize = sizeof(g_pSysInfo->capTemp) / sizeof(g_pSysInfo->capTemp[0]);
+    for (int i = 0; i < capTempSize; i++)
+    {
+        if (g_pSysInfo->capTemp[i] > Tc_MAX)
+        {
+            Tc_MAX = g_pSysInfo->capTemp[i];
+        }
+    }
+    return Tc_MAX;
+}
+
+float getI_TA1_MAX()
+{
+    float I_TA1_MAX = 0;
+    I_TA1_MAX = fmaxf(g_pSysInfo->I_TA1A, g_pSysInfo->I_TA1B);
+    I_TA1_MAX = fmaxf(I_TA1_MAX, g_pSysInfo->I_TA1C);
+    return I_TA1_MAX;
 }

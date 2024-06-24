@@ -141,6 +141,9 @@ B2_CmdBypassCapacitors_Result_t B2_CmdBypassCapacitors_Exec()
         result.code = CMD_CODE_EXEC_SUCCESS;
     }
 
+    // 关闭控制
+    BFL_VCB_Set_As_Switch_No_Ctrl(KM1_SW);
+
     return result;
 }
 

@@ -68,9 +68,7 @@ void B3_SysAutoMode_DeltaPoll(uint32_t poll_delta)
       }
       else
       {
-        float I_TA1_MAX = 0;
-        I_TA1_MAX = fmaxf(g_pSysInfo->I_TA1A, g_pSysInfo->I_TA1B);
-        I_TA1_MAX = fmaxf(I_TA1_MAX, g_pSysInfo->I_TA1C);
+        float I_TA1_MAX = getI_TA1_MAX();
 
         if (CheckConditionDurationMet(
                 &g_AppMainInfo.satifyCapacitorsWorkTimeCnt, poll_delta,
@@ -90,14 +88,12 @@ void B3_SysAutoMode_DeltaPoll(uint32_t poll_delta)
   }
   else
   {
-    // B2_CmdCutOffCapacitors_Exec_Solution();
-    BFL_VCB_Set_As_Switch_Closed(QF_SW);
-    BFL_VCB_Set_As_Switch_Closed(KM1_SW);
-    g_pSysInfo->Capacitors_Exec_State = CAPACITORS_STATE_CUT_OFF;
+    B2_CmdCutOffCapacitors_Exec_Solution();
+    // BFL_VCB_Set_As_Switch_Closed(QF_SW);
+    // BFL_VCB_Set_As_Switch_Closed(KM1_SW);
+    // g_pSysInfo->Capacitors_Exec_State = CAPACITORS_STATE_CUT_OFF;
   }
 
   B3_Check_Minor_Fault_Exist(poll_delta);
   B3_Check_SCR_Serious_Fault(poll_delta);
 }
-
-
