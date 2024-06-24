@@ -196,7 +196,7 @@ uint32_t BFL_SCRR_Have_Signal(BFL_SCRR_t scrr)
 #define EPWM1_PWM_PERIOD 5 // 5ms Period
 #define EPWM1_TIMER_TBPRD \
     (9375000ULL / (1000 / EPWM1_PWM_PERIOD) - 1) // 5ms Period，max 6
-#define EPWM1_TIMER_CMPA_MIN 4
+#define EPWM1_TIMER_CMPA_MIN 50
 #define EPWM123_ENABLE_SYNC 0
 //
 // InitEPwm1Example -
@@ -623,4 +623,16 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
     default:
         return;
     }
+}
+
+
+/**
+ * @brief 输出脉冲。
+ *
+ * @param scrt 输出通道。
+ */
+void BFL_SCRT_Pluse_Set(BFL_SCRT_t scrt)
+{
+    __unused(scrt);
+    ;
 }
