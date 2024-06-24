@@ -113,7 +113,7 @@ B2_CmdBypassCapacitors_Result_t B2_CmdBypassCapacitors_Exec()
             {
                 KM1_Fault = BFL_VBC_CANT_CLOSE;
             }
-            else if(KM1_State == BFL_VCB_Closed)
+            else if (KM1_State == BFL_VCB_Closed)
             {
                 KM1_Fault = BFL_VBC_NO_FAULT;
                 break;
@@ -176,6 +176,7 @@ void B2_CmdBypassCapacitors_Exec_Solution()
             g_pSysInfo->SCRT_Fault |= result.SCRT_Fault;
 
             APP_Main_NotifyHaveParamNeedToSave();
+            // TODO:Serious_Fault Event
         }
 
         // TODO: 处理严重故障

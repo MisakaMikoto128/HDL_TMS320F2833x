@@ -122,7 +122,7 @@ B2_CmdMakeCapacitorsWork_Result_t B2_CmdMakeCapacitorsWork_Exec()
     // 关闭控制
     BFL_VCB_Set_As_Switch_No_Ctrl(KM1_SW);
     BFL_VCB_Set_As_Switch_No_Ctrl(QF_SW);
-    
+
     return result;
 }
 
@@ -144,17 +144,18 @@ void B2_CmdMakeCapacitorsWork_Exec_Solution()
         {
 
             g_pSysInfo->Serious_Fault = 1;
-            if(result.QF_Fault != BFL_VBC_NO_FAULT)
+            if (result.QF_Fault != BFL_VBC_NO_FAULT)
             {
                 g_pSysInfo->QF_Fault = result.QF_Fault;
             }
 
-            if(result.KM1_Fault != BFL_VBC_NO_FAULT)
+            if (result.KM1_Fault != BFL_VBC_NO_FAULT)
             {
                 g_pSysInfo->KM1_Fault = result.KM1_Fault;
             }
 
             APP_Main_NotifyHaveParamNeedToSave();
+            // TODO:Serious_Fault Event
         }
 
         // TODO: 处理严重故障

@@ -84,7 +84,7 @@ extern "C"
 
 #define SET_MINOR_FAULT(value, mask) (value |= mask)
 #define CLEAR_MINOR_FAULT(value, mask) (value &= ~mask)
-#define EXIST_MINOR_FAULT(value, mask) (value & mask)
+#define EXIST_MINOR_FAULT(value, mask) ((value & mask) == mask)
 
 #define Have_Serious_Fault() (g_pSysInfo->Serious_Fault != 0)
 #define Have_Minor_Fault() (g_pSysInfo->Minor_Fault != 0)

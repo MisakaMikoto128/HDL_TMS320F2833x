@@ -62,8 +62,12 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
             (I_TA1_MAX > g_pSysInfo->I_TA_quick_oc_A)))
     {
         // 线路过载直接触发
-        g_pSysInfo->Serious_Fault = true;
-        g_pSysInfo->I_TA_quick_oc_Fault = 1;
+        if (g_pSysInfo->I_TA_quick_oc_Fault == 0)
+        {
+            g_pSysInfo->Serious_Fault = true;
+            g_pSysInfo->I_TA_quick_oc_Fault = 1;
+            // TODO:I_TA_quick_oc_Fault Event
+        }
     }
 
     return;
@@ -93,7 +97,11 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
             (I_TA1_MAX < g_pSysInfo->I_TA_low_thl_A)))
     {
         // 线路轻载触发
-        SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_LIGHT_LOAD);
+        if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_LIGHT_LOAD))
+        {
+            SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_LIGHT_LOAD);
+            // TODO:MINOR_FAULT_LINE_LIGHT_LOAD Event
+        }
     }
     else if (CheckConditionDurationMet(
                  &g_AppMainInfo.satifyT_I_TA_Thl_cancle,
@@ -112,7 +120,11 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
             (I_TA1_MAX > g_pSysInfo->I_TA_oc_A)))
     {
         // 线路过流触发
-        SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OVERLOAD);
+        if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OVERLOAD))
+        {
+            SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OVERLOAD);
+            // TODO:MINOR_FAULT_LINE_OVERLOAD Event
+        }
     }
     else if (CheckConditionDurationMet(
                  &g_AppMainInfo.satifyT_I_TA_oc_cancle,
@@ -131,7 +143,11 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
             (V_TV1x_MAX > g_pSysInfo->V_TVx_ov_kV)))
     {
         // 电容器过压故障触发
-        SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OV);
+        if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OV))
+        {
+            SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OV);
+            // TODO:MINOR_FAULT_CAPACITOR_OV Event
+        }
     }
     else if (CheckConditionDurationMet(
                  &g_AppMainInfo.satifyT_V_TVx_ov_cancle,
@@ -150,7 +166,10 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
             (Tc_MAX > g_pSysInfo->Tc_ot)))
     {
         // 电容器过温故障触发
-        SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OT);
+        if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OT))
+        {
+            SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OT);
+        }
     }
     else if (CheckConditionDurationMet(
                  &g_AppMainInfo.satifyT_Tc_ot_cancle,
@@ -169,7 +188,10 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
             (g_pSysInfo->V_UIAB < g_pSysInfo->V_SYS_UNDER_kV)))
     {
         // 直接触发系统欠压
-        SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_UNDERVOLTAGE);
+        if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_UNDERVOLTAGE))
+        {
+            SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_UNDERVOLTAGE);
+        }
     }
     else if (CheckConditionDurationMet(
                  &g_AppMainInfo.satifyT_SYS_UNDER_CANCLE_SEC,
@@ -189,7 +211,10 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
             (fmaxf(g_pSysInfo->V_UIAB, g_pSysInfo->V_UOAB) > g_pSysInfo->V_SYS_OV_kV)))
     {
         // 检测到系统过压
-        SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OV);
+        if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OV))
+        {
+            SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OV);
+        }
     }
     else if (CheckConditionDurationMet(
                  &g_AppMainInfo.satifyT_V_ov_cancle_SEC,

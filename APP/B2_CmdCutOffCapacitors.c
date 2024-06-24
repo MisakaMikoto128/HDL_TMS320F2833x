@@ -170,6 +170,7 @@ void B2_CmdCutOffCapacitors_Exec_Solution()
             g_pSysInfo->SCRT_Fault |= result.SCRT_Fault;
 
             APP_Main_NotifyHaveParamNeedToSave();
+            // TODO:Serious_Fault Event
         }
     }
     else if (result.code == CMD_CODE_EXEC_SUCCESS || result.code == CMD_CODE_SYS_CAPACITORS_ARE_NOT_WORKING)
