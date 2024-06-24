@@ -145,10 +145,10 @@ void SyncSysinfoToModbusReg()
     usRegHoldingBuf[58] = ((uint16_t)(((pSysinfo->devId) >> 16 * 1) & 0xFFFF));
     usRegHoldingBuf[59] = ((uint16_t)(((pSysinfo->devId) >> 16 * 0) & 0xFFFF));
     uint64_t ts_device_utc_ms = datetime_get_unix_ms_timestamp();
-    usRegInputBuf[60] = (uint16_t)(ts_device_utc_ms >> 48) & 0xFFFF;
-    usRegInputBuf[61] = (uint16_t)(ts_device_utc_ms >> 32) & 0xFFFF;
-    usRegInputBuf[62] = (uint16_t)(ts_device_utc_ms >> 16) & 0xFFFF;
-    usRegInputBuf[63] = (uint16_t)(ts_device_utc_ms >> 0) & 0xFFFF;
+    usRegHoldingBuf[60] = (uint16_t)(ts_device_utc_ms >> 48) & 0xFFFF;
+    usRegHoldingBuf[61] = (uint16_t)(ts_device_utc_ms >> 32) & 0xFFFF;
+    usRegHoldingBuf[62] = (uint16_t)(ts_device_utc_ms >> 16) & 0xFFFF;
+    usRegHoldingBuf[63] = (uint16_t)(ts_device_utc_ms >> 0) & 0xFFFF;
     
     usRegInputBuf[0] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1A, 1000);
     usRegInputBuf[1] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1B, 1000);
@@ -306,6 +306,8 @@ void SyncModbusRegToSysinfo()
     pSysinfo->T_I_TA_quick_oc_MS = usRegInputBuf[54];
     pSysinfo->T_V_SYS_OV_SEC = usRegInputBuf[55];
     pSysinfo->devId = (((uint64_t)usRegHoldingBuf[56] << 48) | ((uint64_t)usRegHoldingBuf[57] << 32) | ((uint64_t)usRegHoldingBuf[58] << 16) | ((uint64_t)usRegHoldingBuf[59]));
+    uint64_t ts_device_utc_ms = (((uint64_t)usRegHoldingBuf[60] << 48) | ((uint64_t)usRegHoldingBuf[61] << 32) | ((uint64_t)usRegHoldingBuf[62] << 16) | ((uint64_t)usRegHoldingBuf[63]));
+    datetime_set_unix_timestamp(ts_device_utc_ms/1000);
 
     // 指令解析
     uint16_t cmdReg = usRegHoldingBuf[44];
