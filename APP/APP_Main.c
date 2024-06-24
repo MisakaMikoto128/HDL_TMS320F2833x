@@ -18,6 +18,7 @@
 #include "BFL_RS485.h"
 #include "BFL_SCR.h"
 #include "BFL_VCB.h"
+#include "datetime.h"
 #include "CHIP_W25Q128.h"
 #include "CPU_Define.h"
 #include "DSP2833x_Device.h"
@@ -35,6 +36,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 // TODO:利用全局变量初始化为0的特性,但是浮点数还是要手动初始化
 AppMainInfo_t g_AppMainInfo = {0};
@@ -91,8 +93,7 @@ void Config_Default_Parameter()
   g_pSysInfo->T_SYS_UNDER_CANCLE_SEC = SEC(10);
   g_pSysInfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC = SEC(5);
 
-  g_pSysInfo->devId = 0x12345678UL;
-  g_pSysInfo->devType = 0x1234U;
+  g_pSysInfo->devId = 0x0807060504030201ULL;
 }
 
 #define BFL_ARGUMENT_MAX_SIZE                         \
@@ -196,6 +197,8 @@ void APP_Main_Init()
   HDL_CPU_Time_Init();
   BFL_DebugPin_Init();
   HDL_IWDG_Init(SECOND_TO_MS(1));
+  datetime_init();
+  
 
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();

@@ -633,6 +633,5 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
  */
 void BFL_SCRT_Pluse_Set(BFL_SCRT_t scrt)
 {
-    __unused(scrt);
     ;
 }

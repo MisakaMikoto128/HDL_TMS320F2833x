@@ -26,7 +26,7 @@ extern "C" {
 // 保持寄存器起始地址
 #define REG_HOLDING_START 0x0000
 // 保持寄存器数量
-#define REG_HOLDING_NREGS 60
+#define REG_HOLDING_NREGS 70
 #define REG_HOLDING_END (REG_HOLDING_START + REG_HOLDING_NREGS)
 
 // 线圈起始地址

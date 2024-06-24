@@ -10,7 +10,6 @@
  *
  */
 #include "APP_Main.h"
-#include "math.h"
 #include "mtime.h"
 
 volatile int debugVar = 0;
