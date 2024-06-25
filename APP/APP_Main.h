@@ -185,13 +185,13 @@ extern "C"
         float I_TA_oc_A;                    // 线路过载电流阈值:过流电流
         uint16_t T_I_TA_oc_SEC;             // 线路过载触发延时
         float V_TVx_ov_kV;                  // 电容器过压阈值
-        uint16_t T_V_TVx_ov_SEC;            // 电容过压延时时间
+        uint16_t T_V_TVx_ov_SEC;            // 电容过压取消延时时间
         float Tc_ot;                        // 电容器过温阈值
         uint16_t T_Tc_ot_SEC;               // 电容器过温恢复延时
-        uint16_t T1_MS;                     // 闸刀状态反馈信号生效时间，单位ms
+        uint16_t T1_MS;                     // VCB控制信号维持时间，单位ms
         uint16_t T2_US;                     // 晶闸管触发信号脉宽
         uint16_t T3_MS;                     // 晶闸管状态反馈信号生效时间
-        uint16_t T4_MS;                     // 晶闸管导通到闭合VBC延时
+        uint16_t T4_MS;                     // 晶闸管触发导通到控制VBC延时
         float V_SCR_NORMAL_DIFF_kV;         // 晶闸管在电容器投入工作期间的正常压差
         uint16_t T_V_SCR_ABNORMAL_DIFF_SEC; // 晶闸管击穿条件判断生效时间，必须在电容器投入工作期间判断
         float I_SCR_NORMAL_DIFF_A;          // 晶闸管击穿条件判断有效电流条件
@@ -263,6 +263,8 @@ extern "C"
         StateDurationCnt_t satifySCRA_SeriousFaultTimeCnt;
         StateDurationCnt_t satifySCRB_SeriousFaultTimeCnt;
         StateDurationCnt_t satifySCRC_SeriousFaultTimeCnt;
+
+        bool VBCDebugMode;
     } AppMainInfo_t;
 
     extern AppMainInfo_t g_AppMainInfo;
