@@ -10,12 +10,13 @@
  *
  */
 #include "APP_Main.h"
-#include "BFL_VCB.h"
 #include "BFL_SCR.h"
+#include "BFL_VCB.h"
 #include "async_delay.h"
 #include "mtime.h"
 #include "period_query.h"
 #include <stddef.h>
+
 #define FUALT_LEVEL_NO_FAULT 0
 #define FUALT_LEVEL_MINOR_FAULT 1
 #define FUALT_LEVEL_SERIOUS_FAULT 2
@@ -142,7 +143,10 @@ B2_CmdBypassCapacitors_Result_t B2_CmdBypassCapacitors_Exec()
     }
 
     // 关闭控制
-    BFL_VCB_Set_As_Switch_No_Ctrl(KM1_SW);
+    if (g_AppMainInfo.VBCDebugMode != 1)
+    {
+        BFL_VCB_Set_As_Switch_No_Ctrl(KM1_SW);
+    }
 
     return result;
 }

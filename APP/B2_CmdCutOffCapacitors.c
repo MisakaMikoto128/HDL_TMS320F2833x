@@ -10,11 +10,12 @@
  *
  */
 #include "APP_Main.h"
-#include "BFL_VCB.h"
 #include "BFL_SCR.h"
+#include "BFL_VCB.h"
 #include "async_delay.h"
 #include "mtime.h"
 #include <stddef.h>
+
 #define FUALT_LEVEL_NO_FAULT 0
 #define FUALT_LEVEL_MINOR_FAULT 1
 #define FUALT_LEVEL_SERIOUS_FAULT 2
@@ -26,7 +27,7 @@
 #define CMD_CODE_EXEC_OCCUR_SERIOUS_FAULT 4
 #define CMD_CODE_EXEC_SUCCESS 5
 
-#define CMD_CODE_SYS_CAPACITORS_ARE_NOT_WORKING 6
+#define CMD_CODE_SYS_CAPACITORS_ARE_CUTOFF 6
 
 static void async_delay_callback1(void *arg)
 {
@@ -51,9 +52,9 @@ B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec()
     result.KM1_Fault = BFL_VBC_NO_FAULT;
 
     // 如果电容未投入并且也没有旁路那么直接返回->即电容器已经切除
-    if ((The_Capacitors_Are_Working() == false) && (The_Capacitors_Are_Bypass() == false))
+    if (The_Capacitors_Are_Cut_Off())
     {
-        result.code = CMD_CODE_SYS_CAPACITORS_ARE_NOT_WORKING;
+        result.code = CMD_CODE_SYS_CAPACITORS_ARE_CUTOFF;
         return result;
     }
 
@@ -66,13 +67,12 @@ B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec()
         BFL_VCB_STATE_t QF_State = BFL_VCB_Get_Actual_State(QF_SW);
         BFL_VCB_STATE_t KM1_State = BFL_VCB_Get_Actual_State(KM1_SW);
 
-        if(!(QF_State == BFL_VCB_Closed || KM1_State == BFL_VCB_Closed))
+        if (!(QF_State == BFL_VCB_Closed || KM1_State == BFL_VCB_Closed))
         {
             BFL_SCRT_Pluse_Transmit(SCRT_ALL, 20, US(g_pSysInfo->T2_US));
             async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback1, &scrtFb);
             SCRT_Fault = scrtFb;
-        }        
-
+        }
 
         BFL_VCB_Set_As_Switch_Closed(QF_SW);
         BFL_VCB_Set_As_Switch_Closed(KM1_SW);
@@ -122,7 +122,8 @@ B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec()
     }
 
     // 判断最终结果
-    if (QF_Fault != BFL_VBC_NO_FAULT || KM1_Fault != BFL_VBC_NO_FAULT || SCRT_Fault != 0)
+    if (QF_Fault != BFL_VBC_NO_FAULT || KM1_Fault != BFL_VBC_NO_FAULT ||
+        SCRT_Fault != 0)
     {
         result.code = CMD_CODE_EXEC_OCCUR_SERIOUS_FAULT;
         result.QF_Fault = QF_Fault;
@@ -135,8 +136,11 @@ B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec()
     }
 
     // 关闭控制
-    BFL_VCB_Set_As_Switch_No_Ctrl(KM1_SW);
-    BFL_VCB_Set_As_Switch_No_Ctrl(QF_SW);
+    if (g_AppMainInfo.VBCDebugMode != 1)
+    {
+        BFL_VCB_Set_As_Switch_No_Ctrl(KM1_SW);
+        BFL_VCB_Set_As_Switch_No_Ctrl(QF_SW);
+    }
 
     return result;
 }
@@ -173,7 +177,8 @@ void B2_CmdCutOffCapacitors_Exec_Solution()
             // TODO:Serious_Fault Event
         }
     }
-    else if (result.code == CMD_CODE_EXEC_SUCCESS || result.code == CMD_CODE_SYS_CAPACITORS_ARE_NOT_WORKING)
+    else if (result.code == CMD_CODE_EXEC_SUCCESS ||
+             result.code == CMD_CODE_SYS_CAPACITORS_ARE_CUTOFF)
     {
         g_pSysInfo->Capacitors_Exec_State = CAPACITORS_STATE_CUT_OFF;
     }
