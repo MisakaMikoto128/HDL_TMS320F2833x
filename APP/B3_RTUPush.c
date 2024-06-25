@@ -59,7 +59,7 @@ void B3_RTUPush_Poll()
     rtuDataBufSend[3] = 0x00;
 
     byte_t *rtuHeaderDataBuf = rtuDataBufSend + 4;
-    uint64_t devId = 0x0807060504030201ULL;
+    uint64_t devId = g_pSysInfo->devId;
     rtuHeaderDataBuf[0] = 0x01;
     rtuHeaderDataBuf[1] = 0;
     rtuHeaderDataBuf[2] = 0;
