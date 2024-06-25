@@ -303,8 +303,8 @@ void SyncModbusRegToSysinfo()
 
     pSysinfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC = usRegHoldingBuf[52];
     pSysinfo->I_TA_quick_oc_A = (float)usRegHoldingBuf[53] * 0.1f;
-    pSysinfo->T_I_TA_quick_oc_MS = usRegInputBuf[54];
-    pSysinfo->T_V_SYS_OV_SEC = usRegInputBuf[55];
+    pSysinfo->T_I_TA_quick_oc_MS = usRegHoldingBuf[54];
+    pSysinfo->T_V_SYS_OV_SEC = usRegHoldingBuf[55];
     pSysinfo->devId = (((uint64_t)usRegHoldingBuf[56] << 48) | ((uint64_t)usRegHoldingBuf[57] << 32) | ((uint64_t)usRegHoldingBuf[58] << 16) | ((uint64_t)usRegHoldingBuf[59]));
     uint64_t ts_device_utc_ms = (((uint64_t)usRegHoldingBuf[60] << 48) | ((uint64_t)usRegHoldingBuf[61] << 32) | ((uint64_t)usRegHoldingBuf[62] << 16) | ((uint64_t)usRegHoldingBuf[63]));
     datetime_set_unix_timestamp(ts_device_utc_ms/1000);
