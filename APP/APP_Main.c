@@ -57,14 +57,14 @@ void Config_Default_Parameter()
   g_pSysInfo->TA1B_ScaleL1 = 6.2300004959106445f;
   g_pSysInfo->TA1C_ScaleL1 = 6.2300004959106445f;
 
-  g_pSysInfo->TV1A_ScaleL2 = 1.0f;
-  g_pSysInfo->TV1B_ScaleL2 = 1.0f;
-  g_pSysInfo->TV1C_ScaleL2 = 1.0f;
-  g_pSysInfo->UIAB_ScaleL2 = 1.0f;
-  g_pSysInfo->UOAB_ScaleL2 = 1.0f;
-  g_pSysInfo->TA1A_ScaleL2 = 1.0f;
-  g_pSysInfo->TA1B_ScaleL2 = 1.0f;
-  g_pSysInfo->TA1C_ScaleL2 = 1.0f;
+  g_pSysInfo->TV1A_ScaleL2 = 55.0f;
+  g_pSysInfo->TV1B_ScaleL2 = 55.0f;
+  g_pSysInfo->TV1C_ScaleL2 = 55.0f;
+  g_pSysInfo->UIAB_ScaleL2 = 500.0f;
+  g_pSysInfo->UOAB_ScaleL2 = 500.0f;
+  g_pSysInfo->TA1A_ScaleL2 = 300.0f;
+  g_pSysInfo->TA1B_ScaleL2 = 300.0f;
+  g_pSysInfo->TA1C_ScaleL2 = 300.0f;
 
   g_pSysInfo->I_TA_low_thl_A = 50;
   g_pSysInfo->I_TA_low_thh_A = 55;
@@ -72,7 +72,7 @@ void Config_Default_Parameter()
   g_pSysInfo->I_TA_oc_A = 200;
   g_pSysInfo->T_I_TA_oc_SEC = SEC(4);
   g_pSysInfo->V_TVx_ov_kV = 2.0f;
-  g_pSysInfo->T_V_TVx_ov_SEC = SEC(60);
+  g_pSysInfo->T_V_TVx_ov_SEC = SEC(10);
   g_pSysInfo->Tc_ot = 80;
   g_pSysInfo->T_Tc_ot_SEC = SEC(10);
   g_pSysInfo->T1_MS = MS(1500);
@@ -94,6 +94,8 @@ void Config_Default_Parameter()
   g_pSysInfo->T_SYS_SATIFY_CAPACITORS_WAORK_SEC = SEC(5);
 
   g_pSysInfo->devId = 0x0807060504030201ULL;
+
+  g_AppMainInfo.VBCDebugMode = 0;
 }
 
 #define BFL_ARGUMENT_MAX_SIZE                         \
@@ -189,6 +191,7 @@ void APP_Main_Clear_All_Fault()
   g_pSysInfo->VTx_A_Breakdown_Fault = SCR_NO_FAULT;
   g_pSysInfo->VTx_B_Breakdown_Fault = SCR_NO_FAULT;
   g_pSysInfo->VTx_C_Breakdown_Fault = SCR_NO_FAULT;
+  g_pSysInfo->I_TA_quick_oc_Fault = 0;
   APP_Main_NotifyHaveParamNeedToSave();
 }
 
