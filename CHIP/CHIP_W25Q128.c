@@ -214,6 +214,11 @@ int32_t w25q128_write_page_no_erase(uint32_t address, byte_t *buf, uint32_t size
     Flash_Write_Enable(); // SET WEL
     Flash_Wait_Busy();
 
+    if(size > W25Q128_PAGE_SIZE)
+    {
+        size = W25Q128_PAGE_SIZE;
+    }
+
     HDL_SPI_CS_CLS(); // CS=0
     byte_t buf1[] = {0x02, (address >> 16) & 0xFF, (address >> 8) & 0xFF, address & 0xFF};
     byte_t buf_rev[sizeof(buf1) / sizeof(buf1)] = {0};
