@@ -173,6 +173,11 @@ void APP_Main_EraseFlashParamData()
   CHIP_W25Q128_Erase_One_Sector(0);
 }
 
+void APP_Main_Switch_VCB_Trigger_Mode()
+{
+  g_AppMainInfo.VBCDebugMode = !g_AppMainInfo.VBCDebugMode;
+}
+
 void Config_PowerOn_Parameter()
 {
   g_pSysInfo->SYS_MODE = SYS_MODE_AUTO;
@@ -201,7 +206,6 @@ void APP_Main_Init()
   BFL_DebugPin_Init();
   HDL_IWDG_Init(SECOND_TO_MS(1));
   datetime_init();
-  
 
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
@@ -305,22 +309,22 @@ void APP_Main_SysinfoSavePoll()
 
 float getMaxCapTemp()
 {
-    float Tc_MAX = -273.15f;
-    int capTempSize = sizeof(g_pSysInfo->capTemp) / sizeof(g_pSysInfo->capTemp[0]);
-    for (int i = 0; i < capTempSize; i++)
+  float Tc_MAX = -273.15f;
+  int capTempSize = sizeof(g_pSysInfo->capTemp) / sizeof(g_pSysInfo->capTemp[0]);
+  for (int i = 0; i < capTempSize; i++)
+  {
+    if (g_pSysInfo->capTemp[i] > Tc_MAX)
     {
-        if (g_pSysInfo->capTemp[i] > Tc_MAX)
-        {
-            Tc_MAX = g_pSysInfo->capTemp[i];
-        }
+      Tc_MAX = g_pSysInfo->capTemp[i];
     }
-    return Tc_MAX;
+  }
+  return Tc_MAX;
 }
 
 float getI_TA1_MAX()
 {
-    float I_TA1_MAX = 0;
-    I_TA1_MAX = fmaxf(g_pSysInfo->I_TA1A, g_pSysInfo->I_TA1B);
-    I_TA1_MAX = fmaxf(I_TA1_MAX, g_pSysInfo->I_TA1C);
-    return I_TA1_MAX;
+  float I_TA1_MAX = 0;
+  I_TA1_MAX = fmaxf(g_pSysInfo->I_TA1A, g_pSysInfo->I_TA1B);
+  I_TA1_MAX = fmaxf(I_TA1_MAX, g_pSysInfo->I_TA1C);
+  return I_TA1_MAX;
 }

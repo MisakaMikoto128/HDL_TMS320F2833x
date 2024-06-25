@@ -149,7 +149,8 @@ void SyncSysinfoToModbusReg()
     usRegHoldingBuf[61] = (uint16_t)(ts_device_utc_ms >> 32) & 0xFFFF;
     usRegHoldingBuf[62] = (uint16_t)(ts_device_utc_ms >> 16) & 0xFFFF;
     usRegHoldingBuf[63] = (uint16_t)(ts_device_utc_ms >> 0) & 0xFFFF;
-    
+    usRegHoldingBuf[64] = g_AppMainInfo.VBCDebugMode ? 1 : 0;
+
     usRegInputBuf[0] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1A, 1000);
     usRegInputBuf[1] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1B, 1000);
     usRegInputBuf[2] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_TV1C, 1000);
@@ -334,6 +335,7 @@ void MBCmdHandler(uint16_t cmdReg)
 打开蜂鸣器	10
 关闭蜂鸣器	11
 清除Flash保存的参数	12
+切换VCB触发模式 13
 */
 #define MB_CMD_NONE 0
 #define MB_SRC_SCRT_PLUSE_TRANSMIT 8
@@ -341,6 +343,7 @@ void MBCmdHandler(uint16_t cmdReg)
 #define MB_CMD_OPEN_BUZZ 10
 #define MB_CMD_CLOSE_BUZZ 11
 #define MB_CMD_ERASE_FLASH_PARAM_DATA 12
+#define MB_CMD_SWITCH_VCB_TRIGGER_MODE 13
 
     switch (cmdReg)
     {
@@ -358,6 +361,9 @@ void MBCmdHandler(uint16_t cmdReg)
         break;
     case MB_CMD_ERASE_FLASH_PARAM_DATA:
         APP_Main_EraseFlashParamData();
+        break;
+    case MB_CMD_SWITCH_VCB_TRIGGER_MODE:
+        APP_Main_Switch_VCB_Trigger_Mode();
         break;
     default:
         break;

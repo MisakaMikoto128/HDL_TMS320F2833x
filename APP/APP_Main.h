@@ -265,6 +265,7 @@ extern "C"
         StateDurationCnt_t satifySCRC_SeriousFaultTimeCnt;
 
         bool VBCDebugMode;
+        uint16_t DebugMode;
     } AppMainInfo_t;
 
     extern AppMainInfo_t g_AppMainInfo;
@@ -276,6 +277,7 @@ extern "C"
     void APP_Main_SysinfoSavePoll();
     void APP_Main_Clear_All_Fault();
     void APP_Main_EraseFlashParamData();
+    void APP_Main_Switch_VCB_Trigger_Mode();
     float getMaxCapTemp();
     float getI_TA1_MAX();
 
