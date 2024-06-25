@@ -451,16 +451,16 @@ BFL_VCB_STATE_t BFL_VCB_Get_Actual_State(BFL_VCB_SW_t vcb)
   switch (vcb)
   {
   case QF_SW:
-    state = XIN1_IsSet() ? BFL_VCB_Closed : BFL_VCB_Opened;
+    state = XIN4_IsSet() ? BFL_VCB_Closed : BFL_VCB_Opened;
     break;
   case QS1_SW:
-    state = XIN2_IsSet() ? BFL_VCB_Closed : BFL_VCB_Opened;
-    break;
-  case QS2_SW:
     state = XIN3_IsSet() ? BFL_VCB_Closed : BFL_VCB_Opened;
     break;
+  case QS2_SW:
+    state = XIN2_IsSet() ? BFL_VCB_Closed : BFL_VCB_Opened;
+    break;
   case KM1_SW:
-    state = XIN4_IsSet() ? BFL_VCB_Closed : BFL_VCB_Opened;
+    state = XIN1_IsSet() ? BFL_VCB_Closed : BFL_VCB_Opened;
     break;
   case RES_SW:
     break;
