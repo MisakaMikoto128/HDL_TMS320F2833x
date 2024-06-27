@@ -205,9 +205,10 @@ extern "C"
         uint16_t Minor_Fault;           // 轻微故障 0:无故障 1:有故障
         uint16_t Serious_Fault;         // 严重故障 0:无故障 1:有故障
         uint16_t Line_State;            // 线路状态 0:停运 1:运行
-        
-        uint64_t devId;        // 设备编号
-        uint16_t powerOnTimes; // 设备开机次数
+
+        uint16_t powerOnTimes;      // 设备开机次数
+        uint32_t recordedEventsNum; // 记录的事件数量,代表的时已经写入存储的事件数量
+        uint64_t devId;             // 设备编号
         uint32_t __crc16;
     } SysInfo_t;
 
@@ -279,6 +280,7 @@ extern "C"
     void APP_Main_EraseFlashParamData();
     void APP_Main_Switch_VCB_Trigger_Mode();
     float getMaxCapTemp();
+    float getMinCapTemp();
     float getI_TA1_MAX();
 
     void BackGroundTask();

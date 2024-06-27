@@ -10,3 +10,4 @@ Debug/*/*.mk
 *.mk
 Debug/makefile
 .vscode/settings.json
+/Debug/

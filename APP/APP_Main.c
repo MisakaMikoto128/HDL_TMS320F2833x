@@ -11,6 +11,7 @@
  */
 #include "APP_Main.h"
 #include "B0_DeltaPoll.h"
+#include "B2_EventRecord.h"
 #include "BFL_Button.h"
 #include "BFL_Buzz.h"
 #include "BFL_DebugPin.h"
@@ -206,7 +207,6 @@ void APP_Main_Init()
   BFL_DebugPin_Init();
   HDL_IWDG_Init(SECOND_TO_MS(1));
   datetime_init();
-
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
   BFL_VCB_Seurity_Init();
@@ -227,6 +227,9 @@ void APP_Main_Init()
   B1_SysModeGet_Init();
   B1_VCBStatusGet_Init();
   B3_RTUPush_Init();
+
+  B2_EventRecord_Init();
+  B2_EventRecord_Write(EVENT_SYSTEM_POWER_ON);
 }
 
 uint32_t g_backGroundTaskMaxRuningTimeUS = 0;
@@ -319,6 +322,20 @@ float getMaxCapTemp()
     }
   }
   return Tc_MAX;
+}
+
+float getMinCapTemp()
+{
+  float Tc_MIN = 1000.0f;
+  int capTempSize = sizeof(g_pSysInfo->capTemp) / sizeof(g_pSysInfo->capTemp[0]);
+  for (int i = 0; i < capTempSize; i++)
+  {
+    if (g_pSysInfo->capTemp[i] < Tc_MIN)
+    {
+      Tc_MIN = g_pSysInfo->capTemp[i];
+    }
+  }
+  return Tc_MIN;
 }
 
 float getI_TA1_MAX()
