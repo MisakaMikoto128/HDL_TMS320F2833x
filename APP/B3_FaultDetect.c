@@ -119,7 +119,7 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
             SECOND_TO_MS(g_pSysInfo->T_I_TA_oc_SEC),
             (I_TA1_MAX > g_pSysInfo->I_TA_oc_A)))
     {
-        // 线路过流触发
+        // 线路1段过流触发
         if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OVERLOAD))
         {
             SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OVERLOAD);
@@ -132,7 +132,7 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
                  SECOND_TO_MS(g_pSysInfo->T_I_TA_oc_SEC),
                  (I_TA1_MAX < g_pSysInfo->I_TA_oc_A)))
     {
-        // 线路过流取消
+        // 线路1段过流取消
         CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OVERLOAD);
     }
 
@@ -187,7 +187,7 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
             SECOND_TO_MS(3),
             (g_pSysInfo->V_UIAB < g_pSysInfo->V_SYS_UNDER_kV)))
     {
-        // 直接触发系统欠压
+        // 系统欠压触发
         if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_UNDERVOLTAGE))
         {
             SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_UNDERVOLTAGE);
@@ -210,7 +210,7 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
             SECOND_TO_MS(g_pSysInfo->T_V_SYS_OV_SEC),
             (fmaxf(g_pSysInfo->V_UIAB, g_pSysInfo->V_UOAB) > g_pSysInfo->V_SYS_OV_kV)))
     {
-        // 检测到系统过压
+        // 系统过压触发
         if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OV))
         {
             SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OV);
