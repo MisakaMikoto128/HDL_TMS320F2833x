@@ -132,7 +132,7 @@ int32_t CHIP_W25Q128_Read(uint32_t address, byte_t *data, uint32_t size)
 
 static byte_t g_pageBuf[W25Q128_PAGE_SIZE] = {0};
 /**
- * @brief 这个方法还不完善。
+ * @brief 这个方法还不完善。一次最多只能写一个扇区的数据。
  *
  * @param address
  * @param data
@@ -198,6 +198,29 @@ int32_t CHIP_W25Q128_Erase_One_Sector(uint32_t sector)
 }
 
 /**
+ * @brief 检查扇区是否已经擦除。
+ * 
+ * @param sector 扇区编号。
+ * @return true 扇区已经擦除。
+ * @return false 扇区未擦除。
+ */
+bool CHIP_W25Q128_Is_Sector_Erased(uint32_t sector)
+{
+    uint32_t address = 0;
+    address = sector * W25Q128_SECTOR_SIZE;
+    byte_t buf[W25Q128_PAGE_SIZE] = {0};
+    CHIP_W25Q128_Read(address, buf, W25Q128_PAGE_SIZE);
+    for (uint32_t i = 0; i < W25Q128_PAGE_SIZE; i++)
+    {
+        if (buf[i] != 0xFF)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
  * @brief W25Q128写入一个页的数据。_no_erase表示不进行擦除。
  * @note W25Q128有256字节的页缓冲区，写数据的起始地址可以是随机的，不需要考虑对齐，
  * 但是必须预先擦除，以确保被写入的字节单元写入数据前的值为0xFF。W25Q128一次最多写
@@ -228,6 +251,23 @@ int32_t w25q128_write_page_no_erase(uint32_t address, byte_t *buf, uint32_t size
     Flash_Wait_Busy(); // 耗时大约3ms
 
     return status;
+}
+
+
+/**
+ * @brief W25Q128写入任意长度的数据。_no_erase表示不进行擦除，需要调用者确保写入的区域已经擦除。
+ * @note W25Q128有256字节的页缓冲区，写数据的起始地址可以是随机的，不需要考虑对齐，
+ * 但是必须预先擦除，以确保被写入的字节单元写入数据前的值为0xFF。W25Q128一次最多写
+ * 一页数据。
+ *
+ * @param buf 指向待写入数据的指针。
+ * @param address 写入闪存的数据地址。
+ * @param size 待写入数据的大小，单位字节。
+ * @return int32_t 成功返回0，失败返回-1。
+ */
+int32_t CHIP_W25Q128_Write_No_Erase(uint32_t address, byte_t *buf, uint32_t size)
+{
+    return w25q128_write_page_no_erase(address, buf, size);
 }
 
 int32_t CHIP_W25Q128_Write_One_Sector_No_Erase(uint32_t sector, byte_t *buf)

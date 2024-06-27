@@ -33,6 +33,8 @@ extern "C"
     int32_t CHIP_W25q128_Write_One_Sector(uint32_t sector, byte_t *buf);
     int32_t CHIP_W25Q128_Erase_One_Sector(uint32_t sector);
     int32_t CHIP_W25q128_Write_One_Sector_No_Erase(uint32_t sector, byte_t *buf);
+    bool CHIP_W25Q128_Is_Sector_Erased(uint32_t sector);
+    int32_t CHIP_W25Q128_Write_No_Erase(uint32_t address, byte_t *buf, uint32_t size);
 #ifdef __cplusplus
 }
 #endif
