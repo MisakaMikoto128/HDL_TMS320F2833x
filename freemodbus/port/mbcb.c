@@ -2,6 +2,7 @@
 #include "mbcb.h"
 #include "CPU_Define.h"
 #include "ccommon.h"
+#include "port.h"
 #include <stdlib.h>
 
 /* Private variables ---------------------------------------------------------*/
@@ -74,7 +75,7 @@ eMBRegInputCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs)
     else if ((usAddress >= REG_INPUT_START_SEC2) && (usAddress + usNRegs <= REG_INPUT_END_SEC2 + 1))
     {
         // iRegIndex = (int)(usAddress - 1 - usRegInputStart);
-        uint32_t readSize = B2_EventRecord_Read_RwaData_Circular_Generic(pucRegBuffer, REG_INPUT_NREGS_SEC2 * 2);
+        uint32_t readSize = B2_EventRecord_Read_RwaData_Circular_Generic((byte_t*)pucRegBuffer, REG_INPUT_NREGS_SEC2 * 2);
         if (readSize == 0)
         {
             eStatus = MB_ENOREG;
@@ -180,7 +181,7 @@ eMBRegCoilsCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNCoils,
         case MB_REG_READ:
             while (iNCoils > 0)
             {
-                *pucRegBuffer++ = xMBUtilGetBits(ucRegCoilsBuf, usBitOffset,
+                *pucRegBuffer++ = xMBUtilGetBits((UCHAR *)ucRegCoilsBuf, usBitOffset,
                                                  (byte_t)(iNCoils > 8 ? 8 : iNCoils));
                 iNCoils -= 8;
                 usBitOffset += 8;
@@ -191,7 +192,7 @@ eMBRegCoilsCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNCoils,
         case MB_REG_WRITE:
             while (iNCoils > 0)
             {
-                xMBUtilSetBits(ucRegCoilsBuf, usBitOffset,
+                xMBUtilSetBits((UCHAR *)ucRegCoilsBuf, usBitOffset,
                                (byte_t)(iNCoils > 8 ? 8 : iNCoils),
                                *pucRegBuffer++);
                 iNCoils -= 8;
@@ -235,7 +236,7 @@ eMBRegDiscreteCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNDiscrete)
 
         while (iNDiscrete > 0)
         {
-            *pucRegBuffer++ = xMBUtilGetBits(ucRegDiscreteBuf, usBitOffset,
+            *pucRegBuffer++ = xMBUtilGetBits((UCHAR *)ucRegDiscreteBuf, usBitOffset,
                                              (byte_t)(iNDiscrete > 8 ? 8 : iNDiscrete));
             iNDiscrete -= 8;
             usBitOffset += 8;

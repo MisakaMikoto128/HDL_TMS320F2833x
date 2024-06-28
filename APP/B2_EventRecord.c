@@ -18,7 +18,7 @@
 static inline bool B2_EventRecord_WriteQueuePush(B2_EventRecord_t *eventRecord);
 static inline bool B2_EventRecord_WriteQueuePop(B2_EventRecord_t *eventRecord);
 static inline bool B2_EventRecord_WriteQueuePeek(B2_EventRecord_t *eventRecord);
-static inline bool B2_EventRecord_WriteQueueIsEmpyt();
+// static inline bool B2_EventRecord_WriteQueueIsEmpyt();
 
 static uint32_t g_B2_EventRecord_WriteIdx = 0;
 static CQueue_t g_B2_EventRecord_WriteQueue;
@@ -356,10 +356,10 @@ static inline bool B2_EventRecord_WriteQueuePeek(B2_EventRecord_t *eventRecord)
     return cqueue_peek(&g_B2_EventRecord_WriteQueue, eventRecord);
 }
 
-static inline bool B2_EventRecord_WriteQueueIsEmpyt()
-{
-    return cqueue_is_empty(&g_B2_EventRecord_WriteQueue);
-}
+// static inline bool B2_EventRecord_WriteQueueIsEmpyt()
+// {
+//     return cqueue_is_empty(&g_B2_EventRecord_WriteQueue);
+// }
 
 uint32_t B2_EventRecord_Get_ReadIdx()
 {
