@@ -91,21 +91,7 @@ bool B2_EventRecord_Write_Generic(B2_EventRecord_t *pEventRecord)
         return false;
     }
 
-    if (g_B2_EventRecord_WriteIdx >= B2_EVENTRECORD_MAX_EVENT_NUM)
-    {
-        return false;
-    }
-
-    if (pEventRecord->eventID >= B2_EVENTRECORD_MAX_EVENT_NUM)
-    {
-        return false;
-    }
-
     bool ret = B2_EventRecord_WriteQueuePush(pEventRecord);
-    if (ret)
-    {
-        g_B2_EventRecord_WriteIdx++;
-    }
 
     return ret;
 }
@@ -119,12 +105,20 @@ bool B2_EventRecord_Write(B2_EventCode_t eventCode)
         return false;
     }
 
+    // TODO:写入上限判断，暂定写满则停止写入
     if (g_B2_EventRecord_WriteIdx >= B2_EVENTRECORD_MAX_EVENT_NUM)
     {
         return false;
     }
 
-    return B2_EventRecord_Write_Generic(B2_EventRecord_Create(&eventRecord, eventCode, g_B2_EventRecord_WriteIdx, g_pSysInfo));
+    bool ret = false;
+    ret = B2_EventRecord_Write_Generic(B2_EventRecord_Create(&eventRecord, eventCode, g_B2_EventRecord_WriteIdx, g_pSysInfo));
+    if (ret)
+    {
+        g_B2_EventRecord_WriteIdx++;
+    }
+
+    return ret;
 }
 
 /**
@@ -240,8 +234,17 @@ static void B2_EventRecord_WritePoll()
 
         if (B2_EventRecord_Write_RawData(&eventRecord))
         {
+            // TODO:写入固化上限判断，兼容写满则停止写入和循环写入
             g_pSysInfo->recordedEventsNum++;
-            APP_Main_NotifyHaveParamNeedToSave();
+            if (g_pSysInfo->recordedEventsNum >= B2_EVENTRECORD_MAX_EVENT_NUM)
+            {
+                g_pSysInfo->recordedEventsNum = B2_EVENTRECORD_MAX_EVENT_NUM;
+            }
+
+            if (g_pSysInfo->recordedEventsNum <= B2_EVENTRECORD_MAX_EVENT_NUM)
+            {
+                APP_Main_NotifyHaveParamNeedToSave();
+            }
         }
 
         B2_EventRecord_WriteQueuePop(&eventRecord);
@@ -373,13 +376,14 @@ uint32_t B2_EventRecord_Get_ReadIdx()
 
 uint32_t B2_EventRecord_Set_ReadIdx(uint32_t recordedEventsReadIdx)
 {
-    g_recordedEventsReadIdx = recordedEventsReadIdx % B2_EVENTRECORD_MAX_EVENT_NUM;
+    g_recordedEventsReadIdx = recordedEventsReadIdx % g_pSysInfo->recordedEventsNum;
     return g_recordedEventsReadIdx;
 }
 
 void B2_EventRecord_Inc_ReadIdx()
 {
-    g_recordedEventsReadIdx = (g_recordedEventsReadIdx + 1) % B2_EVENTRECORD_MAX_EVENT_NUM;
+    // TODO:读取上限判断，已经实现循环读取
+    g_recordedEventsReadIdx = (g_recordedEventsReadIdx + 1) % g_pSysInfo->recordedEventsNum;
 }
 
 void B2_EventRecord_Clear_All()
