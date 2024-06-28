@@ -253,6 +253,9 @@ void SyncSysinfoToModbusReg()
     usRegInputBuf[56] = reg;
     reg = (((int16_t)(pSysinfo->capTemp[Tc_C3_IDX]) & 0xFF) << 8);
     usRegInputBuf[57] = reg;
+
+    usRegInputBuf[58] = HIGH_16_BITS(g_pSysInfo->recordedEventsNum);
+    usRegInputBuf[59] = LOW_16_BITS(g_pSysInfo->recordedEventsNum);
 }
 
 /**
