@@ -120,6 +120,9 @@ extern "C"
     bool B2_EventRecord_Write(B2_EventCode_t eventCode);
     bool B2_EventRecord_Read(B2_EventRecord_t *eventRecord, uint32_t eventID);
     void B2_EventRecord_Poll();
+    uint32_t B2_EventRecord_Get_ReadIdx();
+    uint32_t B2_EventRecord_Set_ReadIdx(uint32_t recordedEventsReadIdx);
+    void B2_EventRecord_Inc_ReadIdx();
 
 #ifdef __cplusplus
 }

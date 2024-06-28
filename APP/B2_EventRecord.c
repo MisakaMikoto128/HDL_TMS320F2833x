@@ -26,13 +26,16 @@ static CQueue_t g_B2_EventRecord_WriteQueue;
 static B2_EventRecord_t g_B2_EventRecord_WriteQueueBuffer[B2_EVENTRECORD_WRITE_QUEUE_CAPACITY];
 static bool g_B2_EventRecord_WriteQueueEventDisbale[B2_EVENT_RECORD_EVENT_NUM];
 
-#define B2_EVENTRECORD_SECTOR_START 5
-#define B2_EVENTRECORD_SECTOR_END (W25Q128_SECTOR_COUNT / 2)
+#define B2_EVENTRECORD_SECTOR_START 20 // Start Sector ID
+#define B2_EVENTRECORD_SECTOR_END (W25Q128_SECTOR_COUNT)
 
 #define B2_EVENTRECORD_ENCODE_SIZE 64 // 这里必须64字节对齐，不然一个扇区存不了整数个记录
 static byte_t g_B2_EventRecord_EncodeBuffer[B2_EVENTRECORD_ENCODE_SIZE];
 static byte_t g_B2_EventRecord_DecodeBuffer[B2_EVENTRECORD_ENCODE_SIZE];
 #define B2_EVENTRECORD_MAX_EVENT_NUM ((B2_EVENTRECORD_SECTOR_END - B2_EVENTRECORD_SECTOR_START) * W25Q128_SECTOR_SIZE / B2_EVENTRECORD_ENCODE_SIZE)
+
+uint32_t g_recordedEventsReadIdx = 0;
+
 void B2_EventRecord_Init()
 {
     cqueue_create(&g_B2_EventRecord_WriteQueue, g_B2_EventRecord_WriteQueueBuffer, B2_EVENTRECORD_WRITE_QUEUE_CAPACITY, sizeof(B2_EventRecord_t));
@@ -44,13 +47,13 @@ void B2_EventRecord_Init()
 }
 
 /**
-    * @brief Creates an event record based on the provided system information.
-    *
-    * @param eventRecord Pointer to an event record to be populated.
-    * @param eventCode Event code indicating the type of event.
-    * @param sysInfo Pointer to the current system information.
-    * @return B2_EventRecord_t* Pointer to the populated event record.
-    */
+ * @brief Creates an event record based on the provided system information.
+ *
+ * @param eventRecord Pointer to an event record to be populated.
+ * @param eventCode Event code indicating the type of event.
+ * @param sysInfo Pointer to the current system information.
+ * @return B2_EventRecord_t* Pointer to the populated event record.
+ */
 B2_EventRecord_t *B2_EventRecord_Create(B2_EventRecord_t *eventRecord, B2_EventCode_t eventCode, uint32_t eventID, SysInfo_t *sysInfo)
 {
     if (eventRecord == NULL || sysInfo == NULL)
@@ -357,3 +360,19 @@ static inline bool B2_EventRecord_WriteQueueIsEmpyt()
 {
     return cqueue_is_empty(&g_B2_EventRecord_WriteQueue);
 }
+
+uint32_t B2_EventRecord_Get_ReadIdx()
+{
+    return g_recordedEventsReadIdx;
+}
+
+uint32_t B2_EventRecord_Set_ReadIdx(uint32_t recordedEventsReadIdx)
+{
+    g_recordedEventsReadIdx = recordedEventsReadIdx % B2_EVENTRECORD_MAX_EVENT_NUM;
+}
+
+void B2_EventRecord_Inc_ReadIdx()
+{
+    g_recordedEventsReadIdx = (g_recordedEventsReadIdx + 1) % B2_EVENTRECORD_MAX_EVENT_NUM;
+}
+
