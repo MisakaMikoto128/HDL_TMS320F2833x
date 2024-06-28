@@ -208,7 +208,7 @@ bool B2_EventRecord_Write_RawData(B2_EventRecord_t *eventRecord)
     {
         if (!CHIP_W25Q128_Is_Sector_Erased(address / W25Q128_SECTOR_SIZE))
         {
-            if (CHIP_W25Q128_Erase_Sector(address / W25Q128_SECTOR_SIZE) != 0)
+            if (CHIP_W25Q128_Erase_One_Sector(address / W25Q128_SECTOR_SIZE) != 0)
             {
                 return false; // Erase failed
             }
@@ -369,6 +369,7 @@ uint32_t B2_EventRecord_Get_ReadIdx()
 uint32_t B2_EventRecord_Set_ReadIdx(uint32_t recordedEventsReadIdx)
 {
     g_recordedEventsReadIdx = recordedEventsReadIdx % B2_EVENTRECORD_MAX_EVENT_NUM;
+    return g_recordedEventsReadIdx;
 }
 
 void B2_EventRecord_Inc_ReadIdx()
@@ -376,7 +377,24 @@ void B2_EventRecord_Inc_ReadIdx()
     g_recordedEventsReadIdx = (g_recordedEventsReadIdx + 1) % B2_EVENTRECORD_MAX_EVENT_NUM;
 }
 
-uint32_t B2_EventRecord_Read_RwaData_Circular(byte_t *readBuffer, uint32_t bufferSize)
+uint32_t B2_EventRecord_Read_RwaData_Circular_Generic(byte_t *readBuffer, uint32_t bufferSize)
+{
+    bool result = false;
+    uint32_t readBytesNum = 0;
+
+    // Step 1. 计算所在地址,读取数据
+    result = B2_EventRecord_Read_RawData(B2_EventRecord_Get_ReadIdx(),
+                                         readBuffer, bufferSize);
+    if (result)
+    {
+        B2_EventRecord_Inc_ReadIdx();
+        readBytesNum = B2_EVENTRECORD_ENCODE_SIZE;
+    }
+
+    return readBytesNum;
+}
+
+uint32_t B2_EventRecord_Read_RwaData_Circular(byte_t **pReadBuffer)
 {
     bool result = false;
     uint32_t readBytesNum = 0;
@@ -388,7 +406,9 @@ uint32_t B2_EventRecord_Read_RwaData_Circular(byte_t *readBuffer, uint32_t buffe
     {
         B2_EventRecord_Inc_ReadIdx();
         readBytesNum = B2_EVENTRECORD_ENCODE_SIZE;
+        *pReadBuffer = g_B2_EventRecord_DecodeBuffer;
     }
 
+    *pReadBuffer = NULL;
     return readBytesNum;
 }

@@ -128,9 +128,16 @@ extern "C"
      * @param bufferSize 缓冲区大小。
      * @return uint32_t 实际读取的数据长度，0表示读取失败。
      */
-    uint32_t B2_EventRecord_Read_RwaData_Circular(byte_t *readBuffer, uint32_t bufferSize);
+    uint32_t B2_EventRecord_Read_RwaData_Circular_Generic(byte_t *readBuffer, uint32_t bufferSize);
     uint32_t B2_EventRecord_Set_ReadIdx(uint32_t recordedEventsReadIdx);
 
+    /**
+     * @brief  循环读取已经存储固化的事件记录。读取为原始数据。
+     *  使用内部缓冲区。
+     * @param pReadBuffer 读取缓冲区指针，指向读取的数据，读取失败返回NULL。
+     * @return uint32_t 实际读取的数据长度，0表示读取失败。
+     */
+    uint32_t B2_EventRecord_Read_RwaData_Circular(byte_t **pReadBuffer);
 #ifdef __cplusplus
 }
 #endif

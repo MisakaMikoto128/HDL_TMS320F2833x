@@ -40,6 +40,8 @@ void eMBRegHoldingClearChanged(void)
     boolRegHoldingChanged = false;
 }
 
+#include "B2_EventRecord.h"
+
 /**
  * @brief 读取输入寄存器，对应功能码是 04 eMBFuncReadInputRegister.
  * @note 上位机发来的 帧格式是:
@@ -58,7 +60,7 @@ eMBRegInputCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs)
     eMBErrorCode eStatus = MB_ENOERR;
     int iRegIndex;
 
-    if ((usAddress >= REG_INPUT_START) && (usAddress + usNRegs <= REG_INPUT_END + 1))
+    if ((usAddress >= usRegInputStart) && (usAddress + usNRegs <= REG_INPUT_END + 1))
     {
         iRegIndex = (int)(usAddress - 1 - usRegInputStart);
         while (usNRegs > 0)
@@ -67,6 +69,15 @@ eMBRegInputCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs)
             *pucRegBuffer++ = (UCHAR)(usRegInputBuf[iRegIndex] & 0xFF);
             iRegIndex++;
             usNRegs--;
+        }
+    }
+    else if ((usAddress >= REG_INPUT_START_SEC2) && (usAddress + usNRegs <= REG_INPUT_END_SEC2 + 1))
+    {
+        // iRegIndex = (int)(usAddress - 1 - usRegInputStart);
+        uint32_t readSize = B2_EventRecord_Read_RwaData_Circular_Generic(pucRegBuffer, REG_INPUT_NREGS_SEC2 * 2);
+        if (readSize == 0)
+        {
+            eStatus = MB_ENOREG;
         }
     }
     else

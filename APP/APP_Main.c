@@ -288,6 +288,8 @@ void ForeGroundTask()
       B3_SysManualMode_DeltaPoll(poll_delta);
     }
   });
+
+  B2_EventRecord_Poll();
 }
 
 void APP_Main_Poll()
