@@ -311,7 +311,7 @@ void SyncModbusRegToSysinfo()
     pSysinfo->T_V_SYS_OV_SEC = usRegHoldingBuf[55];
     pSysinfo->devId = (((uint64_t)usRegHoldingBuf[56] << 48) | ((uint64_t)usRegHoldingBuf[57] << 32) | ((uint64_t)usRegHoldingBuf[58] << 16) | ((uint64_t)usRegHoldingBuf[59]));
     uint64_t ts_device_utc_ms = (((uint64_t)usRegHoldingBuf[60] << 48) | ((uint64_t)usRegHoldingBuf[61] << 32) | ((uint64_t)usRegHoldingBuf[62] << 16) | ((uint64_t)usRegHoldingBuf[63]));
-    datetime_set_unix_timestamp(ts_device_utc_ms/1000);
+    datetime_set_unix_timestamp(ts_device_utc_ms / 1000);
 
     // 指令解析
     uint16_t cmdReg = usRegHoldingBuf[44];
@@ -322,6 +322,8 @@ void SyncModbusRegToSysinfo()
 #include "BFL_VCB.h"
 #include "BFL_SCR.h"
 #include "BFL_Buzz.h"
+#include "B2_EventRecord.h"
+
 void MBCmdHandler(uint16_t cmdReg)
 {
 /*
@@ -339,6 +341,7 @@ void MBCmdHandler(uint16_t cmdReg)
 关闭蜂鸣器	11
 清除Flash保存的参数	12
 切换VCB触发模式 13
+设置当前事件记录读取目录编号	14	R1,R2为事件目录编号的高16bit和低16bit
 */
 #define MB_CMD_NONE 0
 #define MB_SRC_SCRT_PLUSE_TRANSMIT 8
@@ -347,6 +350,7 @@ void MBCmdHandler(uint16_t cmdReg)
 #define MB_CMD_CLOSE_BUZZ 11
 #define MB_CMD_ERASE_FLASH_PARAM_DATA 12
 #define MB_CMD_SWITCH_VCB_TRIGGER_MODE 13
+#define MB_CMD_SET_EVENT_RECORD_READ_IDX 14
 
     switch (cmdReg)
     {
@@ -367,6 +371,15 @@ void MBCmdHandler(uint16_t cmdReg)
         break;
     case MB_CMD_SWITCH_VCB_TRIGGER_MODE:
         APP_Main_Switch_VCB_Trigger_Mode();
+        break;
+    case MB_CMD_SET_EVENT_RECORD_READ_IDX:
+        {
+            uint16_t R1 = usRegHoldingBuf[45];
+            uint16_t R2 = usRegHoldingBuf[46];
+
+            uint32_t idx = ((uint32_t)R1 << 16) | R2;
+            B2_EventRecord_Set_ReadIdx(idx);
+        }
         break;
     default:
         break;

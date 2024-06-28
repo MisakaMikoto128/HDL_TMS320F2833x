@@ -120,9 +120,16 @@ extern "C"
     bool B2_EventRecord_Write(B2_EventCode_t eventCode);
     bool B2_EventRecord_Read(B2_EventRecord_t *eventRecord, uint32_t eventID);
     void B2_EventRecord_Poll();
-    uint32_t B2_EventRecord_Get_ReadIdx();
+
+    /**
+     * @brief 循环读取已经存储固化的事件记录。读取为原始数据。
+     *
+     * @param readBuffer 读取缓冲区。
+     * @param bufferSize 缓冲区大小。
+     * @return uint32_t 实际读取的数据长度，0表示读取失败。
+     */
+    uint32_t B2_EventRecord_Read_RwaData_Circular(byte_t *readBuffer, uint32_t bufferSize);
     uint32_t B2_EventRecord_Set_ReadIdx(uint32_t recordedEventsReadIdx);
-    void B2_EventRecord_Inc_ReadIdx();
 
 #ifdef __cplusplus
 }

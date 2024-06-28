@@ -376,3 +376,19 @@ void B2_EventRecord_Inc_ReadIdx()
     g_recordedEventsReadIdx = (g_recordedEventsReadIdx + 1) % B2_EVENTRECORD_MAX_EVENT_NUM;
 }
 
+uint32_t B2_EventRecord_Read_RwaData_Circular(byte_t *readBuffer, uint32_t bufferSize)
+{
+    bool result = false;
+    uint32_t readBytesNum = 0;
+
+    // Step 1. 计算所在地址,读取数据
+    result = B2_EventRecord_Read_RawData(B2_EventRecord_Get_ReadIdx(),
+                                         g_B2_EventRecord_DecodeBuffer, B2_EVENTRECORD_ENCODE_SIZE);
+    if (result)
+    {
+        B2_EventRecord_Inc_ReadIdx();
+        readBytesNum = B2_EVENTRECORD_ENCODE_SIZE;
+    }
+
+    return readBytesNum;
+}
