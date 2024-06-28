@@ -91,6 +91,11 @@ bool B2_EventRecord_Write_Generic(B2_EventRecord_t *pEventRecord)
         return false;
     }
 
+    if (g_B2_EventRecord_WriteIdx >= B2_EVENTRECORD_MAX_EVENT_NUM)
+    {
+        return false;
+    }
+
     if (pEventRecord->eventID >= B2_EVENTRECORD_MAX_EVENT_NUM)
     {
         return false;
@@ -375,6 +380,14 @@ uint32_t B2_EventRecord_Set_ReadIdx(uint32_t recordedEventsReadIdx)
 void B2_EventRecord_Inc_ReadIdx()
 {
     g_recordedEventsReadIdx = (g_recordedEventsReadIdx + 1) % B2_EVENTRECORD_MAX_EVENT_NUM;
+}
+
+void B2_EventRecord_Clear_All()
+{
+    g_recordedEventsReadIdx = 0;
+    g_B2_EventRecord_WriteIdx = 0;
+    g_pSysInfo->recordedEventsNum = 0;
+    APP_Main_NotifyHaveParamNeedToSave();
 }
 
 uint32_t B2_EventRecord_Read_RwaData_Circular_Generic(byte_t *readBuffer, uint32_t bufferSize)

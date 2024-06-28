@@ -342,6 +342,7 @@ void MBCmdHandler(uint16_t cmdReg)
 清除Flash保存的参数	12
 切换VCB触发模式 13
 设置当前事件记录读取目录编号	14	R1,R2为事件目录编号的高16bit和低16bit
+清空所有事件记录	15	懒惰删除所有事件记录
 */
 #define MB_CMD_NONE 0
 #define MB_SRC_SCRT_PLUSE_TRANSMIT 8
@@ -351,6 +352,7 @@ void MBCmdHandler(uint16_t cmdReg)
 #define MB_CMD_ERASE_FLASH_PARAM_DATA 12
 #define MB_CMD_SWITCH_VCB_TRIGGER_MODE 13
 #define MB_CMD_SET_EVENT_RECORD_READ_IDX 14
+#define MB_CMD_CLEAR_ALL_EVENT_RECORD 15
 
     switch (cmdReg)
     {
@@ -380,6 +382,9 @@ void MBCmdHandler(uint16_t cmdReg)
             uint32_t idx = ((uint32_t)R1 << 16) | R2;
             B2_EventRecord_Set_ReadIdx(idx);
         }
+        break;
+    case MB_CMD_CLEAR_ALL_EVENT_RECORD:
+        B2_EventRecord_Clear_All();
         break;
     default:
         break;

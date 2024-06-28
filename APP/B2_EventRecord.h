@@ -130,6 +130,7 @@ extern "C"
      */
     uint32_t B2_EventRecord_Read_RwaData_Circular_Generic(byte_t *readBuffer, uint32_t bufferSize);
     uint32_t B2_EventRecord_Set_ReadIdx(uint32_t recordedEventsReadIdx);
+    void B2_EventRecord_Clear_All();
 
     /**
      * @brief  循环读取已经存储固化的事件记录。读取为原始数据。
