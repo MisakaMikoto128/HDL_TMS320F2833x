@@ -24,9 +24,9 @@ extern "C"
     // Serial Port ID definition
     typedef enum
     {
-        COM1 = 0, // SCI-A
-        COM2 = 1, // SCI-B
-        COM3 = 2, // SCI-C
+        COM1 = 0, // SCI-A 隔离485
+        COM2 = 1, // SCI-B 普通232
+        COM3 = 2, // SCI-C 普通485
         COM_NUM,
     } COMID_t;
 
