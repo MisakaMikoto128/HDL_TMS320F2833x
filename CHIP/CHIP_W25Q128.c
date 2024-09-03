@@ -127,16 +127,16 @@ int32_t CHIP_W25Q128_Read(uint32_t address, byte_t *data, uint32_t size)
     HDL_SPI_WriteRead(SPI_1, buf, buf_rev, 4, W25Q128_RECEIVE_TIMEOUT);
     HDL_SPI_WriteRead(SPI_1, NULL, data, size, W25Q128_TIMEOUT_DEFAULT_VALUE);
     HDL_SPI_CS_SET();
-    return 0;
+    return size;
 }
 
 static byte_t g_pageBuf[W25Q128_PAGE_SIZE] = {0};
 /**
- * @brief 这个方法还不完善。一次最多只能写一个扇区的数据。
+ * @brief 这个方法还不完善。一次最多只能写一个扇区4096字节的数据。
  *
  * @param address
  * @param data
- * @param size
+ * @param size 数据有多少就写入多少字节，没有对齐要求，不会在未对齐的区域写入任何数据。
  * @return int32_t
  */
 int32_t CHIP_W25Q128_Write(uint32_t address, byte_t *data, uint32_t size)
@@ -228,7 +228,7 @@ bool CHIP_W25Q128_Is_Sector_Erased(uint32_t sector)
  *
  * @param buf 指向待写入数据的指针。
  * @param address 写入闪存的数据地址。
- * @param size 待写入数据的大小，单位字节。
+ * @param size 待写入数据的大小，单位字节。数据有多少字节就写入多少，不会对齐一个Page。
  * @return int32_t 成功返回0，失败返回-1。
  */
 int32_t w25q128_write_page_no_erase(uint32_t address, byte_t *buf, uint32_t size)
