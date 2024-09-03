@@ -29,10 +29,11 @@ static bool g_B2_EventRecord_WriteQueueEventDisbale[B2_EVENT_RECORD_EVENT_NUM];
 #define B2_EVENTRECORD_SECTOR_START 20 // Start Sector ID
 #define B2_EVENTRECORD_SECTOR_END (W25Q128_SECTOR_COUNT)
 
-#define B2_EVENTRECORD_ENCODE_SIZE 64 // 这里必须64字节对齐，不然一个扇区存不了整数个记录
-static byte_t g_B2_EventRecord_EncodeBuffer[B2_EVENTRECORD_ENCODE_SIZE];
-static byte_t g_B2_EventRecord_DecodeBuffer[B2_EVENTRECORD_ENCODE_SIZE];
-#define B2_EVENTRECORD_MAX_EVENT_NUM ((B2_EVENTRECORD_SECTOR_END - B2_EVENTRECORD_SECTOR_START) * W25Q128_SECTOR_SIZE / B2_EVENTRECORD_ENCODE_SIZE)
+#define B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE 64 // 这里必须64字节对齐，不然一个扇区存不了整数个记录,TODO:这个应该重新命名为B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE 64,因为多出来的字节是为了对齐考虑的，但实际不占用那么多空间
+#define B2_EVENTRECORD_ENCODE_SIZE_VALID 48
+static byte_t g_B2_EventRecord_EncodeBuffer[B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE];
+static byte_t g_B2_EventRecord_DecodeBuffer[B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE];
+#define B2_EVENTRECORD_MAX_EVENT_NUM ((B2_EVENTRECORD_SECTOR_END - B2_EVENTRECORD_SECTOR_START) * W25Q128_SECTOR_SIZE / B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE)
 
 uint32_t g_recordedEventsReadIdx = 0;
 
@@ -42,8 +43,10 @@ void B2_EventRecord_Init()
     g_B2_EventRecord_WriteIdx = g_pSysInfo->recordedEventsNum;
     for (uint32_t i = 0; i < B2_EVENT_RECORD_EVENT_NUM; i++)
     {
-        g_B2_EventRecord_WriteQueueEventDisbale[i] = true;
+        g_B2_EventRecord_WriteQueueEventDisbale[i] = false;
     }
+
+    B2_EventRecord_Clear_All();
 }
 
 /**
@@ -61,25 +64,42 @@ B2_EventRecord_t *B2_EventRecord_Create(B2_EventRecord_t *eventRecord, B2_EventC
         return NULL;
     }
 
-    eventRecord->eventID = eventID;
-    eventRecord->eventTimestamp = datetime_get_unix_ms_timestamp();
-    eventRecord->eventCode = eventCode;
-    eventRecord->eventStatus = ((sysInfo->QF_FB & 0x01) << 7) | ((sysInfo->QS1_FB & 0x01) << 6) |
-                               ((sysInfo->QS2_FB & 0x01) << 5) | ((sysInfo->KM1_FB & 0x01) << 4) |
-                               ((sysInfo->SYS_MODE & 0x03) << 2) |
-                               ((sysInfo->Line_State & 0x01) << 1);
+   eventRecord->eventID = eventID;
+   eventRecord->eventTimestamp = datetime_get_unix_ms_timestamp();
+   eventRecord->eventCode = eventCode;
+   eventRecord->eventStatus = ((sysInfo->QF_FB & 0x01) << 7) | ((sysInfo->QS1_FB & 0x01) << 6) |
+                              ((sysInfo->QS2_FB & 0x01) << 5) | ((sysInfo->KM1_FB & 0x01) << 4) |
+                              ((sysInfo->SYS_MODE & 0x03) << 2) |
+                              ((sysInfo->Line_State & 0x01) << 1);
 
-    eventRecord->maxTemperature = (int16_t)getMaxCapTemp();
-    eventRecord->minTemperature = (int16_t)getMinCapTemp();
+   eventRecord->maxTemperature = (int16_t)getMaxCapTemp();
+   eventRecord->minTemperature = (int16_t)getMinCapTemp();
 
-    eventRecord->V_TV1A = (int32_t)(sysInfo->V_TV1A * 10000);
-    eventRecord->V_TV1B = (int32_t)(sysInfo->V_TV1B * 10000);
-    eventRecord->V_TV1C = (int32_t)(sysInfo->V_TV1C * 10000);
-    eventRecord->V_UIAB = (int32_t)(sysInfo->V_UIAB * 10000);
-    eventRecord->V_UOAB = (int32_t)(sysInfo->V_UOAB * 10000);
-    eventRecord->I_TA1A = (int32_t)(sysInfo->I_TA1A * 10000);
-    eventRecord->I_TA1B = (int32_t)(sysInfo->I_TA1B * 10000);
-    eventRecord->I_TA1C = (int32_t)(sysInfo->I_TA1C * 10000);
+   eventRecord->V_TV1A = (int32_t)(sysInfo->V_TV1A * 10000);
+   eventRecord->V_TV1B = (int32_t)(sysInfo->V_TV1B * 10000);
+   eventRecord->V_TV1C = (int32_t)(sysInfo->V_TV1C * 10000);
+   eventRecord->V_UIAB = (int32_t)(sysInfo->V_UIAB * 10000);
+   eventRecord->V_UOAB = (int32_t)(sysInfo->V_UOAB * 10000);
+   eventRecord->I_TA1A = (int32_t)(sysInfo->I_TA1A * 10000);
+   eventRecord->I_TA1B = (int32_t)(sysInfo->I_TA1B * 10000);
+   eventRecord->I_TA1C = (int32_t)(sysInfo->I_TA1C * 10000);
+
+    // eventRecord->eventID = eventID;
+    // eventRecord->eventTimestamp = 0x12345678ABCDEF01;
+    // eventRecord->eventCode = eventCode;
+    // eventRecord->eventStatus = 0x1234;
+
+    // eventRecord->maxTemperature = 0x1A;
+    // eventRecord->minTemperature = 0x1B;
+
+    // eventRecord->V_TV1A = 0x12345678;
+    // eventRecord->V_TV1B = 0x12345678;
+    // eventRecord->V_TV1C = 0x12345678;
+    // eventRecord->V_UIAB = 0x12345678;
+    // eventRecord->V_UOAB = 0x12345678;
+    // eventRecord->I_TA1A = 0x12345678;
+    // eventRecord->I_TA1B = 0x12345678;
+    // eventRecord->I_TA1C = 0x12345678;
 
     return eventRecord;
 }
@@ -153,9 +173,9 @@ static void encode_uint64(byte_t *buffer, uint64_t value)
     buffer[7] = (value >> 56) & 0xFF;
 }
 
-static byte_t *B2_EventRecord_Encode(B2_EventRecord_t *eventRecor, byte_t encodeBuffer[B2_EVENTRECORD_ENCODE_SIZE], uint32_t bufferSize)
+static byte_t *B2_EventRecord_Encode(B2_EventRecord_t *eventRecor, byte_t encodeBuffer[B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE], uint32_t bufferSize)
 {
-    if (eventRecor == NULL || encodeBuffer == NULL || bufferSize < B2_EVENTRECORD_ENCODE_SIZE)
+    if (eventRecor == NULL || encodeBuffer == NULL || bufferSize < B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE)
     {
         return NULL;
     }
@@ -194,7 +214,7 @@ bool B2_EventRecord_Write_RawData(B2_EventRecord_t *eventRecord)
 
     // Step 1. Encode the event record
     byte_t *encodeBuffer = NULL;
-    encodeBuffer = B2_EventRecord_Encode(eventRecord, g_B2_EventRecord_EncodeBuffer, B2_EVENTRECORD_ENCODE_SIZE);
+    encodeBuffer = B2_EventRecord_Encode(eventRecord, g_B2_EventRecord_EncodeBuffer, B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE);
 
     if (encodeBuffer == NULL)
     {
@@ -202,7 +222,7 @@ bool B2_EventRecord_Write_RawData(B2_EventRecord_t *eventRecord)
     }
 
     // Step 2. 检查是第一次写入这个扇区，如果是，那么先擦除这个扇区
-    uint32_t address = B2_EVENTRECORD_SECTOR_START * W25Q128_SECTOR_SIZE + eventRecord->eventID * B2_EVENTRECORD_ENCODE_SIZE;
+    uint32_t address = B2_EVENTRECORD_SECTOR_START * W25Q128_SECTOR_SIZE + eventRecord->eventID * B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE;
     if (address % W25Q128_SECTOR_SIZE == 0)
     {
         if (!CHIP_W25Q128_Is_Sector_Erased(address / W25Q128_SECTOR_SIZE))
@@ -215,10 +235,10 @@ bool B2_EventRecord_Write_RawData(B2_EventRecord_t *eventRecord)
     }
 
     // Step 3. Write the encoded data to the flash and do not need to erase the sector
-    int32_t writtenBytesNum = CHIP_W25Q128_Write_No_Erase(address, g_B2_EventRecord_EncodeBuffer, B2_EVENTRECORD_ENCODE_SIZE);
+    int32_t writtenBytesNum = CHIP_W25Q128_Write_No_Erase(address, g_B2_EventRecord_EncodeBuffer, B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE);
 
     // Check if the write was successful
-    return writtenBytesNum == B2_EVENTRECORD_ENCODE_SIZE;
+    return writtenBytesNum == 0;
 }
 
 static void B2_EventRecord_WritePoll()
@@ -283,9 +303,9 @@ static uint64_t decode_uint64(const byte_t *buffer)
            ((uint64_t)buffer[7] << 56);
 }
 
-static B2_EventRecord_t *B2_EventRecord_Decode(B2_EventRecord_t *eventRecord, byte_t decodeBuffer[B2_EVENTRECORD_ENCODE_SIZE], uint32_t bufferSize)
+static B2_EventRecord_t *B2_EventRecord_Decode(B2_EventRecord_t *eventRecord, byte_t decodeBuffer[B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE], uint32_t bufferSize)
 {
-    if (eventRecord == NULL || decodeBuffer == NULL || bufferSize < B2_EVENTRECORD_ENCODE_SIZE)
+    if (eventRecord == NULL || decodeBuffer == NULL || bufferSize < B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE)
     {
         return NULL;
     }
@@ -312,29 +332,29 @@ static B2_EventRecord_t *B2_EventRecord_Decode(B2_EventRecord_t *eventRecord, by
 
 bool B2_EventRecord_Read_RawData(uint32_t eventID, byte_t *decodeBuffer, uint32_t bufferSize)
 {
-    if (decodeBuffer == NULL || bufferSize < B2_EVENTRECORD_ENCODE_SIZE || eventID >= B2_EVENTRECORD_MAX_EVENT_NUM)
+    if (decodeBuffer == NULL || bufferSize < B2_EVENTRECORD_ENCODE_SIZE_VALID || eventID >= B2_EVENTRECORD_MAX_EVENT_NUM)
     {
         return false;
     }
 
-    uint32_t address = B2_EVENTRECORD_SECTOR_START * W25Q128_SECTOR_SIZE + eventID * B2_EVENTRECORD_ENCODE_SIZE;
-    int32_t readBytesNum = CHIP_W25Q128_Read(address, decodeBuffer, B2_EVENTRECORD_ENCODE_SIZE);
+    uint32_t address = B2_EVENTRECORD_SECTOR_START * W25Q128_SECTOR_SIZE + eventID * B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE;
+    int32_t readBytesNum = CHIP_W25Q128_Read(address, decodeBuffer, B2_EVENTRECORD_ENCODE_SIZE_VALID);
 
-    return readBytesNum == B2_EVENTRECORD_ENCODE_SIZE;
+    return readBytesNum >= B2_EVENTRECORD_ENCODE_SIZE_VALID;
 }
 
 bool B2_EventRecord_Read(B2_EventRecord_t *eventRecord, uint32_t eventID)
 {
     bool result = false;
     // Step 1. 计算所在地址,读取数据
-    result = B2_EventRecord_Read_RawData(eventID, g_B2_EventRecord_DecodeBuffer, B2_EVENTRECORD_ENCODE_SIZE);
+    result = B2_EventRecord_Read_RawData(eventID, g_B2_EventRecord_DecodeBuffer, B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE);
     if (!result)
     {
         return false;
     }
 
     // Step 2. 解码
-    B2_EventRecord_t *pEventRecord = B2_EventRecord_Decode(eventRecord, g_B2_EventRecord_DecodeBuffer, B2_EVENTRECORD_ENCODE_SIZE);
+    B2_EventRecord_t *pEventRecord = B2_EventRecord_Decode(eventRecord, g_B2_EventRecord_DecodeBuffer, B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE);
 
     return pEventRecord != NULL;
 }
@@ -374,6 +394,11 @@ uint32_t B2_EventRecord_Get_ReadIdx()
     return g_recordedEventsReadIdx;
 }
 
+uint32_t B2_EventRecord_Get_RecordedEventsNum()
+{
+    return g_pSysInfo->recordedEventsNum;
+}
+
 uint32_t B2_EventRecord_Set_ReadIdx(uint32_t recordedEventsReadIdx)
 {
     g_recordedEventsReadIdx = recordedEventsReadIdx % g_pSysInfo->recordedEventsNum;
@@ -399,13 +424,18 @@ uint32_t B2_EventRecord_Read_RwaData_Circular_Generic(byte_t *readBuffer, uint32
     bool result = false;
     uint32_t readBytesNum = 0;
 
+    if(B2_EventRecord_Get_RecordedEventsNum() == 0)
+    {
+        return 0;
+    }
+
     // Step 1. 计算所在地址,读取数据
     result = B2_EventRecord_Read_RawData(B2_EventRecord_Get_ReadIdx(),
                                          readBuffer, bufferSize);
     if (result)
     {
         B2_EventRecord_Inc_ReadIdx();
-        readBytesNum = B2_EVENTRECORD_ENCODE_SIZE;
+        readBytesNum = B2_EVENTRECORD_ENCODE_SIZE_VALID;
     }
 
     return readBytesNum;
@@ -418,11 +448,11 @@ uint32_t B2_EventRecord_Read_RwaData_Circular(byte_t **pReadBuffer)
 
     // Step 1. 计算所在地址,读取数据
     result = B2_EventRecord_Read_RawData(B2_EventRecord_Get_ReadIdx(),
-                                         g_B2_EventRecord_DecodeBuffer, B2_EVENTRECORD_ENCODE_SIZE);
+                                         g_B2_EventRecord_DecodeBuffer, B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE);
     if (result)
     {
         B2_EventRecord_Inc_ReadIdx();
-        readBytesNum = B2_EVENTRECORD_ENCODE_SIZE;
+        readBytesNum = B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE;
         *pReadBuffer = g_B2_EventRecord_DecodeBuffer;
     }
 

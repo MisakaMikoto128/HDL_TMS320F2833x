@@ -75,7 +75,7 @@ eMBRegInputCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs)
     else if ((usAddress >= REG_INPUT_START_SEC2) && (usAddress + usNRegs <= REG_INPUT_END_SEC2 + 1))
     {
         // iRegIndex = (int)(usAddress - 1 - usRegInputStart);
-        uint32_t readSize = B2_EventRecord_Read_RwaData_Circular_Generic((byte_t*)pucRegBuffer, REG_INPUT_NREGS_SEC2 * 2);
+        uint32_t readSize = B2_EventRecord_Read_RwaData_Circular_Generic((byte_t*)pucRegBuffer, usNRegs * 2);
         if (readSize == 0)
         {
             eStatus = MB_ENOREG;
