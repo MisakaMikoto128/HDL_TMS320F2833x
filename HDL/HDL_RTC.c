@@ -24,17 +24,25 @@ BaseYear存在一定的问题，ST的这个RTC没有一个单独的秒寄存器�
 */
 #define RTC_BASE_YEAR_TIMESTAMP 946684800 // 2000-1-1 0:0:0的时间戳
 
-struct softRTC_t {
+struct softRTC_t
+{
     uint64_t unixMsTimestamp;   // 1970-1-1以来的总毫秒数
     bool calibratedAtLeastOnce; // 校准过至少一次
 };
 
-static struct softRTC_t softRTC   = {0};
+static struct softRTC_t softRTC = {0};
 static struct softRTC_t *pSoftRTC = &softRTC;
-
+static uint32_t reSyncPeriod = SECOND_TO_MS(3600); // 1小时重新校准一次
+static uint32_t elapsedTime = 0;
 static void HDL_RTC_Update()
 {
-    pSoftRTC->unixMsTimestamp ++;
+    pSoftRTC->unixMsTimestamp++;
+    elapsedTime++;
+    if (elapsedTime >= reSyncPeriod)
+    {
+        HDL_RTC_ReSyncWithHardware();
+        elapsedTime = 0;
+    }
 }
 
 /**
@@ -45,7 +53,7 @@ static void HDL_RTC_Update()
 void HDL_RTC_Init()
 {
     pSoftRTC->calibratedAtLeastOnce = false;
-    pSoftRTC->unixMsTimestamp       = 0;
+    pSoftRTC->unixMsTimestamp = 0;
     HDL_CPU_Time_SetCPUTickCallback(HDL_RTC_Update);
 }
 
@@ -58,8 +66,9 @@ void HDL_RTC_Init()
 uint64_t HDL_RTC_GetTimeTick(uint16_t *pSub)
 {
     uint64_t timestamp = 0;
-    timestamp          = pSoftRTC->unixMsTimestamp / 1000;
-    if (pSub != NULL) {
+    timestamp = pSoftRTC->unixMsTimestamp / 1000;
+    if (pSub != NULL)
+    {
         *pSub = pSoftRTC->unixMsTimestamp % 1000;
     }
     return timestamp;
@@ -73,7 +82,7 @@ uint64_t HDL_RTC_GetTimeTick(uint16_t *pSub)
 void HDL_RTC_GetStructTime(mtime_t *myTime)
 {
     uint32_t timestamp = 0;
-    timestamp          = (uint32_t)(pSoftRTC->unixMsTimestamp / 1000);
+    timestamp = (uint32_t)(pSoftRTC->unixMsTimestamp / 1000);
     mtime_unix_sec_2_time(timestamp, myTime);
 }
 
@@ -85,7 +94,8 @@ void HDL_RTC_GetStructTime(mtime_t *myTime)
  */
 void HDL_RTC_SetTimeTick(uint64_t timestamp)
 {
-    if (timestamp > RTC_BASE_YEAR_TIMESTAMP) {
+    if (timestamp > RTC_BASE_YEAR_TIMESTAMP)
+    {
         pSoftRTC->unixMsTimestamp = timestamp * 1000;
         pSoftRTC->calibratedAtLeastOnce = true;
     }
@@ -100,8 +110,9 @@ void HDL_RTC_SetTimeTick(uint64_t timestamp)
 void HDL_RTC_SetStructTime(mtime_t *myTime)
 {
     uint32_t timestamp = 0;
-    timestamp          = mtime_2_unix_sec(myTime);
-    if (timestamp > RTC_BASE_YEAR_TIMESTAMP) {
+    timestamp = mtime_2_unix_sec(myTime);
+    if (timestamp > RTC_BASE_YEAR_TIMESTAMP)
+    {
         pSoftRTC->unixMsTimestamp = (uint64_t)timestamp * 1000;
         pSoftRTC->calibratedAtLeastOnce = true;
     }
@@ -115,4 +126,21 @@ uint64_t HDL_RTC_GetMsTimestamp()
 bool HDL_RTC_HasSynced()
 {
     return pSoftRTC->calibratedAtLeastOnce;
+}
+
+bool HDL_RTC_SetTimeTick_HeardWare(uint64_t timestamp)
+{
+    if (timestamp > RTC_BASE_YEAR_TIMESTAMP)
+    {
+        pSoftRTC->unixMsTimestamp = timestamp * 1000;
+        pSoftRTC->calibratedAtLeastOnce = true;
+        return true;
+    }
+    return false;
+}
+
+bool HDL_RTC_ReSyncWithHardware()
+{
+    pSoftRTC->unixMsTimestamp = pSoftRTC->unixMsTimestamp;
+    return false;
 }

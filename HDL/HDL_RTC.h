@@ -23,6 +23,9 @@ void HDL_RTC_SetTimeTick(uint64_t timestamp);
 void HDL_RTC_SetStructTime(mtime_t *pmtime);
 bool HDL_RTC_HasSynced();
 
+bool HDL_RTC_SetTimeTick_HeardWare(uint64_t timestamp);
+bool HDL_RTC_ReSyncWithHardware();
+
 #define HDL_RTC_Subsec2mSec(subsec) ((uint64_t)((subsec) * (1000.0f / RTC_SUBSEC_MAX) + 0.5f))
 #define HDL_RTC_mSec2Subsec(ms) ((uint64_t)((ms)*RTC_SUBSEC_MAX * 0.001f + 0.5f))
 #endif // HDL_RTC_H
