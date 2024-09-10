@@ -46,7 +46,7 @@ void B2_EventRecord_Init()
         g_B2_EventRecord_WriteQueueEventDisbale[i] = false;
     }
 
-    B2_EventRecord_Clear_All();
+//    B2_EventRecord_Clear_All();
 }
 
 /**
