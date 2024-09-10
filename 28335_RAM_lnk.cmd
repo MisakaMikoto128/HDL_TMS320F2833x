@@ -161,11 +161,11 @@ SECTIONS
    #endif
 #endif
 
-   .text            : >> RAML0 | RAML1 | RAML2 | RAML3,     PAGE = 0
+   .text            : >> RAMM0 | RAML0 | RAML1 | RAML2 | RAML3,     PAGE = 0
    .InitBoot        : > RAML1,     PAGE = 0
-   .cinit           : > RAML0,     PAGE = 0
-   .pinit           : > RAML0,     PAGE = 0
-   .switch          : > RAML0,     PAGE = 0
+   .cinit           : > RAMM0,     PAGE = 0
+   .pinit           : > RAMM0,     PAGE = 0
+   .switch          : > RAMM0,     PAGE = 0
 
    .stack           : > RAMM1,     PAGE = 1
    .ebss            : >> RAML4 | RAML5,     PAGE = 1
