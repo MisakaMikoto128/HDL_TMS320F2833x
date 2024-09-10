@@ -40,6 +40,109 @@ EPWM_INFO epwm1_info;
 EPWM_INFO epwm2_info;
 EPWM_INFO epwm3_info;
 
+#define SCR_LEVEL_MODE 0
+#define SCR_PWM_MODE 1
+#define SRC_USING_PWM SCR_LEVEL_MODE
+//
+// InitEPwm1Gpio - This function initializes GPIO pins to function as ePWM1
+//
+void mInitEPwm1Gpio(void)
+{
+#if SRC_USING_PWM == SCR_LEVEL_MODE
+    EALLOW;
+    //
+    // Enable internal pull-up for the selected pins
+    // Pull-ups can be enabled or disabled by the user.
+    // This will enable the pullups for the specified pins.
+    // Comment out other unwanted lines.
+    //
+    GpioCtrlRegs.GPAPUD.bit.GPIO0 = 0; // Enable pull-up on GPIO0 (EPWM1A)
+    GpioCtrlRegs.GPAPUD.bit.GPIO1 = 0; // Enable pull-up on GPIO1 (EPWM1B)
+
+    //
+    // Configure General purpose I/O (default)
+    //
+    GpioCtrlRegs.GPAMUX1.bit.GPIO0 = 0;
+    GpioCtrlRegs.GPAMUX1.bit.GPIO1 = 0;
+
+    // Configures the GPIO pin as an output
+    GpioCtrlRegs.GPADIR.bit.GPIO0 = 1;
+    GpioCtrlRegs.GPADIR.bit.GPIO1 = 1;
+#else
+    InitEPwm1Gpio();
+#endif
+}
+
+//
+// InitEPwm2Gpio - This function initializes GPIO pins to function as ePWM2
+//
+void mInitEPwm2Gpio(void)
+{
+#if SRC_USING_PWM == SCR_LEVEL_MODE
+    EALLOW;
+
+    //
+    // Enable internal pull-up for the selected pins
+    // Pull-ups can be enabled or disabled by the user.
+    // This will enable the pullups for the specified pins.
+    // Comment out other unwanted lines.
+    //
+    GpioCtrlRegs.GPAPUD.bit.GPIO2 = 0; // Enable pull-up on GPIO2 (EPWM2A)
+    GpioCtrlRegs.GPAPUD.bit.GPIO3 = 0; // Enable pull-up on GPIO3 (EPWM3B)
+
+    //
+    // Configure General purpose I/O (default)
+    //
+    GpioCtrlRegs.GPAMUX1.bit.GPIO2 = 0;
+    GpioCtrlRegs.GPAMUX1.bit.GPIO3 = 0;
+
+    // Configures the GPIO pin as an output
+    GpioCtrlRegs.GPADIR.bit.GPIO2 = 1;
+    GpioCtrlRegs.GPADIR.bit.GPIO3 = 1;
+    EDIS;
+
+#else
+    InitEPwm2Gpio();
+#endif
+}
+
+//
+// InitEPwm3Gpio - This function initializes GPIO pins to function as ePWM3
+//
+void mInitEPwm3Gpio(void)
+{
+#if SRC_USING_PWM == SCR_LEVEL_MODE
+    EALLOW;
+
+    //
+    // Enable internal pull-up for the selected pins
+    // Pull-ups can be enabled or disabled by the user.
+    // This will enable the pullups for the specified pins.
+    // Comment out other unwanted lines.
+    //
+    GpioCtrlRegs.GPAPUD.bit.GPIO4 = 0; // Enable pull-up on GPIO4 (EPWM3A)
+    GpioCtrlRegs.GPAPUD.bit.GPIO5 = 0; // Enable pull-up on GPIO5 (EPWM3B)
+
+    //
+    // Configure General purpose I/O (default)
+    //
+    GpioCtrlRegs.GPAMUX1.bit.GPIO4 = 0;
+    GpioCtrlRegs.GPAMUX1.bit.GPIO5 = 0;
+
+    // Configures the GPIO pin as an output
+    GpioCtrlRegs.GPADIR.bit.GPIO4 = 1;
+    GpioCtrlRegs.GPADIR.bit.GPIO5 = 1;
+    EDIS;
+#else
+    InitEPwm3Gpio();
+#endif
+}
+
+// GPIO0,1,2,3,4,5
+#define SCRT_ALL_Set() (GpioDataRegs.GPASET.all |= 0x0000003F)
+#define SCRT_ALL_Clear() (GpioDataRegs.GPACLEAR.all |= 0x0000003F)
+#define SCRT_ALL_Toggle() (GpioDataRegs.GPATOGGLE.all |= 0x0000003F)
+
 //
 // Defines that keep track of which way the compare value is moving
 //
@@ -53,6 +156,7 @@ EPWM_INFO epwm3_info;
 #define SCRR3A_IsSet() (GpioDataRegs.GPADAT.bit.GPIO12)
 #define SCRR3B_IsSet() (GpioDataRegs.GPADAT.bit.GPIO13)
 #define SCRA_ALL_Read() ((GpioDataRegs.GPADAT.all & 0x00003F00) >> 8)
+
 /**
  * @brief SCR输入输出通道初始化。
  *
@@ -107,9 +211,9 @@ void BFL_SCR_Init()
     // For this case just init GPIO pins for ePWM1, ePWM2, ePWM3
     // These functions are in the DSP2833x_EPwm.c file
     //
-    InitEPwm1Gpio();
-    InitEPwm2Gpio();
-    InitEPwm3Gpio();
+    mInitEPwm1Gpio();
+    mInitEPwm2Gpio();
+    mInitEPwm3Gpio();
 
     //
     // Interrupts that are used in this example are re-mapped to
@@ -432,6 +536,10 @@ __interrupt void epwm1_isr(void)
         EPwmRegHandle->TBCTL.bit.CTRMODE = TB_FREEZE; // freeze count
         EPwmRegHandle->ETSEL.bit.INTEN = 0;           // Disable INT
         pEpwmx_info->busy = 0;
+
+#if SRC_USING_PWM == SCR_LEVEL_MODE
+    SCRT_ALL_Set();
+#endif
     }
     pEpwmx_info->INT_CNT++;
 
@@ -563,6 +671,7 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
         break;
     case SCRT_ALL:
     {
+#if SRC_USING_PWM == SCR_PWM_MODE
         volatile struct EPWM_REGS *EPwmRegHandle = NULL;
         _disable_interrupts();
         pEpwmx_info = &epwm1_info;
@@ -618,6 +727,29 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
         EPwm2Regs.ETSEL.bit.INTEN = 1;             // Enable INT
         EPwm1Regs.ETSEL.bit.INTEN = 1;             // Enable INT
         EPwm3Regs.ETSEL.bit.INTEN = 1;             // Enable INT
+#elif SRC_USING_PWM == SCR_LEVEL_MODE
+        SCRT_ALL_Clear();
+
+        _uiPluseWidth = 2500;
+        volatile struct EPWM_REGS *EPwmRegHandle = NULL;
+        _disable_interrupts();
+        pEpwmx_info = &epwm1_info;
+        EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
+        pEpwmx_info->INT_CNT = 0;
+        pEpwmx_info->PLUSE_NUM = _uiPluseNum - 1;
+        pEpwmx_info->busy = 1;
+        _enable_interrupts();
+        // 最大值为5000 + 1
+        // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
+        // 1时，输出的脉冲宽度为5000us。
+        //(_uiPluseWidth / (EPWM1_PWM_PERIOD * 1000)) * EPWM1_TIMER_TBPRD;
+        EPwmRegHandle->CMPA.half.CMPA = EPWM1_TIMER_CMPA_MIN;
+        EPwmRegHandle->CMPB = ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
+                               (EPWM1_PWM_PERIOD * 1000ULL));
+        EPwmRegHandle->TBCTR = 0x0000; // Clear counter
+        EPwm1Regs.TBCTL.bit.CTRMODE = TB_COUNT_UP; // Up count mode
+        EPwm1Regs.ETSEL.bit.INTEN = 1;             // Enable INT
+#endif
     }
     break;
     default:
