@@ -11,3 +11,4 @@ Debug/*/*.mk
 Debug/makefile
 .vscode/settings.json
 /Debug/
+/Flash/
