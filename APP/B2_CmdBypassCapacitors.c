@@ -55,9 +55,9 @@ void B2_CmdBypassCapacitors_Test()
     {
         SCRT_Fault1 = 0;
         scrtFb1 = 0;
-        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 20, US(g_pSysInfo->T2_US));
+        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 6000, US(g_pSysInfo->T2_US));
         async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback1, &scrtFb1);
-        SCRT_Fault1 = scrtFb1;
+        // SCRT_Fault1 = scrtFb1;
     }
 }
 
@@ -97,9 +97,9 @@ B2_CmdBypassCapacitors_Result_t B2_CmdBypassCapacitors_Exec()
     uint32_t scrtFb = 0;
     for (int tryCnt = 0; tryCnt < 3; tryCnt++)
     {
-        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 20, US(g_pSysInfo->T2_US));
+        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 6000, US(g_pSysInfo->T2_US));
         async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback1, &scrtFb);
-        SCRT_Fault = scrtFb;
+        // SCRT_Fault = scrtFb;
 
         BFL_VCB_Set_As_Switch_Closed(KM1_SW);
         async_delay(MS(g_pSysInfo->T1_MS), async_delay_callback2, NULL);

@@ -357,7 +357,7 @@ void MBCmdHandler(uint16_t cmdReg)
     switch (cmdReg)
     {
     case MB_SRC_SCRT_PLUSE_TRANSMIT:
-        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 20, US(g_pSysInfo->T2_US));
+        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 6000, US(g_pSysInfo->T2_US));
         break;
     case MB_CMD_SERIOUS_FAUIL_CLEAR:
         APP_Main_Clear_All_Fault();
