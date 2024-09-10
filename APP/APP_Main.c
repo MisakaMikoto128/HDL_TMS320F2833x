@@ -77,9 +77,9 @@ void Config_Default_Parameter()
   g_pSysInfo->Tc_ot = 80;
   g_pSysInfo->T_Tc_ot_SEC = SEC(10);
   g_pSysInfo->T1_MS = MS(1500);
-  g_pSysInfo->T2_US = US(2000);
+  g_pSysInfo->T2_US = US(4000);
   g_pSysInfo->T3_MS = MS(5);
-  g_pSysInfo->T4_MS = MS(5);
+  g_pSysInfo->T4_MS = MS(20);
   g_pSysInfo->V_SCR_NORMAL_DIFF_kV = 0.1f;
   g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC = SEC(3);
   g_pSysInfo->I_SCR_NORMAL_DIFF_A = 1.0f;
@@ -204,13 +204,15 @@ void APP_Main_Clear_All_Fault()
 void APP_Main_Init()
 {
   HDL_CPU_Time_Init();
+  B1_VCBStatusGet_Init();
+  BFL_VCB_Seurity_Init();
+  BFL_SCR_Init();
+  B1_SysModeGet_Init();
   BFL_DebugPin_Init();
   HDL_IWDG_Init(SECOND_TO_MS(1));
   datetime_init();
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();
-  BFL_VCB_Seurity_Init();
-  BFL_SCR_Init();
 
   AppMainInfo_Init();
   Config_Default_Parameter();
@@ -218,14 +220,12 @@ void APP_Main_Init()
   Config_PowerOn_Parameter();
 
 #if __DEBUG_MODE == 1
-//   APP_Main_Clear_All_Fault();
+//  APP_Main_Clear_All_Fault();
 #endif
 
   B1_Measure_Init();
   B1_CapacitanceTemperatureMeasure_Init();
   B1_ModbusRTUSlaver_Init();
-  B1_SysModeGet_Init();
-  B1_VCBStatusGet_Init();
   B3_RTUPush_Init();
 
   B2_EventRecord_Init();
