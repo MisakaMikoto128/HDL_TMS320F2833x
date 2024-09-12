@@ -12,6 +12,7 @@
 #include "APP_Main.h"
 #include "mtime.h"
 #include "math.h"
+#include "BFL_Measure.h"
 
 void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
 {
@@ -70,6 +71,30 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
         }
     }
 
+    float V_TV1x_MAX = getV_TV1x_MAX();
+    if (CheckConditionDurationMet(
+            &g_AppMainInfo.satifyT_V_TVx_ov,
+            poll_delta,
+            SECOND_TO_MS(g_pSysInfo->T_V_TVx_ov_SEC),
+            (V_TV1x_MAX > g_pSysInfo->V_TVx_ov_kV)))
+    {
+        // 电容器过压故障触发
+        if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OV))
+        {
+            SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OV);
+            // TODO:MINOR_FAULT_CAPACITOR_OV Event
+        }
+    }
+    else if (CheckConditionDurationMet(
+                 &g_AppMainInfo.satifyT_V_TVx_ov_cancle,
+                 poll_delta,
+                 SECOND_TO_MS(g_pSysInfo->T_V_TVx_ov_SEC),
+                 (V_TV1x_MAX < g_pSysInfo->V_TVx_ov_kV)))
+    {
+        // 电容器过压故障取消
+        CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OV);
+    }
+
     return;
 }
 
@@ -81,14 +106,8 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
  */
 bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
 {
-    float I_TA1_MAX = 0;
-    float V_TV1x_MAX = 0;
-    float Tc_MAX = 0;
-    I_TA1_MAX = fmaxf(g_pSysInfo->I_TA1A, g_pSysInfo->I_TA1B);
-    I_TA1_MAX = fmaxf(I_TA1_MAX, g_pSysInfo->I_TA1C);
-    V_TV1x_MAX = fmaxf(g_pSysInfo->V_TV1A, g_pSysInfo->V_TV1B);
-    V_TV1x_MAX = fmaxf(V_TV1x_MAX, g_pSysInfo->V_TV1C);
-    Tc_MAX = getMaxCapTemp();
+    float I_TA1_MAX = getI_TA1_MAX();
+    float Tc_MAX = getMaxCapTemp();
 
     if (CheckConditionDurationMet(
             &g_AppMainInfo.satifyT_I_TA_Thl,
@@ -134,29 +153,6 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
     {
         // 线路1段过流取消
         CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OVERLOAD);
-    }
-
-    if (CheckConditionDurationMet(
-            &g_AppMainInfo.satifyT_V_TVx_ov,
-            poll_delta,
-            SECOND_TO_MS(g_pSysInfo->T_V_TVx_ov_SEC),
-            (V_TV1x_MAX > g_pSysInfo->V_TVx_ov_kV)))
-    {
-        // 电容器过压故障触发
-        if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OV))
-        {
-            SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OV);
-            // TODO:MINOR_FAULT_CAPACITOR_OV Event
-        }
-    }
-    else if (CheckConditionDurationMet(
-                 &g_AppMainInfo.satifyT_V_TVx_ov_cancle,
-                 poll_delta,
-                 SECOND_TO_MS(g_pSysInfo->T_V_TVx_ov_SEC),
-                 (V_TV1x_MAX < g_pSysInfo->V_TVx_ov_kV)))
-    {
-        // 电容器过压故障取消
-        CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OV);
     }
 
     if (CheckConditionDurationMet(

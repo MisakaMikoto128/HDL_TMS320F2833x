@@ -340,10 +340,3 @@ float getMinCapTemp()
   return Tc_MIN;
 }
 
-float getI_TA1_MAX()
-{
-  float I_TA1_MAX = 0;
-  I_TA1_MAX = fmaxf(g_pSysInfo->I_TA1A, g_pSysInfo->I_TA1B);
-  I_TA1_MAX = fmaxf(I_TA1_MAX, g_pSysInfo->I_TA1C);
-  return I_TA1_MAX;
-}

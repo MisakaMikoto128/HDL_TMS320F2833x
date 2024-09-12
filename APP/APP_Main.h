@@ -281,7 +281,6 @@ extern "C"
     void APP_Main_Switch_VCB_Trigger_Mode();
     float getMaxCapTemp();
     float getMinCapTemp();
-    float getI_TA1_MAX();
 
     void BackGroundTask();
     void BackGroundTask_WhenInSRCPoll();

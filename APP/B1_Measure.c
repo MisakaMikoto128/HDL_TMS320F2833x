@@ -70,3 +70,19 @@ void B1_Measure_Poll()
         }
     }
 }
+
+float getI_TA1_MAX()
+{
+  float I_TA1_MAX = 0;
+  I_TA1_MAX = fmaxf(g_pSysInfo->I_TA1A, g_pSysInfo->I_TA1B);
+  I_TA1_MAX = fmaxf(I_TA1_MAX, g_pSysInfo->I_TA1C);
+  return I_TA1_MAX;
+}
+
+float getV_TV1x_MAX()
+{
+    float V_TV1x_MAX = 0;
+    V_TV1x_MAX = fmaxf(g_pSysInfo->V_TV1A, g_pSysInfo->V_TV1B);
+    V_TV1x_MAX = fmaxf(V_TV1x_MAX, g_pSysInfo->V_TV1C);
+    return V_TV1x_MAX;
+}

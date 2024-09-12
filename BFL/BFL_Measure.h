@@ -50,6 +50,10 @@ extern "C"
      * @param pMeasure 
      */
     void BFL_Measure_Read(BFL_Measure_t *pMeasure);
+
+    float getI_TA1_MAX();
+
+    float getV_TV1x_MAX();
 #ifdef __cplusplus
 }
 #endif
