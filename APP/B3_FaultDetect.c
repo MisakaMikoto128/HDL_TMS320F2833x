@@ -62,7 +62,7 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
             MS(g_pSysInfo->T_I_TA_quick_oc_MS),
             (I_TA1_MAX > g_pSysInfo->I_TA_quick_oc_A)))
     {
-        // 线路过载直接触发
+        // 线路过速断电流直接触发
         if (EXIST_SERIOUS_FAULT(g_pSysInfo->Serious_Fault2,SERIOUS_FAULT_I_TA_QUICK_OC) || g_pSysInfo->Serious_Fault == false)
         {
             g_pSysInfo->Serious_Fault = true;
