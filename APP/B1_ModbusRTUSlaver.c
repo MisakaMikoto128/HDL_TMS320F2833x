@@ -205,7 +205,7 @@ void SyncSysinfoToModbusReg()
     reg |= ((state) & 0x03) << 4;
     state = BFL_VCB_Get_Setting_State(KM1_SW);
     usRegInputBuf[29] = reg;
-    usRegInputBuf[30] = pSysinfo->I_TA_quick_oc_Fault;
+    usRegInputBuf[30] = pSysinfo->Serious_Fault2;
     usRegInputBuf[31] = pSysinfo->powerOnTimes;
     reg = 0;
     reg |= ((pSysinfo->capTempSensorTransmitConnect) & 0x01) << 0;

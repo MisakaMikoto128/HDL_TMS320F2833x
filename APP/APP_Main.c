@@ -197,7 +197,7 @@ void APP_Main_Clear_All_Fault()
   g_pSysInfo->VTx_A_Breakdown_Fault = SCR_NO_FAULT;
   g_pSysInfo->VTx_B_Breakdown_Fault = SCR_NO_FAULT;
   g_pSysInfo->VTx_C_Breakdown_Fault = SCR_NO_FAULT;
-  g_pSysInfo->I_TA_quick_oc_Fault = 0;
+  g_pSysInfo->Serious_Fault2 = 0;
   APP_Main_NotifyHaveParamNeedToSave();
 }
 

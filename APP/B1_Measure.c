@@ -16,6 +16,7 @@
 #include "HDL_CPU_Time.h"
 #include "HDL_Uart.h"
 #include "APP_Main.h"
+#include <math.h>
 static UsTimer_t g_b1_measure_init_moment = 0;
 
 void B1_Measure_Init()

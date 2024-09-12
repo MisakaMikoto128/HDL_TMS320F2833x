@@ -63,10 +63,10 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
             (I_TA1_MAX > g_pSysInfo->I_TA_quick_oc_A)))
     {
         // 线路过载直接触发
-        if (g_pSysInfo->I_TA_quick_oc_Fault == 0 || g_pSysInfo->Serious_Fault == false)
+        if (EXIST_SERIOUS_FAULT(g_pSysInfo->Serious_Fault2,SERIOUS_FAULT_I_TA_QUICK_OC) || g_pSysInfo->Serious_Fault == false)
         {
             g_pSysInfo->Serious_Fault = true;
-            g_pSysInfo->I_TA_quick_oc_Fault = 1;
+            SET_SERIOUS_FAULT(g_pSysInfo->Serious_Fault2,SERIOUS_FAULT_I_TA_QUICK_OC);
             // TODO:I_TA_quick_oc_Fault Event
         }
     }
@@ -79,20 +79,11 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
             (V_TV1x_MAX > g_pSysInfo->V_TVx_ov_kV)))
     {
         // 电容器过压故障触发
-        if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OV))
+        if (!EXIST_SERIOUS_FAULT(g_pSysInfo->Serious_Fault2, SERIOUS_FAULT_CAPACITOR_OV))
         {
-            SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OV);
-            // TODO:MINOR_FAULT_CAPACITOR_OV Event
+            SET_SERIOUS_FAULT(g_pSysInfo->Serious_Fault2, SERIOUS_FAULT_CAPACITOR_OV);
+            // TODO:SERIOUS_FAULT_CAPACITOR_OV Event
         }
-    }
-    else if (CheckConditionDurationMet(
-                 &g_AppMainInfo.satifyT_V_TVx_ov_cancle,
-                 poll_delta,
-                 SECOND_TO_MS(g_pSysInfo->T_V_TVx_ov_SEC),
-                 (V_TV1x_MAX < g_pSysInfo->V_TVx_ov_kV)))
-    {
-        // 电容器过压故障取消
-        CLEAR_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_CAPACITOR_OV);
     }
 
     return;

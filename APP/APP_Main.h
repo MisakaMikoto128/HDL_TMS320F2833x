@@ -54,9 +54,9 @@ extern "C"
 #define LINE_STATE_STOP 0
 #define LINE_STATE_RUNNING 1
 
-#define SCR_NO_FAULT 0
-#define SCR_FAULT_CAN_NOT_TRIGGER 1
-#define SCR_FAULT_BRANCH_BREAKDOWN 2
+#define SCR_NO_FAULT 0x00
+#define SCR_FAULT_CAN_NOT_TRIGGER 0x01
+#define SCR_FAULT_BRANCH_BREAKDOWN 0x02
 
 // 无故障
 #define MINOR_FAULT_NONE 0x0000
@@ -69,9 +69,9 @@ extern "C"
 // 线路谐振
 #define MINOR_FAULT_LINE_RESONANCE_MASK 0x0004
 #define MINOR_FAULT_LINE_RESONANCE 0x0004
-// 电容器过压
-#define MINOR_FAULT_CAPACITOR_OV_MASK 0x0008
-#define MINOR_FAULT_CAPACITOR_OV 0x0008
+// 保留未定义
+#define MINOR_FAULT_REV1_MASK 0x0008
+#define MINOR_FAULT_REV1 0x0008
 // 电容器过温
 #define MINOR_FAULT_CAPACITOR_OT_MASK 0x0010
 #define MINOR_FAULT_CAPACITOR_OT 0x0010
@@ -85,6 +85,18 @@ extern "C"
 #define SET_MINOR_FAULT(value, mask) (value |= mask)
 #define CLEAR_MINOR_FAULT(value, mask) (value &= ~mask)
 #define EXIST_MINOR_FAULT(value, mask) ((value & mask) == mask)
+
+// 严重故障定义
+// 过速断电流故障
+#define SERIOUS_FAULT_I_TA_QUICK_OC_MASK 0x0001
+#define SERIOUS_FAULT_I_TA_QUICK_OC 0x0001
+// 电容器过压故障
+#define SERIOUS_FAULT_CAPACITOR_OV_MASK 0x0002
+#define SERIOUS_FAULT_CAPACITOR_OV 0x0002
+
+#define SET_SERIOUS_FAULT(value, mask) (value |= mask)
+#define CLEAR_SERIOUS_FAULT(value, mask) (value &= ~mask)
+#define EXIST_SERIOUS_FAULT(value, mask) ((value & mask) == mask)
 
 #define Have_Serious_Fault() (g_pSysInfo->Serious_Fault != 0)
 #define Have_Minor_Fault() (g_pSysInfo->Minor_Fault != 0)
@@ -177,7 +189,7 @@ extern "C"
         uint16_t VTx_A_Breakdown_Fault; // A相晶闸管击穿故障，0:正常 2:击穿
         uint16_t VTx_B_Breakdown_Fault; // B相晶闸管击穿故障，0:正常 2:击穿
         uint16_t VTx_C_Breakdown_Fault; // C相晶闸管击穿故障，0:正常 2:击穿
-        uint16_t I_TA_quick_oc_Fault;   // 线路快速过流故障，0:正常 1:过流
+        uint16_t Serious_Fault2;        // 两个状态的严重故障标志位2
 
         float I_TA_low_thl_A;               // 线路轻载电流触发阈值
         float I_TA_low_thh_A;               // 线路轻载电流恢复阈值
