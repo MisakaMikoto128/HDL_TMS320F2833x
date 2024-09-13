@@ -70,7 +70,7 @@ B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec()
         if (!(QF_State == BFL_VCB_Closed || KM1_State == BFL_VCB_Closed))
         {
             //5000us Period x30 times = 600*5=3000ms
-            BFL_SCRT_Pluse_Transmit(SCRT_ALL, 6000, US(g_pSysInfo->T2_US));
+            BFL_SCRT_Pluse_Transmit(SCRT_ALL, US(g_pSysInfo->T2_MS), US(4000));
             async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback1, &scrtFb);
             // SCRT_Fault = scrtFb;
         }

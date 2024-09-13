@@ -750,7 +750,7 @@ static void BFL_SCRT_Pluse_Transmit_Config(EPWM_INFO *pEpwmx_info,
  *
  * @param scrt 输出通道。
  * @param _uiPluseNum
- * @param _uiPluseWidth 单位us，范围[4,5000]
+ * @param _uiPluseWidth 单位us，范围[4,5000]，电平模式下该参数无效。
  */
 void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
                              uint16_t _uiPluseWidth)

@@ -77,7 +77,7 @@ void Config_Default_Parameter()
   g_pSysInfo->Tc_ot = 80;
   g_pSysInfo->T_Tc_ot_SEC = SEC(10);
   g_pSysInfo->T1_MS = MS(1500);
-  g_pSysInfo->T2_US = US(4000);
+  g_pSysInfo->T2_MS = MS(3000);
   g_pSysInfo->T3_MS = MS(5);
   g_pSysInfo->T4_MS = MS(20);
   g_pSysInfo->V_SCR_NORMAL_DIFF_kV = 0.1f;

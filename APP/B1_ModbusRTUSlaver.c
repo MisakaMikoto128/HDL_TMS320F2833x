@@ -129,7 +129,7 @@ void SyncSysinfoToModbusReg()
     usRegHoldingBuf[35] = pSysinfo->Tc_ot;
     usRegHoldingBuf[36] = pSysinfo->T_Tc_ot_SEC;
     usRegHoldingBuf[37] = pSysinfo->T1_MS;
-    usRegHoldingBuf[38] = pSysinfo->T2_US;
+    usRegHoldingBuf[38] = pSysinfo->T2_MS;
     usRegHoldingBuf[39] = pSysinfo->T3_MS;
     usRegHoldingBuf[40] = pSysinfo->T4_MS;
     usRegHoldingBuf[41] = FLOAT_TO_UINT16_SCALE(pSysinfo->V_SCR_NORMAL_DIFF_kV, 1000);
@@ -298,7 +298,7 @@ void SyncModbusRegToSysinfo()
     pSysinfo->Tc_ot = usRegHoldingBuf[35];
     pSysinfo->T_Tc_ot_SEC = usRegHoldingBuf[36];
     pSysinfo->T1_MS = usRegHoldingBuf[37];
-    pSysinfo->T2_US = usRegHoldingBuf[38];
+    pSysinfo->T2_MS = usRegHoldingBuf[38];
     pSysinfo->T3_MS = usRegHoldingBuf[39];
     pSysinfo->T4_MS = usRegHoldingBuf[40];
     pSysinfo->V_SCR_NORMAL_DIFF_kV = (float)usRegHoldingBuf[41] * 0.001f;
@@ -343,6 +343,9 @@ void MBCmdHandler(uint16_t cmdReg)
 切换VCB触发模式 13
 设置当前事件记录读取目录编号	14	R1,R2为事件目录编号的高16bit和低16bit
 清空所有事件记录	15	懒惰删除所有事件记录
+单此发送晶闸管导通指令A相	16
+单此发送晶闸管导通指令B相	17
+单此发送晶闸管导通指令C相	18
 */
 #define MB_CMD_NONE 0
 #define MB_SRC_SCRT_PLUSE_TRANSMIT 8
@@ -353,11 +356,23 @@ void MBCmdHandler(uint16_t cmdReg)
 #define MB_CMD_SWITCH_VCB_TRIGGER_MODE 13
 #define MB_CMD_SET_EVENT_RECORD_READ_IDX 14
 #define MB_CMD_CLEAR_ALL_EVENT_RECORD 15
+#define MB_CMD_SCR_PLUSE_TRANSMIT_A 16
+#define MB_CMD_SCR_PLUSE_TRANSMIT_B 17
+#define MB_CMD_SCR_PLUSE_TRANSMIT_C 18
 
     switch (cmdReg)
     {
     case MB_SRC_SCRT_PLUSE_TRANSMIT:
-        BFL_SCRT_Pluse_Transmit(SCRT_ALL, 6000, US(g_pSysInfo->T2_US));
+        BFL_SCRT_Pluse_Transmit(SCRT_ALL, US(g_pSysInfo->T2_MS), US(4000));
+        break;
+    case MB_CMD_SCR_PLUSE_TRANSMIT_A:
+        BFL_SCRT_Pluse_Transmit(SCRTA, US(g_pSysInfo->T2_MS), US(4000));
+        break;
+    case MB_CMD_SCR_PLUSE_TRANSMIT_B:
+        BFL_SCRT_Pluse_Transmit(SCRTB, US(g_pSysInfo->T2_MS), US(4000));
+        break;
+    case MB_CMD_SCR_PLUSE_TRANSMIT_C:
+        BFL_SCRT_Pluse_Transmit(SCRTC, US(g_pSysInfo->T2_MS), US(4000));
         break;
     case MB_CMD_SERIOUS_FAUIL_CLEAR:
         APP_Main_Clear_All_Fault();
@@ -375,14 +390,14 @@ void MBCmdHandler(uint16_t cmdReg)
         APP_Main_Switch_VCB_Trigger_Mode();
         break;
     case MB_CMD_SET_EVENT_RECORD_READ_IDX:
-        {
-            uint16_t R1 = usRegHoldingBuf[45];
-            uint16_t R2 = usRegHoldingBuf[46];
+    {
+        uint16_t R1 = usRegHoldingBuf[45];
+        uint16_t R2 = usRegHoldingBuf[46];
 
-            uint32_t idx = ((uint32_t)R1 << 16) | R2;
-            B2_EventRecord_Set_ReadIdx(idx);
-        }
-        break;
+        uint32_t idx = ((uint32_t)R1 << 16) | R2;
+        B2_EventRecord_Set_ReadIdx(idx);
+    }
+    break;
     case MB_CMD_CLEAR_ALL_EVENT_RECORD:
         B2_EventRecord_Clear_All();
         break;

@@ -201,7 +201,7 @@ extern "C"
         float Tc_ot;                        // 电容器过温阈值
         uint16_t T_Tc_ot_SEC;               // 电容器过温恢复延时
         uint16_t T1_MS;                     // VCB控制信号维持时间，单位ms
-        uint16_t T2_US;                     // 晶闸管触发信号脉宽
+        uint16_t T2_MS;                     // 晶闸管触发信号持续时间（5ms的整数倍），单位ms
         uint16_t T3_MS;                     // 晶闸管状态反馈信号生效时间
         uint16_t T4_MS;                     // 晶闸管触发导通到控制VBC延时
         float V_SCR_NORMAL_DIFF_kV;         // 晶闸管在电容器投入工作期间的正常压差
