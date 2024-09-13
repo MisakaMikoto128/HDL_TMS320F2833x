@@ -29,9 +29,11 @@ typedef struct
 void InitEPwm1Example(void);
 void InitEPwm2Example(void);
 void InitEPwm3Example(void);
+void InitEPwm4Example(void);
 __interrupt void epwm1_isr(void);
 __interrupt void epwm2_isr(void);
 __interrupt void epwm3_isr(void);
+__interrupt void epwm4_isr(void);
 
 //
 // Globals
@@ -39,6 +41,7 @@ __interrupt void epwm3_isr(void);
 EPWM_INFO epwm1_info;
 EPWM_INFO epwm2_info;
 EPWM_INFO epwm3_info;
+EPWM_INFO epwm4_info;
 
 #define SCR_LEVEL_MODE 0
 #define SCR_PWM_MODE 1
@@ -138,11 +141,6 @@ void mInitEPwm3Gpio(void)
 #endif
 }
 
-// GPIO0,1,2,3,4,5
-#define SCRT_ALL_Set() (GpioDataRegs.GPASET.all |= 0x0000003F)
-#define SCRT_ALL_Clear() (GpioDataRegs.GPACLEAR.all |= 0x0000003F)
-#define SCRT_ALL_Toggle() (GpioDataRegs.GPATOGGLE.all |= 0x0000003F)
-
 //
 // Defines that keep track of which way the compare value is moving
 //
@@ -156,6 +154,23 @@ void mInitEPwm3Gpio(void)
 #define SCRR3A_IsSet() (GpioDataRegs.GPADAT.bit.GPIO12)
 #define SCRR3B_IsSet() (GpioDataRegs.GPADAT.bit.GPIO13)
 #define SCRA_ALL_Read() ((GpioDataRegs.GPADAT.all & 0x00003F00) >> 8)
+
+// GPIO0,1,2,3,4,5
+#define SCRT_ALL_Set() (GpioDataRegs.GPASET.all |= 0x0000003F)
+#define SCRT_ALL_Clear() (GpioDataRegs.GPACLEAR.all |= 0x0000003F)
+#define SCRT_ALL_Toggle() (GpioDataRegs.GPATOGGLE.all |= 0x0000003F)
+// GPIO0,1
+#define SCRT1_Set() (GpioDataRegs.GPASET.all |= 0x00000003)
+#define SCRT1_Clear() (GpioDataRegs.GPACLEAR.all |= 0x00000003)
+#define SCRT1_Toggle() (GpioDataRegs.GPATOGGLE.all |= 0x00000003)
+// GPIO2,3
+#define SCRT2_Set() (GpioDataRegs.GPASET.all |= 0x0000000C)
+#define SCRT2_Clear() (GpioDataRegs.GPACLEAR.all |= 0x0000000C)
+#define SCRT2_Toggle() (GpioDataRegs.GPATOGGLE.all |= 0x0000000C)
+// GPIO4,5
+#define SCRT3_Set() (GpioDataRegs.GPASET.all |= 0x00000030)
+#define SCRT3_Clear() (GpioDataRegs.GPACLEAR.all |= 0x00000030)
+#define SCRT3_Toggle() (GpioDataRegs.GPATOGGLE.all |= 0x00000030)
 
 /**
  * @brief SCR输入输出通道初始化。
@@ -223,6 +238,7 @@ void BFL_SCR_Init()
     PieVectTable.EPWM1_INT = &epwm1_isr;
     PieVectTable.EPWM2_INT = &epwm2_isr;
     PieVectTable.EPWM3_INT = &epwm3_isr;
+    PieVectTable.EPWM4_INT = &epwm4_isr;
     EDIS; // This is needed to disable write to EALLOW protected registers
 
     //
@@ -302,6 +318,7 @@ uint32_t BFL_SCRR_Have_Signal(BFL_SCRR_t scrr)
     (9375000ULL / (1000 / EPWM1_PWM_PERIOD) - 1) // 5ms Period，max 6
 #define EPWM1_TIMER_CMPA_MIN 50
 #define EPWM123_ENABLE_SYNC 0
+#define EPWM456_ENABLE_SYNC 0
 //
 // InitEPwm1Example -
 //
@@ -517,6 +534,69 @@ void InitEPwm3Example(void)
 }
 
 //
+// InitEPwm4Example -
+//
+void InitEPwm4Example(void)
+{
+    volatile struct EPWM_REGS *EPwmxRegsHandle = &EPwm4Regs;
+    EPWM_INFO *pEpwmx_info = &epwm4_info;
+    //
+    // Setup TBCLK
+    //
+    EPwmxRegsHandle->TBCTL.bit.CTRMODE = TB_FREEZE; // Count up
+    // PWM period = (TBPRD + 1 ) × TTBCLK Up-Count mode
+    EPwmxRegsHandle->TBPRD = EPWM1_TIMER_TBPRD; // Set timer period
+
+#if EPWM456_ENABLE_SYNC == 1
+    EPwmxRegsHandle->TBCTL.bit.SYNCOSEL = TB_SYNC_IN;                // Sync down-stream module
+    EPwmxRegsHandle->TBCTL.bit.PHSDIR = TB_UP;                       // Phase Direction Down
+    EPwmxRegsHandle->TBCTL.bit.PHSEN = TB_ENABLE;                    // Disable phase loading
+    EPwmxRegsHandle->TBPHS.half.TBPHS = (EPWM1_TIMER_TBPRD * 2 / 3); // Phase is 0
+    EPwmxRegsHandle->TBCTL.bit.PRDLD = TB_SHADOW;
+#else
+    EPwmxRegsHandle->TBCTL.bit.PHSEN =
+        TB_DISABLE;                             // Disable phase loading Master module
+    EPwmxRegsHandle->TBPHS.half.TBPHS = 0x0000; // Phase is 0
+#endif // EPWM456_ENABLE_SYNC
+
+    EPwmxRegsHandle->TBCTR = 0x0000; // Clear counter
+    // TBCLK=SYSCLKOUT/(HSPCLKDIV*CLKDIV):150/(4*4)
+    EPwmxRegsHandle->TBCTL.bit.HSPCLKDIV = TB_DIV4; // Clock ratio to SYSCLKOUT
+    EPwmxRegsHandle->TBCTL.bit.CLKDIV = TB_DIV4;
+
+    //
+    // Setup shadow register load on ZERO
+    //
+    EPwmxRegsHandle->CMPCTL.bit.SHDWAMODE = CC_SHADOW;
+    EPwmxRegsHandle->CMPCTL.bit.SHDWBMODE = CC_SHADOW;
+    EPwmxRegsHandle->CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;
+    EPwmxRegsHandle->CMPCTL.bit.LOADBMODE = CC_CTR_ZERO;
+
+    //
+    // Set Compare values
+    //
+    EPwmxRegsHandle->CMPA.half.CMPA =
+        EPWM1_TIMER_TBPRD >> 1;                     // Set compare A value
+    EPwmxRegsHandle->CMPB = EPWM1_TIMER_TBPRD >> 1; // Set Compare B value
+
+    EPwmx_ActionInit(EPwmxRegsHandle);
+
+    //
+    // Interrupt where we will change the Compare Values
+    //
+    EPwmxRegsHandle->ETSEL.bit.INTSEL = ET_CTR_PRD; // Select INT on Zero event
+    EPwmxRegsHandle->ETPS.bit.INTPRD = ET_1ST;      // Generate INT on 3rd event
+    //   EPwm1RegsHandle->ETSEL.bit.INTEN = 1;           // Enable INT
+    EPwmxRegsHandle->ETSEL.bit.INTEN = 0; // Disable INT
+
+    pEpwmx_info->INT_CNT = 0;
+    pEpwmx_info->PLUSE_NUM = 0;
+    pEpwmx_info->T_INT = EPWM1_PWM_PERIOD;
+    pEpwmx_info->busy = 0;
+    pEpwmx_info->EPwmRegHandle = EPwmxRegsHandle;
+}
+
+//
 // epwm1_isr -
 //
 __interrupt void epwm1_isr(void)
@@ -538,7 +618,7 @@ __interrupt void epwm1_isr(void)
         pEpwmx_info->busy = 0;
 
 #if SRC_USING_PWM == SCR_LEVEL_MODE
-    SCRT_ALL_Set();
+        SCRT1_Set();
 #endif
     }
     pEpwmx_info->INT_CNT++;
@@ -568,6 +648,9 @@ __interrupt void epwm2_isr(void)
         EPwmRegHandle->TBCTL.bit.CTRMODE = TB_FREEZE; // freeze count
         EPwmRegHandle->ETSEL.bit.INTEN = 0;           // Disable INT
         pEpwmx_info->busy = 0;
+#if SRC_USING_PWM == SCR_LEVEL_MODE
+        SCRT2_Set();
+#endif
     }
     pEpwmx_info->INT_CNT++;
 
@@ -596,6 +679,40 @@ __interrupt void epwm3_isr(void)
         EPwmRegHandle->TBCTL.bit.CTRMODE = TB_FREEZE; // freeze count
         EPwmRegHandle->ETSEL.bit.INTEN = 0;           // Disable INT
         pEpwmx_info->busy = 0;
+#if SRC_USING_PWM == SCR_LEVEL_MODE
+        SCRT3_Set();
+#endif
+    }
+    pEpwmx_info->INT_CNT++;
+
+    //
+    // Acknowledge this interrupt to receive more interrupts from group 3
+    //
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP3;
+}
+
+//
+// epwm4_isr -
+//
+__interrupt void epwm4_isr(void)
+{
+    EPWM_INFO *pEpwmx_info = &epwm4_info;
+
+    volatile struct EPWM_REGS *EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
+    //
+    // Clear INT flag for this timer
+    //
+    EPwmRegHandle->ETCLR.bit.INT = 1;
+
+    if (pEpwmx_info->INT_CNT >= pEpwmx_info->PLUSE_NUM)
+    {
+        EPwmRegHandle->TBCTR = 0x0000;                // Clear counter
+        EPwmRegHandle->TBCTL.bit.CTRMODE = TB_FREEZE; // freeze count
+        EPwmRegHandle->ETSEL.bit.INTEN = 0;           // Disable INT
+        pEpwmx_info->busy = 0;
+#if SRC_USING_PWM == SCR_LEVEL_MODE
+        SCRT_ALL_Set();
+#endif
     }
     pEpwmx_info->INT_CNT++;
 
@@ -609,8 +726,8 @@ static void BFL_SCRT_Pluse_Transmit_Config(EPWM_INFO *pEpwmx_info,
                                            uint16_t _uiPluseNum,
                                            uint16_t _uiPluseWidth)
 {
-    _disable_interrupts();
     volatile struct EPWM_REGS *EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
+    _disable_interrupts();
     pEpwmx_info->INT_CNT = 0;
     pEpwmx_info->PLUSE_NUM = _uiPluseNum - 1;
     pEpwmx_info->busy = 1;
@@ -653,25 +770,21 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
     {
         _uiPluseWidth = EPWM1_TIMER_CMPA_MIN;
     }
-
-    EPWM_INFO *pEpwmx_info = NULL;
+#if SRC_USING_PWM == SCR_PWM_MODE
     switch (scrt)
     {
     case SCRTA:
-        pEpwmx_info = &epwm1_info;
-        BFL_SCRT_Pluse_Transmit_Config(pEpwmx_info, _uiPluseNum, _uiPluseWidth);
+        BFL_SCRT_Pluse_Transmit_Config(&epwm1_info, _uiPluseNum, _uiPluseWidth);
         break;
     case SCRTB:
-        pEpwmx_info = &epwm2_info;
-        BFL_SCRT_Pluse_Transmit_Config(pEpwmx_info, _uiPluseNum, _uiPluseWidth);
+        BFL_SCRT_Pluse_Transmit_Config(&epwm2_info, _uiPluseNum, _uiPluseWidth);
         break;
     case SCRTC:
-        pEpwmx_info = &epwm3_info;
-        BFL_SCRT_Pluse_Transmit_Config(pEpwmx_info, _uiPluseNum, _uiPluseWidth);
+        BFL_SCRT_Pluse_Transmit_Config(&epwm3_info, _uiPluseNum, _uiPluseWidth);
         break;
     case SCRT_ALL:
     {
-#if SRC_USING_PWM == SCR_PWM_MODE
+        EPWM_INFO *pEpwmx_info = NULL;
         volatile struct EPWM_REGS *EPwmRegHandle = NULL;
         _disable_interrupts();
         pEpwmx_info = &epwm1_info;
@@ -727,37 +840,34 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
         EPwm2Regs.ETSEL.bit.INTEN = 1;             // Enable INT
         EPwm1Regs.ETSEL.bit.INTEN = 1;             // Enable INT
         EPwm3Regs.ETSEL.bit.INTEN = 1;             // Enable INT
-#elif SRC_USING_PWM == SCR_LEVEL_MODE
-        SCRT_ALL_Clear();
-
-        _uiPluseWidth = 2500;
-        volatile struct EPWM_REGS *EPwmRegHandle = NULL;
-        _disable_interrupts();
-        pEpwmx_info = &epwm1_info;
-        EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
-        pEpwmx_info->INT_CNT = 0;
-        pEpwmx_info->PLUSE_NUM = _uiPluseNum - 1;
-        pEpwmx_info->busy = 1;
-        _enable_interrupts();
-        // 最大值为5000 + 1
-        // us。为5000us时，输出的脉冲宽度为5000us，会有一个非常小的脉冲，当为5000 +
-        // 1时，输出的脉冲宽度为5000us。
-        //(_uiPluseWidth / (EPWM1_PWM_PERIOD * 1000)) * EPWM1_TIMER_TBPRD;
-        EPwmRegHandle->CMPA.half.CMPA = EPWM1_TIMER_CMPA_MIN;
-        EPwmRegHandle->CMPB = ((uint32_t)_uiPluseWidth * EPWM1_TIMER_TBPRD /
-                               (EPWM1_PWM_PERIOD * 1000ULL));
-        EPwmRegHandle->TBCTR = 0x0000; // Clear counter
-        EPwm1Regs.TBCTL.bit.CTRMODE = TB_COUNT_UP; // Up count mode
-        EPwm1Regs.ETSEL.bit.INTEN = 1;             // Enable INT
-#endif
+        break;
     }
-    break;
     default:
-        return;
+        break;
     }
+#elif SRC_USING_PWM == SCR_LEVEL_MODE
+    switch (scrt)
+    {
+    case SCRTA:
+        SCRT1_Clear();
+        BFL_SCRT_Pluse_Transmit_Config(&epwm1_info, _uiPluseNum, 2500);
+        break;
+    case SCRTB:
+        SCRT2_Clear();
+        BFL_SCRT_Pluse_Transmit_Config(&epwm2_info, _uiPluseNum, 2500);
+        break;
+    case SCRTC:
+        SCRT3_Clear();
+        BFL_SCRT_Pluse_Transmit_Config(&epwm3_info, _uiPluseNum, 2500);
+        break;
+    case SCRT_ALL:
+        SCRT_ALL_Clear();
+        BFL_SCRT_Pluse_Transmit_Config(&epwm4_info, _uiPluseNum, 2500);
+    default:
+        break;
+    }
+#endif
 }
-
-
 /**
  * @brief 输出脉冲。
  *
