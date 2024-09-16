@@ -13,7 +13,7 @@
 #include "mtime.h"
 #include "math.h"
 #include "BFL_Measure.h"
-
+#include "B2_EventRecord.h"
 void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
 {
     // if (CheckConditionDurationMet(
@@ -68,6 +68,7 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
             g_pSysInfo->Serious_Fault = true;
             SET_SERIOUS_FAULT(g_pSysInfo->Serious_Fault2,SERIOUS_FAULT_I_TA_QUICK_OC);
             // TODO:I_TA_quick_oc_Fault Event
+            B2_EventRecord_Write(EVENT_SERIOUS_FAULT_SYSTEM_OVERSPEED_BREAKER_CURRENT);
         }
     }
 
@@ -83,6 +84,7 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
         {
             SET_SERIOUS_FAULT(g_pSysInfo->Serious_Fault2, SERIOUS_FAULT_CAPACITOR_OV);
             // TODO:SERIOUS_FAULT_CAPACITOR_OV Event
+            B2_EventRecord_Write(EVENT_MINOR_FAULT_CAPACITOR_OVERTEMPERATURE_TRIGGER);
         }
     }
 
@@ -111,6 +113,7 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
         {
             SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_LIGHT_LOAD);
             // TODO:MINOR_FAULT_LINE_LIGHT_LOAD Event
+            B2_EventRecord_Write(EVENT_MINOR_FAULT_LINE_LIGHT_LOAD_TRIGGER);
         }
     }
     else if (CheckConditionDurationMet(
@@ -134,6 +137,7 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
         {
             SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OVERLOAD);
             // TODO:MINOR_FAULT_LINE_OVERLOAD Event
+            B2_EventRecord_Write(EVENT_MINOR_FAULT_LINE_STAGE_1_OVERCURRENT_TRIGGER);
         }
     }
     else if (CheckConditionDurationMet(
