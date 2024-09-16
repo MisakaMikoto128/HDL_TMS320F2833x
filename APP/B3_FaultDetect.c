@@ -182,6 +182,7 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
         if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_UNDERVOLTAGE))
         {
             SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_UNDERVOLTAGE);
+            B2_EventRecord_Write(EVENT_MINOR_FAULT_SYSTEM_UNDERVOLTAGE_TRIGGER);
         }
     }
     else if (CheckConditionDurationMet(
