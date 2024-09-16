@@ -133,10 +133,6 @@ bool B2_EventRecord_Write(B2_EventCode_t eventCode)
 
     bool ret = false;
     ret = B2_EventRecord_Write_Generic(B2_EventRecord_Create(&eventRecord, eventCode, g_B2_EventRecord_WriteIdx, g_pSysInfo));
-    if (ret)
-    {
-        g_B2_EventRecord_WriteIdx++;
-    }
 
     return ret;
 }
@@ -221,7 +217,7 @@ bool B2_EventRecord_Write_RawData(B2_EventRecord_t *eventRecord)
         return false;
     }
 
-    // Step 2. 检查是第一次写入这个扇区，如果是，那么先擦除这个扇区
+    // Step 2. 检查是否第一次写入这个扇区，如果是，那么先擦除这个扇区
     uint32_t address = B2_EVENTRECORD_SECTOR_START * W25Q128_SECTOR_SIZE + eventRecord->eventID * B2_EVENTRECORD_ENCODE_SIZE_FOR_STORE;
     if (address % W25Q128_SECTOR_SIZE == 0)
     {
