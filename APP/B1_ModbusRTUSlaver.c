@@ -363,16 +363,16 @@ void MBCmdHandler(uint16_t cmdReg)
     switch (cmdReg)
     {
     case MB_SRC_SCRT_PLUSE_TRANSMIT:
-        BFL_SCRT_Pluse_Transmit(SCRT_ALL, US(g_pSysInfo->T2_MS), US(4000));
+        BFL_SCRT_Pluse_Transmit(SCRT_ALL, MS(g_pSysInfo->T2_MS), US(4000));
         break;
     case MB_CMD_SCR_PLUSE_TRANSMIT_A:
-        BFL_SCRT_Pluse_Transmit(SCRTA, US(g_pSysInfo->T2_MS), US(4000));
+        BFL_SCRT_Pluse_Transmit(SCRTA, MS(g_pSysInfo->T2_MS), US(4000));
         break;
     case MB_CMD_SCR_PLUSE_TRANSMIT_B:
-        BFL_SCRT_Pluse_Transmit(SCRTB, US(g_pSysInfo->T2_MS), US(4000));
+        BFL_SCRT_Pluse_Transmit(SCRTB, MS(g_pSysInfo->T2_MS), US(4000));
         break;
     case MB_CMD_SCR_PLUSE_TRANSMIT_C:
-        BFL_SCRT_Pluse_Transmit(SCRTC, US(g_pSysInfo->T2_MS), US(4000));
+        BFL_SCRT_Pluse_Transmit(SCRTC, MS(g_pSysInfo->T2_MS), US(4000));
         break;
     case MB_CMD_SERIOUS_FAUIL_CLEAR:
         APP_Main_Clear_All_Fault();
