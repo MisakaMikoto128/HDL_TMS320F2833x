@@ -29,11 +29,11 @@ typedef struct
 void InitEPwm1Example(void);
 void InitEPwm2Example(void);
 void InitEPwm3Example(void);
-void InitEPwm4Example(void);
+void InitEPwm5Example(void);
 __interrupt void epwm1_isr(void);
 __interrupt void epwm2_isr(void);
 __interrupt void epwm3_isr(void);
-__interrupt void epwm4_isr(void);
+__interrupt void epwm5_isr(void);
 
 //
 // Globals
@@ -41,7 +41,7 @@ __interrupt void epwm4_isr(void);
 EPWM_INFO epwm1_info;
 EPWM_INFO epwm2_info;
 EPWM_INFO epwm3_info;
-EPWM_INFO epwm4_info;
+EPWM_INFO epwm5_info;
 
 #define SCR_LEVEL_MODE 0
 #define SCR_PWM_MODE 1
@@ -178,6 +178,16 @@ void mInitEPwm3Gpio(void)
  */
 void BFL_SCR_Init()
 {
+    SCRT_ALL_Set();
+
+    //
+    // For this case just init GPIO pins for ePWM1, ePWM2, ePWM3
+    // These functions are in the DSP2833x_EPwm.c file
+    //
+    mInitEPwm1Gpio();
+    mInitEPwm2Gpio();
+    mInitEPwm3Gpio();
+
     EALLOW;
     // Specifies the sampling period for pins GPIO8 to GPIO15 with Sampling Period
     // = TSYSCLKOUT
@@ -223,14 +233,6 @@ void BFL_SCR_Init()
     EDIS;
 
     //
-    // For this case just init GPIO pins for ePWM1, ePWM2, ePWM3
-    // These functions are in the DSP2833x_EPwm.c file
-    //
-    mInitEPwm1Gpio();
-    mInitEPwm2Gpio();
-    mInitEPwm3Gpio();
-
-    //
     // Interrupts that are used in this example are re-mapped to
     // ISR functions found within this file.
     //
@@ -238,7 +240,7 @@ void BFL_SCR_Init()
     PieVectTable.EPWM1_INT = &epwm1_isr;
     PieVectTable.EPWM2_INT = &epwm2_isr;
     PieVectTable.EPWM3_INT = &epwm3_isr;
-    PieVectTable.EPWM4_INT = &epwm4_isr;
+    PieVectTable.EPWM5_INT = &epwm5_isr;
     EDIS; // This is needed to disable write to EALLOW protected registers
 
     //
@@ -251,6 +253,7 @@ void BFL_SCR_Init()
     InitEPwm1Example();
     InitEPwm2Example();
     InitEPwm3Example();
+    InitEPwm5Example();
 
     EALLOW;
     SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC = 1;
@@ -271,6 +274,7 @@ void BFL_SCR_Init()
     PieCtrlRegs.PIEIER3.bit.INTx1 = 1;
     PieCtrlRegs.PIEIER3.bit.INTx2 = 1;
     PieCtrlRegs.PIEIER3.bit.INTx3 = 1;
+    PieCtrlRegs.PIEIER3.bit.INTx5 = 1;
 }
 
 /**
@@ -534,12 +538,12 @@ void InitEPwm3Example(void)
 }
 
 //
-// InitEPwm4Example -
+// InitEPwm5Example -
 //
-void InitEPwm4Example(void)
+void InitEPwm5Example(void)
 {
-    volatile struct EPWM_REGS *EPwmxRegsHandle = &EPwm4Regs;
-    EPWM_INFO *pEpwmx_info = &epwm4_info;
+    volatile struct EPWM_REGS *EPwmxRegsHandle = &EPwm5Regs;
+    EPWM_INFO *pEpwmx_info = &epwm5_info;
     //
     // Setup TBCLK
     //
@@ -692,11 +696,11 @@ __interrupt void epwm3_isr(void)
 }
 
 //
-// epwm4_isr -
+// epwm5_isr -
 //
-__interrupt void epwm4_isr(void)
+__interrupt void epwm5_isr(void)
 {
-    EPWM_INFO *pEpwmx_info = &epwm4_info;
+    EPWM_INFO *pEpwmx_info = &epwm5_info;
 
     volatile struct EPWM_REGS *EPwmRegHandle = pEpwmx_info->EPwmRegHandle;
     //
@@ -846,6 +850,14 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
         break;
     }
 #elif SRC_USING_PWM == SCR_LEVEL_MODE
+    //电平模式下_uiPluseNum代表脉冲持续时间
+    _uiPluseNum = _uiPluseNum / EPWM1_PWM_PERIOD;
+    
+    if(_uiPluseNum == 0)
+    {
+        _uiPluseNum = 1;
+    }
+
     switch (scrt)
     {
     case SCRTA:
@@ -862,7 +874,7 @@ void BFL_SCRT_Pluse_Transmit(BFL_SCRT_t scrt, uint16_t _uiPluseNum,
         break;
     case SCRT_ALL:
         SCRT_ALL_Clear();
-        BFL_SCRT_Pluse_Transmit_Config(&epwm4_info, _uiPluseNum, 2500);
+        BFL_SCRT_Pluse_Transmit_Config(&epwm5_info, _uiPluseNum, 2500);
     default:
         break;
     }
