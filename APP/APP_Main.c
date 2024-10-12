@@ -247,8 +247,12 @@ void BackGroundTask()
   B1_CapacitanceTemperatureMeasure_Poll();
   B1_ModbusRTUSlaver_Poll();
   B1_Measure_Poll();
-  B0_DeltaPoll(poll_delta, B1_SysModeGet_DeltaPoll(poll_delta);
-               B1_VCBStatusGet_DeltaPoll(poll_delta););
+  B0_DeltaPoll(poll_delta, 
+                B1_SysModeGet_DeltaPoll(poll_delta);
+                B1_VCBStatusGet_DeltaPoll(poll_delta);
+                B3_Check_Minor_Fault_Exist(poll_delta);
+                B3_Check_SCR_Serious_Fault(poll_delta);
+               );
   APP_Main_SysinfoSavePoll();
   B3_RTUPush_Poll();
   // B2_CmdBypassCapacitors_Test();
@@ -268,11 +272,15 @@ void BackGroundTask()
 void BackGroundTask_WhenInSRCPoll()
 {
   HDL_IWDG_Feed();
-  B1_CapacitanceTemperatureMeasure_Poll();
-  B1_ModbusRTUSlaver_Poll();
+  // B1_CapacitanceTemperatureMeasure_Poll();
+  // B1_ModbusRTUSlaver_Poll();
   B1_Measure_Poll();
-  B0_DeltaPoll(poll_delta, B1_SysModeGet_DeltaPoll(poll_delta);
-               B1_VCBStatusGet_DeltaPoll(poll_delta););
+  B0_DeltaPoll(poll_delta, 
+                B1_SysModeGet_DeltaPoll(poll_delta);
+                B1_VCBStatusGet_DeltaPoll(poll_delta);
+                B3_Check_Minor_Fault_Exist(poll_delta);
+                B3_Check_SCR_Serious_Fault(poll_delta);
+               );
 }
 
 // 正常运行
