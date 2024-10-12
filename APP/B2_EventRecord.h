@@ -59,7 +59,7 @@ extern "C"
     11	轻微故障线路轻载取消
     12	轻微故障线路1段过流触发
     13	轻微故障线路1段过流取消
-    14	轻微故障电容器过压故障触发
+    14	严重故障电容器过压故障触发
     15	轻微故障电容器过压故障取消
     16	轻微故障电容器过温故障触发
     17	轻微故障电容器过温故障取消
@@ -95,6 +95,10 @@ extern "C"
         EVENT_MINOR_FAULT_SYSTEM_OVERVOLTAGE_TRIGGER,
         EVENT_MINOR_FAULT_SYSTEM_OVERVOLTAGE_CANCEL,
         EVENT_SERIOUS_FAULT_CLEAR_EVENT,
+        EVENT_SERIOUS_FAULT_RES1,
+        EVENT_SERIOUS_FAULT_RES2,
+        EVENT_SERIOUS_FAULT_RES3,
+        EVENT_SERIOUS_FAULT_RES4,
         B2_EVENT_RECORD_EVENT_NUM,
     } B2_EventCode_t;
 
