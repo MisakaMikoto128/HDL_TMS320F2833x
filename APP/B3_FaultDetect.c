@@ -80,11 +80,12 @@ void B3_Check_SCR_Serious_Fault(uint32_t poll_delta)
             (V_TV1x_MAX > g_pSysInfo->V_TVx_ov_kV)))
     {
         // 电容器过压故障触发
-        if (!EXIST_SERIOUS_FAULT(g_pSysInfo->Serious_Fault2, SERIOUS_FAULT_CAPACITOR_OV))
+        if ((!EXIST_SERIOUS_FAULT(g_pSysInfo->Serious_Fault2, SERIOUS_FAULT_CAPACITOR_OV))  || g_pSysInfo->Serious_Fault == false)
         {
+            g_pSysInfo->Serious_Fault = true;
             SET_SERIOUS_FAULT(g_pSysInfo->Serious_Fault2, SERIOUS_FAULT_CAPACITOR_OV);
             // TODO:SERIOUS_FAULT_CAPACITOR_OV Event
-            B2_EventRecord_Write(EVENT_MINOR_FAULT_CAPACITOR_OVERTEMPERATURE_TRIGGER);
+            B2_EventRecord_Write(EVENT_MINOR_FAULT_CAPACITOR_OVERVOLTAGE_TRIGGER);
         }
     }
 
