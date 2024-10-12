@@ -16,6 +16,7 @@
 #include "mtime.h"
 #include "period_query.h"
 #include <stddef.h>
+#include "B2_EventRecord.h"
 
 #define FUALT_LEVEL_NO_FAULT 0
 #define FUALT_LEVEL_MINOR_FAULT 1
@@ -37,7 +38,7 @@ static void async_delay_callback1(void *arg)
     uint32_t haveSignal = BFL_SCRR_Have_Signal(SCRR_ALL);
     uint32_t haveFault = (~haveSignal) & BFL_SCR_SIGNAL_MASK;
     *scrtFb |= haveFault;
-    // BackGroundTask_WhenInSRCPoll();
+    BackGroundTask_WhenInSRCPoll();
 }
 
 static void async_delay_callback2(void *arg)
@@ -170,11 +171,15 @@ void B2_CmdBypassCapacitors_Exec_Solution()
             if (result.QF_Fault != BFL_VBC_NO_FAULT)
             {
                 g_pSysInfo->QF_Fault = result.QF_Fault;
+
+                B2_EventRecord_Write(EVENT_SERIOUS_FAULT_RES1);
             }
 
             if (result.KM1_Fault != BFL_VBC_NO_FAULT)
             {
                 g_pSysInfo->KM1_Fault = result.KM1_Fault;
+
+                B2_EventRecord_Write(EVENT_SERIOUS_FAULT_RES2);
             }
 
             g_pSysInfo->SCRT_Fault |= result.SCRT_Fault;

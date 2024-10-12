@@ -14,6 +14,8 @@
 #include "async_delay.h"
 #include "mtime.h"
 #include <stddef.h>
+#include "B2_EventRecord.h"
+
 #define FUALT_LEVEL_NO_FAULT 0
 #define FUALT_LEVEL_MINOR_FAULT 1
 #define FUALT_LEVEL_SERIOUS_FAULT 2
@@ -150,11 +152,15 @@ void B2_CmdMakeCapacitorsWork_Exec_Solution()
       if (result.QF_Fault != BFL_VBC_NO_FAULT)
       {
         g_pSysInfo->QF_Fault = result.QF_Fault;
+
+        B2_EventRecord_Write(EVENT_SERIOUS_FAULT_RES1);
       }
 
       if (result.KM1_Fault != BFL_VBC_NO_FAULT)
       {
         g_pSysInfo->KM1_Fault = result.KM1_Fault;
+
+        B2_EventRecord_Write(EVENT_SERIOUS_FAULT_RES2);
       }
 
       APP_Main_NotifyHaveParamNeedToSave();

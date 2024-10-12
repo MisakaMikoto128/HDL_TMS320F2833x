@@ -15,6 +15,7 @@
 #include "async_delay.h"
 #include "mtime.h"
 #include <stddef.h>
+#include "B2_EventRecord.h"
 
 #define FUALT_LEVEL_NO_FAULT 0
 #define FUALT_LEVEL_MINOR_FAULT 1
@@ -165,11 +166,15 @@ void B2_CmdCutOffCapacitors_Exec_Solution()
             if (result.QF_Fault != BFL_VBC_NO_FAULT)
             {
                 g_pSysInfo->QF_Fault = result.QF_Fault;
+
+                B2_EventRecord_Write(EVENT_SERIOUS_FAULT_RES1);
             }
 
             if (result.KM1_Fault != BFL_VBC_NO_FAULT)
             {
                 g_pSysInfo->KM1_Fault = result.KM1_Fault;
+
+                B2_EventRecord_Write(EVENT_SERIOUS_FAULT_RES2);
             }
 
             g_pSysInfo->SCRT_Fault |= result.SCRT_Fault;
