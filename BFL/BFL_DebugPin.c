@@ -18,11 +18,11 @@ void BFL_DebugPin_Init()
     EALLOW;
     // VCB控制信号外部电路上无上下拉
     //  General purpose I/O
-    GpioCtrlRegs.GPCMUX1.bit.GPIO75 = 0x00;
+    GpioCtrlRegs.GPCMUX1.bit.GPIO77 = 0x00;
     // Configures the GPIO pin as an output
-    GpioCtrlRegs.GPCDIR.bit.GPIO75 = 1;
+    GpioCtrlRegs.GPCDIR.bit.GPIO77 = 1;
     // Enable the internal pullup on the specified pin.
-    GpioCtrlRegs.GPCPUD.bit.GPIO75 = 0;
+    GpioCtrlRegs.GPCPUD.bit.GPIO77 = 0;
 
 
     GpioCtrlRegs.GPCMUX1.bit.GPIO76 = 0x00;
@@ -35,7 +35,7 @@ void BFL_DebugPin_Set(BFL_DebugPin_t pin)
     switch (pin)
     {
     case DEBUG_PIN_1:
-        GpioDataRegs.GPCSET.bit.GPIO75 = 1;
+        GpioDataRegs.GPCSET.bit.GPIO77 = 1;
         break;
     case DEBUG_PIN_2:
         GpioDataRegs.GPCSET.bit.GPIO76 = 1;
@@ -50,7 +50,7 @@ void BFL_DebugPin_Reset(BFL_DebugPin_t pin)
     switch (pin)
     {
     case DEBUG_PIN_1:
-        GpioDataRegs.GPCCLEAR.bit.GPIO75 = 1;
+        GpioDataRegs.GPCCLEAR.bit.GPIO77 = 1;
         break;
     case DEBUG_PIN_2:
         GpioDataRegs.GPCCLEAR.bit.GPIO76 = 1;
@@ -65,7 +65,7 @@ void BFL_DebugPin_Toggle(BFL_DebugPin_t pin)
     switch (pin)
     {
     case DEBUG_PIN_1:
-        GpioDataRegs.GPCTOGGLE.bit.GPIO75 = 1;
+        GpioDataRegs.GPCTOGGLE.bit.GPIO77 = 1;
         break;
     case DEBUG_PIN_2:
         GpioDataRegs.GPCTOGGLE.bit.GPIO76 = 1;
