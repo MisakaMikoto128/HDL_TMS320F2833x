@@ -22,7 +22,7 @@ BaseYear存在一定的问题，ST的这个RTC没有一个单独的秒寄存器�
 对于闰年的处理取决于RTC_BASE_YEAR,但是RTC_BASE_YEAR手册中却从来没有提及。更具
 论坛讨论的结果为2000年1月1日0时0分为基础时间
 */
-#define RTC_BASE_YEAR_TIMESTAMP 946684800 // 2000-1-1 0:0:0的时间戳
+#define RTC_BASE_YEAR_TIMESTAMP (946684800ULL) // 2000-1-1 0:0:0的时间戳
 
 struct softRTC_t
 {
