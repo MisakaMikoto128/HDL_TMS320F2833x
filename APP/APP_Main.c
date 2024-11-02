@@ -209,7 +209,9 @@ void APP_Main_Init()
   BFL_SCR_Init();
   B1_SysModeGet_Init();
   BFL_DebugPin_Init();
+#ifndef _DEBUG
   HDL_IWDG_Init(SECOND_TO_MS(1));
+#endif
   datetime_init();
   BFL_Buzz_Init();
   CHIP_W25Q128_Init();

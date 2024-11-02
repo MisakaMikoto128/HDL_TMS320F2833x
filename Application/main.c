@@ -56,7 +56,7 @@
 //
 #include "DSP28x_Project.h" // Device Headerfile and Examples Include File
 #include "APP_Main.h"
-
+#include "APP_Main_Test.h"
 //
 // Main
 //
@@ -142,7 +142,11 @@ void main(void)
     //
     for (;;)
     {
+#ifdef _DEBUG
+        APP_Main_Test_Poll();
+#else
         APP_Main_Poll();
+#endif
     }
 }
 
