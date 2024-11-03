@@ -11,6 +11,7 @@
 #include "HDL_RTC.h"
 #include "mtime.h"
 #include "HDL_CPU_Time.h"
+#include "CHIP_PCF8563.h"
 #include <stddef.h>
 
 /**
@@ -52,6 +53,8 @@ static void HDL_RTC_Update()
  */
 void HDL_RTC_Init()
 {
+    CHIP_PCF8563_Init();
+    HDL_RTC_ReSyncWithHardware();
     pSoftRTC->calibratedAtLeastOnce = false;
     pSoftRTC->unixMsTimestamp = 0;
     HDL_CPU_Time_SetCPUTickCallback(HDL_RTC_Update);
@@ -92,11 +95,11 @@ void HDL_RTC_GetStructTime(mtime_t *myTime)
  * @param timestamp 1970-1-1以来总秒数。必须大于rtc_base_year_timestamp。参考RTC_BASE_YEAR。
  *
  */
-void HDL_RTC_SetTimeTick(uint64_t timestamp)
+void HDL_RTC_SetTimeTick(uint64_t timestamp_sec)
 {
-    if (timestamp > RTC_BASE_YEAR_TIMESTAMP)
+    if (timestamp_sec > RTC_BASE_YEAR_TIMESTAMP)
     {
-        pSoftRTC->unixMsTimestamp = timestamp * 1000;
+        pSoftRTC->unixMsTimestamp = timestamp_sec * 1000;
         pSoftRTC->calibratedAtLeastOnce = true;
     }
 }
@@ -109,13 +112,9 @@ void HDL_RTC_SetTimeTick(uint64_t timestamp)
  */
 void HDL_RTC_SetStructTime(mtime_t *myTime)
 {
-    uint32_t timestamp = 0;
-    timestamp = mtime_2_unix_sec(myTime);
-    if (timestamp > RTC_BASE_YEAR_TIMESTAMP)
-    {
-        pSoftRTC->unixMsTimestamp = (uint64_t)timestamp * 1000;
-        pSoftRTC->calibratedAtLeastOnce = true;
-    }
+    uint32_t timestamp_sec = 0;
+    timestamp_sec = mtime_2_unix_sec(myTime);
+    HDL_RTC_SetTimeTick(timestamp_sec);
 }
 
 uint64_t HDL_RTC_GetMsTimestamp()
@@ -132,8 +131,9 @@ bool HDL_RTC_SetTimeTick_HeardWare(uint64_t timestamp)
 {
     if (timestamp > RTC_BASE_YEAR_TIMESTAMP)
     {
-        pSoftRTC->unixMsTimestamp = timestamp * 1000;
-        pSoftRTC->calibratedAtLeastOnce = true;
+        mtime_t settingTime;
+        mtime_unix_sec_2_time((uint32_t)(timestamp / 1000), &settingTime);
+        CHIP_PCF8563_Set(&settingTime);
         return true;
     }
     return false;
@@ -141,6 +141,8 @@ bool HDL_RTC_SetTimeTick_HeardWare(uint64_t timestamp)
 
 bool HDL_RTC_ReSyncWithHardware()
 {
-    pSoftRTC->unixMsTimestamp = pSoftRTC->unixMsTimestamp;
+    mtime_t rtcTime;
+    CHIP_PCF8563_Get(&rtcTime);
+    HDL_RTC_SetStructTime(&rtcTime);
     return false;
 }
