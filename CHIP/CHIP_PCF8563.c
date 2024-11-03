@@ -37,18 +37,27 @@ static byte_t RTC_Bcd2ToBin(byte_t BCDValue)
 void CHIP_PCF8563_Set(mtime_t *pTime)
 {
     byte_t buffer[7] = {0};
-    // 拷贝数据
-    pTime->nMonth &= ~PCF_Century_SetBitC;
+    // 判断世纪位处理
+    if (pTime->nYear >= 2000)
+    {
+        pTime->nYear -= 2000;                  // 将年份减去 2000
+        pTime->nMonth &= ~PCF_Century_SetBitC; // 清除世纪位 (2000 年代)
+    }
+    else
+    {
+        pTime->nYear -= 1900;                 // 将年份减去 1900
+        pTime->nMonth |= PCF_Century_SetBitC; // 设置世纪位 (1900 年代)
+    }
 
     buffer[0] = pTime->nSec;
     buffer[1] = pTime->nMin;
     buffer[2] = pTime->nHour;
     buffer[3] = pTime->nDay;
     buffer[4] = pTime->nWeek;
-    buffer[5] = pTime->nMonth;
+    buffer[5] = pTime->nMonth; // 包含了世纪位信息
     buffer[6] = pTime->nYear;
+
     // 写入数据到寄存器
-    //
     CHIP_PCF8563_Write_Bytes(PCF8563_Address_Seconds, 7, buffer);
 }
 
@@ -71,8 +80,18 @@ void CHIP_PCF8563_Get(mtime_t *pTime)
     buffer[5] &= PCF8563_Shield_Months_Century;
     buffer[6] &= PCF8563_Shield_Years;
 
-    pTime->nYear = buffer[6];
-    pTime->nMonth = buffer[5];
+    // 处理年份和世纪位
+    if (buffer[5] & PCF_Century_SetBitC)
+    {
+        pTime->nYear = 1900 + buffer[6]; // 世纪位为 1，表示 1900 年代
+    }
+    else
+    {
+        pTime->nYear = 2000 + buffer[6]; // 世纪位为 0，表示 2000 年代
+    }
+
+    // 处理剩余的时间字段
+    pTime->nMonth = buffer[5] & ~PCF_Century_SetBitC; // 去掉世纪位，得到月份
     pTime->nWeek = buffer[4];
     pTime->nDay = buffer[3];
     pTime->nHour = buffer[2];

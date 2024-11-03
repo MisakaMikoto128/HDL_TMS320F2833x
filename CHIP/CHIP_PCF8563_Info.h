@@ -44,7 +44,8 @@ extern "C"
 // 世纪位操作定义
 //
 #define PCF_Century_SetBitC (byte_t)0x80
-
+#define PCF_Century_Year_1900       0x80    // 表示 1900 年代
+#define PCF_Century_Year_2000       0x00    // 表示 2000 年代
 #define PCF_Century_19xx (byte_t)0x03
 #define PCF_Century_20xx (byte_t)0x04
 
