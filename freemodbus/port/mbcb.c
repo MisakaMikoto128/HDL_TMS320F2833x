@@ -88,7 +88,7 @@ eMBRegInputCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs)
     return eStatus;
 }
 
-void SyncModbusRegToSysinfo();
+void onModbusHoldingRegChangeToSysinfo(int startRegAddr, int regNum);
 /**
  * @brief 对应功能码有：
  * 06 写保持寄存器 eMBFuncWriteHoldingRegister
@@ -110,28 +110,30 @@ eMBRegHoldingCB(UCHAR *pucRegBuffer, USHORT usAddress, USHORT usNRegs, eMBRegist
     if ((usAddress >= REG_HOLDING_START) &&
         ((usAddress + usNRegs) <= (REG_HOLDING_END + 1)))
     {
+        //TODO:这里有点问题，modbus寄存器地址是从1开始的，没有0，而数组是从0开始的.Qt那个Modbus好像也是从0开始的
+        USHORT _usNRegs = usNRegs;
         iRegIndex = (int)(usAddress - 1 - usRegHoldingStart);
         switch (eMode)
         {
         case MB_REG_READ: // 读 MB_REG_READ = 0
-            while (usNRegs > 0)
+            while (_usNRegs > 0)
             {
                 *pucRegBuffer++ = (byte_t)(usRegHoldingBuf[iRegIndex] >> 8);
                 *pucRegBuffer++ = (byte_t)(usRegHoldingBuf[iRegIndex] & 0xFF);
                 iRegIndex++;
-                usNRegs--;
+                _usNRegs--;
             }
             break;
         case MB_REG_WRITE: // 写 MB_REG_WRITE = 0
-            while (usNRegs > 0)
+            while (_usNRegs > 0)
             {
                 usRegHoldingBuf[iRegIndex] = *pucRegBuffer++ << 8;
                 usRegHoldingBuf[iRegIndex] |= *pucRegBuffer++;
                 iRegIndex++;
-                usNRegs--;
+                _usNRegs--;
             }
 
-            SyncModbusRegToSysinfo();
+            onModbusHoldingRegChangeToSysinfo(usAddress, _usNRegs);
             eMBRegHoldingSetChanged();
         }
     }

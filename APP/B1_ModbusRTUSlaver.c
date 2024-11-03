@@ -17,6 +17,7 @@
 #include "BFL_RS485.h"
 #include "HDL_CPU_Time.h"
 #include "HDL_Uart.h"
+#include "HDL_RTC.h"
 #include "APP_Main.h"
 #include "BFL_VCB.h"
 #include "BFL_Measure.h"
@@ -24,7 +25,7 @@
 #include "datetime.h"
 
 void SyncSysinfoToModbusReg();
-void SyncModbusRegToSysinfo();
+void SyncModbusHoldingRegChangeToSysinfo();
 void MBCmdHandler(uint16_t cmdReg);
 
 void B1_ModbusRTUSlaver_Init()
@@ -258,11 +259,22 @@ void SyncSysinfoToModbusReg()
     usRegInputBuf[59] = LOW_16_BITS(g_pSysInfo->recordedEventsNum);
 }
 
+void onModbusHoldingRegChangeToSysinfo(int startRegAddr, int regNum)
+{
+    SyncModbusHoldingRegChangeToSysinfo();
+    if (startRegAddr >= 60 && startRegAddr < 64)
+    {
+        uint64_t ts_device_utc_ms = (((uint64_t)usRegHoldingBuf[60] << 48) | ((uint64_t)usRegHoldingBuf[61] << 32) | ((uint64_t)usRegHoldingBuf[62] << 16) | ((uint64_t)usRegHoldingBuf[63]));
+        datetime_set_unix_timestamp(ts_device_utc_ms / 1000);
+        HDL_RTC_SetTimeTick_HeardWare(ts_device_utc_ms);
+    }
+}
+
 /**
  * @brief 读取Modbus寄存器的值，同步到系统信息中。
  *
  */
-void SyncModbusRegToSysinfo()
+void SyncModbusHoldingRegChangeToSysinfo()
 {
     SysInfo_t *pSysinfo = g_pSysInfo;
 
@@ -310,8 +322,6 @@ void SyncModbusRegToSysinfo()
     pSysinfo->T_I_TA_quick_oc_MS = usRegHoldingBuf[54];
     pSysinfo->T_V_SYS_OV_SEC = usRegHoldingBuf[55];
     pSysinfo->devId = (((uint64_t)usRegHoldingBuf[56] << 48) | ((uint64_t)usRegHoldingBuf[57] << 32) | ((uint64_t)usRegHoldingBuf[58] << 16) | ((uint64_t)usRegHoldingBuf[59]));
-    uint64_t ts_device_utc_ms = (((uint64_t)usRegHoldingBuf[60] << 48) | ((uint64_t)usRegHoldingBuf[61] << 32) | ((uint64_t)usRegHoldingBuf[62] << 16) | ((uint64_t)usRegHoldingBuf[63]));
-    datetime_set_unix_timestamp(ts_device_utc_ms / 1000);
 
     // 指令解析
     uint16_t cmdReg = usRegHoldingBuf[44];
