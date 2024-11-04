@@ -11,13 +11,13 @@
  */
 #include "mtime.h"
 #include <stdio.h>
-
-#define UTC_BASE_YEAR 1970
-#define MONTH_PER_YEAR 12
-#define DAY_PER_YEAR 365
-#define SEC_PER_DAY 86400
-#define SEC_PER_HOUR 3600
-#define SEC_PER_MIN 60
+#include <stdint.h>
+#define UTC_BASE_YEAR 1970ULL
+#define MONTH_PER_YEAR 12ULL
+#define DAY_PER_YEAR 365ULL
+#define SEC_PER_DAY 86400ULL
+#define SEC_PER_HOUR 3600ULL
+#define SEC_PER_MIN 60ULL
 
 byte_t applib_dt_is_leap_year(uint16_t year);                         // 判断是否是闰年
 byte_t applib_dt_last_day_of_mon(byte_t month, uint16_t year); // 得到每个月有多少天
@@ -149,7 +149,7 @@ byte_t mtime_get_week(uint16_t year, byte_t month, byte_t day)
  * 返回值：
  *     无
  */
-void mtime_unix_sec_2_time(unsigned int utc_sec, mtime_t *result)
+void mtime_unix_sec_2_time(uint32_t utc_sec, mtime_t *result)
 {
     /*----------------------------------------------------------------*/
     /* Local Variables                                                */
@@ -227,14 +227,14 @@ void mtime_unix_sec_2_time(unsigned int utc_sec, mtime_t *result)
  * 返回值：
  *     UTC时间戳
  */
-unsigned int mtime_2_unix_sec(mtime_t *currTime)
+uint32_t mtime_2_unix_sec(mtime_t *currTime)
 {
     /*----------------------------------------------------------------*/
     /* Local Variables                                                */
     /*----------------------------------------------------------------*/
-    uint16_t i;
-    unsigned int no_of_days = 0;
-    int utc_time;
+    uint32_t i;
+    uint32_t no_of_days = 0;
+    uint32_t utc_time = 0;
     // byte_t dst;
 
     /*----------------------------------------------------------------*/
@@ -261,8 +261,8 @@ unsigned int mtime_2_unix_sec(mtime_t *currTime)
     no_of_days += (currTime->nDay - 1);
 
     /* sec */
-    utc_time = (unsigned int)no_of_days * SEC_PER_DAY + (unsigned int)(currTime->nHour * SEC_PER_HOUR +
-                                                                       currTime->nMin * SEC_PER_MIN + currTime->nSec);
+    utc_time = no_of_days * SEC_PER_DAY + currTime->nHour * SEC_PER_HOUR +
+                                                                       currTime->nMin * SEC_PER_MIN + currTime->nSec;
 
     // if (dst && daylightSaving) {
     //     utc_time -= SEC_PER_HOUR;
@@ -275,25 +275,25 @@ unsigned int mtime_2_unix_sec(mtime_t *currTime)
 // utc_sec-utc秒
 // pBuf-存放字符串数组
 // 返回-字符串数组
-char *mtime_format(unsigned int utc_sec, char *pBuf)
+char *mtime_format(uint32_t utc_sec, char *pBuf)
 {
     mtime_t stuTime;
     mtime_unix_sec_2_time(utc_sec, &stuTime);
-    sprintf(pBuf, "%04d-%02d-%02d %02d:%02d:%02d", stuTime.nYear, stuTime.nMonth, stuTime.nDay, stuTime.nHour, stuTime.nMin, stuTime.nSec);
+//    sprintf(pBuf, "%04d-%02d-%02d %02d:%02d:%02d", stuTime.nYear, stuTime.nMonth, stuTime.nDay, stuTime.nHour, stuTime.nMin, stuTime.nSec);
     return pBuf;
 }
 
-void mtime_add_hours(mtime_t *currTime, unsigned int hours)
+void mtime_add_hours(mtime_t *currTime, uint32_t hours)
 {
-    unsigned int timestamp = 0;
+    uint32_t timestamp = 0;
     timestamp = mtime_2_unix_sec(currTime);
     timestamp += hours * 60UL * 60UL;
     mtime_unix_sec_2_time(timestamp, currTime);
 }
 
-void mtime_sub_hours(mtime_t *currTime, unsigned int hours)
+void mtime_sub_hours(mtime_t *currTime, uint32_t hours)
 {
-    unsigned int timestamp = 0;
+    uint32_t timestamp = 0;
     timestamp = mtime_2_unix_sec(currTime);
     timestamp -= hours * 60UL * 60UL;
     mtime_unix_sec_2_time(timestamp, currTime);

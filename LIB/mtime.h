@@ -42,12 +42,12 @@ typedef struct
  * @return byte_t 0 = Sunday
  */
 byte_t mtime_get_week(uint16_t year, byte_t month, byte_t day);
-void mtime_unix_sec_2_time(unsigned int utc_sec, mtime_t *result); // 根据UTC时间戳得到对应的日期
-unsigned int mtime_2_unix_sec(mtime_t *currTime);                  // 根据时间计算出UTC时间戳
-char *mtime_format(unsigned int utc_sec, char *pBuf);              // 根据UTC时间戳得到对应的日期字符串
+void mtime_unix_sec_2_time(uint32_t utc_sec, mtime_t *result); // 根据UTC时间戳得到对应的日期
+uint32_t mtime_2_unix_sec(mtime_t *currTime);                  // 根据时间计算出UTC时间戳
+char *mtime_format(uint32_t utc_sec, char *pBuf);              // 根据UTC时间戳得到对应的日期字符串
 
-void mtime_add_hours(mtime_t *currTime, unsigned int hours);
-void mtime_sub_hours(mtime_t *currTime, unsigned int hours);
+void mtime_add_hours(mtime_t *currTime, uint32_t hours);
+void mtime_sub_hours(mtime_t *currTime, uint32_t hours);
 byte_t mtime_is_equal(mtime_t *currTime, mtime_t *targetTime);
 
 
