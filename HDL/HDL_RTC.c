@@ -53,10 +53,10 @@ static void HDL_RTC_Update()
  */
 void HDL_RTC_Init()
 {
-    CHIP_PCF8563_Init();
-    HDL_RTC_ReSyncWithHardware();
     pSoftRTC->calibratedAtLeastOnce = false;
     pSoftRTC->unixMsTimestamp = 0;
+    CHIP_PCF8563_Init();
+    HDL_RTC_ReSyncWithHardware();
     HDL_CPU_Time_SetCPUTickCallback(HDL_RTC_Update);
 }
 
@@ -127,12 +127,12 @@ bool HDL_RTC_HasSynced()
     return pSoftRTC->calibratedAtLeastOnce;
 }
 
-bool HDL_RTC_SetTimeTick_HeardWare(uint64_t timestamp)
+bool HDL_RTC_SetTimeTick_HeardWare(uint64_t timestamp_ms)
 {
-    if (timestamp > RTC_BASE_YEAR_TIMESTAMP)
+    if (timestamp_ms > RTC_BASE_YEAR_TIMESTAMP)
     {
         mtime_t settingTime;
-        mtime_unix_sec_2_time((uint32_t)(timestamp / 1000), &settingTime);
+        mtime_unix_sec_2_time((uint32_t)(timestamp_ms / 1000), &settingTime);
         CHIP_PCF8563_Set(&settingTime);
         return true;
     }
@@ -144,5 +144,5 @@ bool HDL_RTC_ReSyncWithHardware()
     mtime_t rtcTime;
     CHIP_PCF8563_Get(&rtcTime);
     HDL_RTC_SetStructTime(&rtcTime);
-    return false;
+    return true;
 }
