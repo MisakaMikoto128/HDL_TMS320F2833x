@@ -39,6 +39,35 @@ static void async_delay_callback1(void *arg)
     // BackGroundTask_WhenInSRCPoll();
 }
 
+static void async_delay_callback_vot_check(void *arg)
+{
+    void **args = (void **)arg;
+    uint32_t *scrtFb = (uint32_t *)args[0];
+    B1_Measure_t *begin_measure = (B1_Measure_t *)args[1];
+    B1_Measure_t current_measure;
+    B1_Measure_Read(&current_measure);
+
+    if (g_pSysInfo->V_UIAB > g_pSysInfo->V_SYS_STOP_kV)
+    {
+        if (current_measure.V_TV1A / begin_measure->V_TV1A > 0.5f)
+        {
+            *scrtFb |= BFL_SCRR1A | BFL_SCRR1B;
+        }
+
+        if (current_measure.V_TV1B / begin_measure->V_TV1B > 0.5f)
+        {
+            *scrtFb |= BFL_SCRR2A | BFL_SCRR2B;
+        }
+
+        if (current_measure.V_TV1C / begin_measure->V_TV1C > 0.5f)
+        {
+            *scrtFb |= BFL_SCRR3A | BFL_SCRR3B;
+        }
+    }
+
+    BackGroundTask_WhenInSRCPoll();
+}
+
 static void async_delay_callback2(void *arg)
 {
     UNUSED(arg);
@@ -70,10 +99,13 @@ B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec()
 
         if (!(QF_State == BFL_VCB_Closed || KM1_State == BFL_VCB_Closed))
         {
-            //5000us Period x30 times = 600*5=3000ms
+            // 5000us Period x30 times = 600*5=3000ms
             BFL_SCRT_Pluse_Transmit(SCRT_ALL, MS(g_pSysInfo->T2_MS), US(4000));
-            async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback1, &scrtFb);
-            // SCRT_Fault = scrtFb;
+            B1_Measure_t measures;
+            B1_Measure_Read(&measures);
+            void *args[] = {&scrtFb, &measures};
+            async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback_vot_check, args);
+            SCRT_Fault = scrtFb;
         }
 
         BFL_VCB_Set_As_Switch_Closed(QF_SW);
