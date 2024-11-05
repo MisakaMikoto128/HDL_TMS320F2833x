@@ -79,7 +79,7 @@ void Config_Default_Parameter()
   g_pSysInfo->T1_MS = MS(1500);
   g_pSysInfo->T2_MS = MS(3000);
   g_pSysInfo->T3_MS = MS(5);
-  g_pSysInfo->T4_MS = MS(20);
+  g_pSysInfo->T4_MS = MS(20*16);
   g_pSysInfo->V_SCR_NORMAL_DIFF_kV = 0.1f;
   g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC = SEC(3);
   g_pSysInfo->I_SCR_NORMAL_DIFF_A = 1.0f;
