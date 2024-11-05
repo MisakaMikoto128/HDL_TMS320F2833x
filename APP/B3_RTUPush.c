@@ -241,14 +241,7 @@ void B3_RTUPush_Poll()
             {
                 pRtuDataBufData[6] = g_pSysInfo->VTx_C_Breakdown_Fault;
             }
-
-#define BFL_SCRR3B 0x01
-#define BFL_SCRR3A 0x02
-#define BFL_SCRR2B 0x04
-#define BFL_SCRR2A 0x08
-#define BFL_SCRR1B 0x10
-#define BFL_SCRR1A 0x20
-
+            
             if ((SCRT_Fault & BFL_SCRR1B) || (SCRT_Fault & BFL_SCRR1A))
             {
                 pRtuDataBufData[4] = 1;

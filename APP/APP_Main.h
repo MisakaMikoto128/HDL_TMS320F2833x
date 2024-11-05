@@ -145,14 +145,14 @@ extern "C"
         float TA1B_ScaleL2; // 实际输入模拟量 = L1电压 * ScaleL2
         float TA1C_ScaleL2; // 实际输入模拟量 = L1电压 * ScaleL2
 
-        float V_TV1A; // 电容电压_A相
-        float V_TV1B; // 电容电压_B相
-        float V_TV1C; // 电容电压_C相
-        float V_UIAB; // 进线电压
-        float V_UOAB; // 出线电压
-        float I_TA1A; // 进线电流_A相
-        float I_TA1B; // 进线电流_B相
-        float I_TA1C; // 进线电流_C相
+        float V_TV1A; // 电容电压_A相, 单位kV
+        float V_TV1B; // 电容电压_B相, 单位kV
+        float V_TV1C; // 电容电压_C相, 单位kV
+        float V_UIAB; // 进线电压, 单位kV
+        float V_UOAB; // 出线电压, 单位kV
+        float I_TA1A; // 进线电流_A相, 单位A
+        float I_TA1B; // 进线电流_B相, 单位A
+        float I_TA1C; // 进线电流_C相, 单位A
 
         // B1_SysModeGet
         uint16_t SYS_MODE; // 系统模式
@@ -184,7 +184,7 @@ extern "C"
             0:正常 1:触发故障
          */
         // 严重故障2
-        uint16_t SCRT_Fault;
+        uint16_t SCRT_Fault; // 0x3F->bit5-bit0对应：SCRR1A SCRR1B SCRR2A SCRR2B SCRR3A SCRR3B
         // 严重故障3
         uint16_t VTx_A_Breakdown_Fault; // A相晶闸管击穿故障，0:正常 2:击穿
         uint16_t VTx_B_Breakdown_Fault; // B相晶闸管击穿故障，0:正常 2:击穿
@@ -305,6 +305,18 @@ extern "C"
 
     void B1_Measure_Init();
     void B1_Measure_Poll();
+    typedef struct
+    {
+        float V_TV1A;
+        float V_TV1B;
+        float V_TV1C;
+        float V_UIAB;
+        float V_UOAB;
+        float I_TA1A;
+        float I_TA1B;
+        float I_TA1C;
+    } B1_Measure_t;
+    void B1_Measure_Read(B1_Measure_t *pMeasure);
 
     void B1_SysModeGet_Init();
     void B1_SysModeGet_DeltaPoll(uint32_t poll_delta);
@@ -352,6 +364,13 @@ extern "C"
 
     void B3_RTUPush_Init();
     void B3_RTUPush_Poll();
+
+#define BFL_SCRR3B 0x01
+#define BFL_SCRR3A 0x02 // C相晶闸管触发故障
+#define BFL_SCRR2B 0x04
+#define BFL_SCRR2A 0x08 // B相晶闸管触发故障
+#define BFL_SCRR1B 0x10
+#define BFL_SCRR1A 0x20 // A相晶闸管触发故障
 #ifdef __cplusplus
 }
 #endif
