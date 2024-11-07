@@ -154,10 +154,10 @@ void mtime_unix_sec_2_time(uint32_t utc_sec, mtime_t *result)
     /*----------------------------------------------------------------*/
     /* Local Variables                                                */
     /*----------------------------------------------------------------*/
-    int sec, day;
-    uint16_t y;
-    byte_t m;
-    uint16_t d;
+    uint32_t sec, day;
+    uint32_t y;
+    uint32_t m;
+    uint32_t d;
     // byte_t dst;
 
     /*----------------------------------------------------------------*/
