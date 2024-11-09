@@ -49,22 +49,27 @@ static void async_delay_callback_vot_check(void *arg)
     B1_Measure_t current_measure;
     B1_Measure_Read(&current_measure);
 
+    const float th = 0.5f;
     if (g_pSysInfo->V_UIAB > g_pSysInfo->V_SYS_STOP_kV)
     {
-        if (current_measure.V_TV1A / begin_measure->V_TV1A > 0.5f)
+        if (current_measure.V_TV1A < begin_measure->V_TV1A * th)
         {
-            *scrtFb |= BFL_SCRR1A | BFL_SCRR1B;
+            *scrtFb &= ~(BFL_SCRR1A | BFL_SCRR1B);
         }
 
-        if (current_measure.V_TV1B / begin_measure->V_TV1B > 0.5f)
+        if (current_measure.V_TV1B < begin_measure->V_TV1B * th)
         {
-            *scrtFb |= BFL_SCRR2A | BFL_SCRR2B;
+            *scrtFb &= ~(BFL_SCRR2A | BFL_SCRR2B);
         }
 
-        if (current_measure.V_TV1C / begin_measure->V_TV1C > 0.5f)
+        if (current_measure.V_TV1C < begin_measure->V_TV1C * th)
         {
-            *scrtFb |= BFL_SCRR3A | BFL_SCRR3B;
+            *scrtFb &= ~(BFL_SCRR3A | BFL_SCRR3B);
         }
+    }
+    else
+    {
+        *scrtFb = 0;
     }
 
     BackGroundTask_WhenInSRCPoll();
@@ -132,6 +137,8 @@ B2_CmdBypassCapacitors_Result_t B2_CmdBypassCapacitors_Exec()
         B1_Measure_t measures;
         B1_Measure_Read(&measures);
         void *args[] = {&scrtFb, &measures};
+        //  为了避免电容放电延时的影响，先假定是有故障的，然后电压如果这段时间出现一次小于阈值的情况就清除故障
+        SCRT_Fault = BFL_SCRR1A | BFL_SCRR1B | BFL_SCRR2A | BFL_SCRR2B | BFL_SCRR3A | BFL_SCRR3B;
         async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback_vot_check, args);
         SCRT_Fault = scrtFb;
 
