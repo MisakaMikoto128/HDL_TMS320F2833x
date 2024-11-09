@@ -48,19 +48,20 @@ static void async_delay_callback_vot_check(void *arg)
     B1_Measure_Read(&current_measure);
 
     const float th = 0.5f;
+    const float abs_th_vot_kV = 0.1f;
     if (g_pSysInfo->V_UIAB > g_pSysInfo->V_SYS_STOP_kV)
     {
-        if (current_measure.V_TV1A < begin_measure->V_TV1A * th)
+        if (current_measure.V_TV1A < begin_measure->V_TV1A * th || current_measure.V_TV1A < abs_th_vot_kV)
         {
             *scrtFb &= ~(BFL_SCRR1A | BFL_SCRR1B);
         }
 
-        if (current_measure.V_TV1B < begin_measure->V_TV1B * th)
+        if (current_measure.V_TV1B < begin_measure->V_TV1B * th || current_measure.V_TV1A < abs_th_vot_kV)
         {
             *scrtFb &= ~(BFL_SCRR2A | BFL_SCRR2B);
         }
 
-        if (current_measure.V_TV1C < begin_measure->V_TV1C * th)
+        if (current_measure.V_TV1C < begin_measure->V_TV1C * th || current_measure.V_TV1A < abs_th_vot_kV)
         {
             *scrtFb &= ~(BFL_SCRR3A | BFL_SCRR3B);
         }
@@ -110,7 +111,7 @@ B2_CmdCutOffCapacitors_Result_t B2_CmdCutOffCapacitors_Exec()
             B1_Measure_Read(&measures);
             void *args[] = {&scrtFb, &measures};
 
-            SCRT_Fault = BFL_SCRR1A | BFL_SCRR1B | BFL_SCRR2A | BFL_SCRR2B | BFL_SCRR3A | BFL_SCRR3B;
+            scrtFb = BFL_SCRR1A | BFL_SCRR1B | BFL_SCRR2A | BFL_SCRR2B | BFL_SCRR3A | BFL_SCRR3B;
             async_delay(MS(g_pSysInfo->T4_MS), async_delay_callback_vot_check, args);
             SCRT_Fault = scrtFb;
         }
