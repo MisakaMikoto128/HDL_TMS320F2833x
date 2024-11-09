@@ -76,8 +76,8 @@ void Config_Default_Parameter()
   g_pSysInfo->T_V_TVx_ov_SEC = SEC(10);
   g_pSysInfo->Tc_ot = 80;
   g_pSysInfo->T_Tc_ot_SEC = SEC(10);
-  g_pSysInfo->T1_MS = MS(1500);
-  g_pSysInfo->T2_MS = MS(3000);
+  g_pSysInfo->T1_MS = MS(1500);//TRY 3 Times [SCR->T(T2) POLL_SCRFault(T4) DELAY(T1) DELAY(10) ] 
+  g_pSysInfo->T2_MS = MS(1500);//T2 < T4 + T1
   g_pSysInfo->T3_MS = MS(5);
   g_pSysInfo->T4_MS = MS(20*16);
   g_pSysInfo->V_SCR_NORMAL_DIFF_kV = 0.1f;
