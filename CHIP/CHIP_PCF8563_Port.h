@@ -19,10 +19,8 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 #include "ccommon.h"
-void CHIP_PCF8563_Write_Byte(byte_t regAddr, byte_t dat);                 // PCF8563某寄存器写入一个字节数据
-byte_t CHIP_PCF8563_Read_Byte(byte_t regAddr);                            // PCF8563某寄存器读取一个字节数据
-void CHIP_PCF8563_Write_Bytes(byte_t regAddr, byte_t num, byte_t *pBuff); // PCF8563写入多组数据
-void CHIP_PCF8563_Read_Bytes(byte_t regAddr, byte_t num, byte_t *pBuff);  // PCF8563读取多组数据
+void CHIP_PCF8563_Write_Bytes(byte_t regAddr, byte_t *pBuff, byte_t num); // PCF8563写入多组数据
+void CHIP_PCF8563_Read_Bytes(byte_t regAddr, byte_t *pBuff, byte_t num);  // PCF8563读取多组数据
 void CHIP_PCF8563_IIC_Init();
 #ifdef __cplusplus
 }

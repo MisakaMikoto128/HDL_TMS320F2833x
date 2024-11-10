@@ -44,8 +44,8 @@ extern "C"
 // 世纪位操作定义
 //
 #define PCF_Century_SetBitC (byte_t)0x80
-#define PCF_Century_Year_1900       0x80    // 表示 1900 年代
-#define PCF_Century_Year_2000       0x00    // 表示 2000 年代
+#define PCF_Century_Year_1900 0x80 // 表示 1900 年代
+#define PCF_Century_Year_2000 0x00 // 表示 2000 年代
 #define PCF_Century_19xx (byte_t)0x03
 #define PCF_Century_20xx (byte_t)0x04
 
@@ -60,9 +60,9 @@ extern "C"
 //
 #define PCF_Mode_Normal (byte_t)0x05
 
-/******************************************************************************
-                             参数寄存器地址宏定义
-******************************************************************************/
+    /******************************************************************************
+                                 参数寄存器地址宏定义
+    ******************************************************************************/
 
 #define PCF8563_Address_Control_Status_1 (byte_t)0x00 // 控制/状态寄存器1
 #define PCF8563_Address_Control_Status_2 (byte_t)0x01 // 控制/状态寄存器2
@@ -105,6 +105,7 @@ extern "C"
 #define PCF_Accuracy_ClockNo (byte_t)(1 << 7)     // 不保证准确的时钟/日历数据
 #define PCF_Accuracy_ClockYes (byte_t)(~(1 << 7)) // 保证准确的时钟/日历数据
 
+#define PCF8563_BASE_YEAR 2000
 #ifdef __cplusplus
 }
 #endif
