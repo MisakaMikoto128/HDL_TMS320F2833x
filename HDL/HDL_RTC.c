@@ -33,7 +33,7 @@ struct softRTC_t
 
 static struct softRTC_t softRTC = {0};
 static struct softRTC_t *pSoftRTC = &softRTC;
-static uint32_t reSyncPeriod = SECOND_TO_MS(10); // 3秒新校准一次
+static uint32_t reSyncPeriod = SECOND_TO_MS(30); // 30秒新校准一次
 static uint32_t elapsedTime = 0;
 static void HDL_RTC_Update()
 {
