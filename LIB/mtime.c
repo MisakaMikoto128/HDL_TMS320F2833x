@@ -216,6 +216,7 @@ void mtime_unix_sec_2_time(uint32_t utc_sec, mtime_t *result)
     result->nDay = (byte_t)(day + 1);
     /* 根据给定的日期得到对应的星期 */
     result->nWeek = mtime_get_week(result->nYear, result->nMonth, result->nDay);
+    result->wSub = 0;
 }
 
 /*
