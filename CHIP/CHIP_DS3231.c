@@ -23,6 +23,7 @@
 void CHIP_DS3231_Set(mtime_t *pTime)
 {
     byte_t buffer[7] = {0};                    /**< 用于存储时间数据的缓冲区 */
+    pTime->nWeek = mtime_get_week(pTime->nYear,pTime->nMonth,pTime->nDay);
     uint16_t year_set = pTime->nYear;          /**< 设置的年份 */
     byte_t month_set = Hex2Bcd(pTime->nMonth); /**< 设置的月份，已转换为BCD格式 */
     // 判断世纪位处理
@@ -84,6 +85,7 @@ void CHIP_DS3231_Get(mtime_t *pTime)
 
     // 解析年，考虑世纪位
     pTime->nYear = DS3231_BASE_YEAR + Bcd2Hex(buffer[6]) + ((buffer[5] >> 7) & 0x01) * 100; // 年
+    pTime->wSub = 0;
 }
 
 /**

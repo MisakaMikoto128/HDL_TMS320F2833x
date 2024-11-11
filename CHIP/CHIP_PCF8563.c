@@ -22,7 +22,7 @@
 void CHIP_PCF8563_Set(mtime_t *pTime)
 {
     byte_t buffer[7] = {0};
-
+    pTime->nWeek = mtime_get_week(pTime->nYear,pTime->nMonth,pTime->nDay);
     // 处理世纪位和年份
     uint16_t year_set = pTime->nYear;
     byte_t month_set = Hex2Bcd(pTime->nMonth); /**< 设置的月份，已转换为BCD格式 */
@@ -37,6 +37,7 @@ void CHIP_PCF8563_Set(mtime_t *pTime)
         year_set -= PCF8563_BASE_YEAR;     // 将年份转换为两位数（1900年后的年份）
         month_set &= ~PCF_Century_SetBitC; // 清除世纪位，表示1900年后的世代
     }
+
 
     // 将时间字段转换为BCD格式
     buffer[0] = Hex2Bcd(pTime->nSec);    // 秒
@@ -77,6 +78,7 @@ void CHIP_PCF8563_Get(mtime_t *pTime)
     pTime->nMonth = Bcd2Hex(buffer[5] & ~PCF_Century_SetBitC); // 去掉世纪位，得到月份
     // 处理年份和世纪位
     pTime->nYear = PCF8563_BASE_YEAR + Bcd2Hex(buffer[6]) + ((buffer[5] >> 7) & 0x01) * 100; // 年
+    pTime->wSub = 0;
 }
 
 /**
