@@ -206,6 +206,8 @@ bool B3_Check_Minor_Fault_Exist(uint32_t poll_delta)
         // 系统过压触发
         if (!EXIST_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OV))
         {
+            // TODO:MINOR_FAULT_LINE_OV Event
+            B2_EventRecord_Write(EVENT_MINOR_FAULT_SYSTEM_OVERVOLTAGE_TRIGGER);
             SET_MINOR_FAULT(g_pSysInfo->Minor_Fault, MINOR_FAULT_LINE_OV);
         }
     }
