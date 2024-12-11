@@ -93,6 +93,4 @@ void B3_SysAutoMode_DeltaPoll(uint32_t poll_delta)
     // g_pSysInfo->Capacitors_Exec_State = CAPACITORS_STATE_CUT_OFF;
   }
 
-  B3_Check_Minor_Fault_Exist(poll_delta);
-  B3_Check_SCR_Serious_Fault(poll_delta);
 }
