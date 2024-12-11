@@ -76,10 +76,10 @@ void Config_Default_Parameter()
   g_pSysInfo->T_V_TVx_ov_SEC = SEC(10);
   g_pSysInfo->Tc_ot = 80;
   g_pSysInfo->T_Tc_ot_SEC = SEC(10);
-  g_pSysInfo->T1_MS = MS(1500);//TRY 3 Times [SCR->T(T2) POLL_SCRFault(T4) DELAY(T1) DELAY(10) ] 
-  g_pSysInfo->T2_MS = MS(1500);//T2 < T4 + T1
+  g_pSysInfo->T1_MS = MS(1500); // TRY 3 Times [SCR->T(T2) POLL_SCRFault(T4) DELAY(T1) DELAY(10) ]
+  g_pSysInfo->T2_MS = MS(1500); // T2 < T4 + T1
   g_pSysInfo->T3_MS = MS(5);
-  g_pSysInfo->T4_MS = MS(20*16);
+  g_pSysInfo->T4_MS = MS(20 * 16);
   g_pSysInfo->V_SCR_NORMAL_DIFF_kV = 0.1f;
   g_pSysInfo->T_V_SCR_ABNORMAL_DIFF_SEC = SEC(3);
   g_pSysInfo->I_SCR_NORMAL_DIFF_A = 1.0f;
@@ -249,12 +249,12 @@ void BackGroundTask()
   B1_CapacitanceTemperatureMeasure_Poll();
   B1_ModbusRTUSlaver_Poll();
   B1_Measure_Poll();
-  B0_DeltaPoll(poll_delta, 
-                B1_SysModeGet_DeltaPoll(poll_delta);
-                B1_VCBStatusGet_DeltaPoll(poll_delta);
-                B3_Check_Minor_Fault_Exist(poll_delta);
-                B3_Check_SCR_Serious_Fault(poll_delta);
-               );
+  B0_DeltaPoll_User(&g_AppMainInfo.g_DeltaPoll1,
+                    poll_delta,
+                    B1_SysModeGet_DeltaPoll(poll_delta);
+                    B1_VCBStatusGet_DeltaPoll(poll_delta);
+                    B3_Check_Minor_Fault_Exist(poll_delta);
+                    B3_Check_SCR_Serious_Fault(poll_delta););
   APP_Main_SysinfoSavePoll();
   B3_RTUPush_Poll();
   // B2_CmdBypassCapacitors_Test();
@@ -277,28 +277,33 @@ void BackGroundTask_WhenInSRCPoll()
   // B1_CapacitanceTemperatureMeasure_Poll();
   // B1_ModbusRTUSlaver_Poll();
   B1_Measure_Poll();
-  B0_DeltaPoll(poll_delta, 
-                B1_SysModeGet_DeltaPoll(poll_delta);
-                B1_VCBStatusGet_DeltaPoll(poll_delta);
-                B3_Check_Minor_Fault_Exist(poll_delta);
-                B3_Check_SCR_Serious_Fault(poll_delta);
-               );
+  B0_DeltaPoll_User(&g_AppMainInfo.g_DeltaPoll1,
+                    poll_delta,
+                    B1_SysModeGet_DeltaPoll(poll_delta);
+                    B1_VCBStatusGet_DeltaPoll(poll_delta);
+                    B3_Check_Minor_Fault_Exist(poll_delta);
+                    B3_Check_SCR_Serious_Fault(poll_delta););
 }
 
 // 正常运行
 void ForeGroundTask()
 {
-  B0_DeltaPoll(poll_delta, {
-    if (g_pSysInfo->SYS_MODE == SYS_MODE_AUTO)
-    {
-      B3_SysAutoMode_DeltaPoll(poll_delta);
-    }
-    else if (g_pSysInfo->SYS_MODE == SYS_MODE_MANUAL)
-    {
-      B3_SysManualMode_DeltaPoll(poll_delta);
-    }
-  });
+  B0_DeltaPoll_User(&g_AppMainInfo.g_DeltaPoll2,
+                    poll_delta, {
+                      if (g_pSysInfo->SYS_MODE == SYS_MODE_AUTO)
+                      {
+                        B3_SysAutoMode_DeltaPoll(poll_delta);
+                      }
+                      else if (g_pSysInfo->SYS_MODE == SYS_MODE_MANUAL)
+                      {
+                        B3_SysManualMode_DeltaPoll(poll_delta);
+                      }
+                    });
 
+  B0_DeltaPoll_User(&g_AppMainInfo.g_DeltaPoll1,
+                    poll_delta,
+                    B3_Check_Minor_Fault_Exist(poll_delta);
+                    B3_Check_SCR_Serious_Fault(poll_delta););
   B2_EventRecord_Poll();
 }
 
@@ -349,4 +354,3 @@ float getMinCapTemp()
   }
   return Tc_MIN;
 }
-

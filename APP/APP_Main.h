@@ -23,6 +23,7 @@ extern "C"
 #include "BFL_Measure.h"
 #include "BFL_VCB.h"
 #include "state_duration_timer.h"
+#include "B0_DeltaPoll.h"
 
 #define Tc_A1_IDX 0
 #define Tc_A2_IDX 1
@@ -277,6 +278,9 @@ extern "C"
         StateDurationCnt_t satifySCRB_SeriousFaultTimeCnt;
         StateDurationCnt_t satifySCRC_SeriousFaultTimeCnt;
 
+        // B0_DeltaPoll_User_Obj
+        B0_DeltaPoll_t g_DeltaPoll1;
+        B0_DeltaPoll_t g_DeltaPoll2;
         bool VBCDebugMode;
         uint16_t DebugMode;
     } AppMainInfo_t;
