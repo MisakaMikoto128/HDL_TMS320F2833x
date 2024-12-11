@@ -46,6 +46,34 @@ extern "C"
         }                                               \
     } while (0)
 
+typedef struct tagB0_DeltaPoll_t
+{
+    int poll_stage;
+    uint32_t last_poll_time;
+} B0_DeltaPoll_t;
+
+#define B0_DeltaPoll_User(pDelatPoll, poll_delta, statement) \
+    do                                                       \
+    {                                                        \
+        if ((pDelatPoll)->poll_stage == 0)                   \
+        {                                                    \
+            (pDelatPoll)->last_poll_time = HDL_CPU_Time_GetTick(); \
+            (pDelatPoll)->poll_stage = 1;                    \
+        }                                                    \
+        else                                                 \
+        {                                                    \
+            uint32_t now = HDL_CPU_Time_GetTick();           \
+            uint32_t poll_delta = now - (pDelatPoll)->last_poll_time; \
+            if (poll_delta == 0)                             \
+            {                                                \
+                break;                                      \
+            }                                                \
+            (pDelatPoll)->last_poll_time = now;              \
+            {                                                \
+                statement                                    \
+            }                                                \
+        }                                                    \
+    } while (0)
 #ifdef __cplusplus
 }
 #endif
