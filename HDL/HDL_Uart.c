@@ -766,12 +766,6 @@ __interrupt void sciaRxFifoIsr(void)
     COM_Dev_t *pDev = &_gCOMList[COM1];
 
     volatile struct SCI_REGS * ScixRegs = pDev->ScixRegs;
-    if (ScixRegs->SCIRXST.bit.RXERROR == 1)
-    {
-        ScixRegs->SCICTL1.all = 0x0003;
-        ScixRegs->SCICTL1.all = 0x0023;
-        ScixRegs->SCICTL1.bit.RXERRINTENA = 1;
-    }
 
     if (pDev->receive_char_callback != NULL)
     {
@@ -788,7 +782,118 @@ __interrupt void sciaRxFifoIsr(void)
         for (uint16_t i = 0; i < rx_fifo_ele_num; i++)
         {
             byte_t ch = pDev->ScixRegs->SCIRXBUF.all; // Read data
-            cqueue_enqueue(&pDev->rxQueue, &ch);
+            if (ScixRegs->SCIRXST.bit.RXERROR == 0)
+            {
+                cqueue_enqueue(&pDev->rxQueue, &ch);
+            }
+        }
+    }
+
+    if (ScixRegs->SCIRXST.bit.RXERROR == 1)
+    {
+        ScixRegs->SCICTL1.all = 0x0003;
+        ScixRegs->SCICTL1.all = 0x0023;
+        ScixRegs->SCICTL1.bit.RXERRINTENA = 1;
+    }
+
+    if (SciaRegs.SCIRXST.bit.RXRDY == 1)
+    {
+    }
+
+    if (SciaRegs.SCIRXST.bit.BRKDT == 1)
+    {
+    }
+
+    SciaRegs.SCIFFRX.bit.RXFFOVRCLR = 1; // 1h (R/W) = Write 1 to clear RXFFOVF flag in bit 15
+    SciaRegs.SCIFFRX.bit.RXFFINTCLR = 1; // 1h (R/W) = Write 1 to clear RXFFINT flag in bit 7
+    PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9; // Issue PIE ack
+}
+
+
+//
+// sciaRxFifoIsr -
+//__interrupt
+void correct_sciaRxFifoIsr(void)
+{
+
+    /*
+    RXRDY: R
+    SCI receiver-ready flag. When a new character is ready to be read from the
+    SCIRXBUF register, the receiver sets this bit, and a receiver interrupt is
+    generated if the RX/BK INT ENA bit (SCICTL2.1) is a 1. RXRDY is cleared by a
+    reading of the SCIRXBUF register, by an active SW RESET, or by a system reset.
+    Reset type: SYSRSn 0h (R/W) = No new character in SCIRXBUF 1h (R/W) =
+    Character ready to be read from SCIRXBUF
+
+    BRKDT: R
+    SCI break-detect flag. The SCI sets this bit when a break condition occurs. A
+    break conditionoccurs when the SCI receiver data line (SCIRXD) remains
+    continuously low for at least ten bits, beginning after a missing first stop
+    bit. The occurrence of a break causes a receiver interrupt to be generated if
+    the RX/BK INT ENA bit is a 1, but it does not cause the receiver buffer to be
+    loaded. A BRKDT interrupt can occur even if the receiver SLEEP bit is set
+    to 1. BRKDT is cleared by an active SW RESET or by a system reset. It is not
+    cleared by receipt of a character after the break is detected. In order to
+    receive more characters, the SCI must be reset by toggling the SW RESET bit or
+    by a system reset. Reset type: SYSRSn 0h (R/W) = No break condition 1h (R/W) =
+    Break condition occurred
+
+    RXWAKE: R
+    Receiver wake-up-detect flag Reset type: SYSRSn 0h (R/W) = No detection of a
+      receiver wake-up condition 1h (R/W) = A value of 1 in this bit indicates
+      detection of a receiver wake-up condition. In the address-bit multiprocessor
+      mode (SCICCR.3 = 1), RXWAKE reflects the value of the address bit for the
+      character contained in SCIRXBUF. In the idle-line multiprocessor mode,
+    RXWAKE is set if the SCIRXD data line is detected as idle. RXWAKE is a
+    read-only flag, cleared by one of the following: - The transfer of the first
+    byte after the address byte to SCIRXBUF (only in non-FIFO mode) - The reading
+    of SCIRXBUF - An active SW RESET - A system reset
+    */
+
+    COM_Dev_t *pDev = &_gCOMList[COM1];
+
+    volatile struct SCI_REGS * ScixRegs = pDev->ScixRegs;
+    if (ScixRegs->SCIRXST.bit.RXERROR == 1)
+    {
+        ScixRegs->SCICTL1.all = 0x0003;
+        ScixRegs->SCICTL1.all = 0x0023;
+        ScixRegs->SCICTL1.bit.RXERRINTENA = 1;
+
+        uint16_t rx_fifo_ele_num = pDev->ScixRegs->SCIFFRX.bit.RXFFST;
+        for (uint16_t i = 0; i < rx_fifo_ele_num; i++)
+        {
+            /*
+             * volatile byte_t ch = pDev->ScixRegs->SCIRXBUF.all;
+             *
+             * // Read data,byte_t ch可以不加volatile，因为ScixRegs已经是volatile变量，
+             * volatile 的传递性： volatile 修饰符不会自动传递给局部变量。
+             * 标准支持： C/C++ 标准并没有要求 volatile 的传递性
+             * 由于 ScixRegs->SCIRXBUF.all 是 volatile 的，读取它时会被视为特殊操作，确保从寄存器中实际读取。
+             * 而 byte_t ch 是局部变量，不再与寄存器直接关联，因此可以不声明为 volatile。
+             * 这种行为符合 C/C++ 标准和编译器优化的常见规则。
+             */
+            byte_t ch = pDev->ScixRegs->SCIRXBUF.all;
+            UNUSED(ch);
+        }
+    }else
+    {
+        if (pDev->receive_char_callback != NULL)
+        {
+            byte_t ch = pDev->ScixRegs->SCIRXBUF.all;
+            pDev->receive_char_callback(ch);
+        }
+        else if (pDev->receive_char_ready_callback != NULL)
+        {
+            pDev->receive_char_ready_callback();
+        }
+        else
+        {
+            uint16_t rx_fifo_ele_num = pDev->ScixRegs->SCIFFRX.bit.RXFFST;
+            for (uint16_t i = 0; i < rx_fifo_ele_num; i++)
+            {
+                byte_t ch = pDev->ScixRegs->SCIRXBUF.all; // Read data
+                cqueue_enqueue(&pDev->rxQueue, &ch);
+            }
         }
     }
 
@@ -800,11 +905,8 @@ __interrupt void sciaRxFifoIsr(void)
     {
     }
 
-    SciaRegs.SCIFFRX.bit.RXFFOVRCLR =
-        1; // 1h (R/W) = Write 1 to clear RXFFOVF flag in bit 15
-    SciaRegs.SCIFFRX.bit.RXFFINTCLR =
-        1; // 1h (R/W) = Write 1 to clear RXFFINT flag in bit 7
-
+    SciaRegs.SCIFFRX.bit.RXFFOVRCLR = 1; // 1h (R/W) = Write 1 to clear RXFFOVF flag in bit 15
+    SciaRegs.SCIFFRX.bit.RXFFINTCLR = 1; // 1h (R/W) = Write 1 to clear RXFFINT flag in bit 7
     PieCtrlRegs.PIEACK.all |= PIEACK_GROUP9; // Issue PIE ack
 }
 
@@ -826,12 +928,6 @@ __interrupt void scibRxFifoIsr(void)
     COM_Dev_t *pDev = &_gCOMList[COM2];
 
     volatile struct SCI_REGS * ScixRegs = pDev->ScixRegs;
-    if (ScixRegs->SCIRXST.bit.RXERROR == 1)
-    {
-        ScixRegs->SCICTL1.all = 0x0003;
-        ScixRegs->SCICTL1.all = 0x0023;
-        ScixRegs->SCICTL1.bit.RXERRINTENA = 1;
-    }
 
     if (pDev->receive_char_callback != NULL)
     {
@@ -848,8 +944,18 @@ __interrupt void scibRxFifoIsr(void)
         for (uint16_t i = 0; i < rx_fifo_ele_num; i++)
         {
             byte_t ch = pDev->ScixRegs->SCIRXBUF.all; // Read data
-            cqueue_enqueue(&pDev->rxQueue, &ch);
+            if (ScixRegs->SCIRXST.bit.RXERROR == 0)
+            {
+                cqueue_enqueue(&pDev->rxQueue, &ch);
+            }
         }
+    }
+
+    if (ScixRegs->SCIRXST.bit.RXERROR == 1)
+    {
+        ScixRegs->SCICTL1.all = 0x0003;
+        ScixRegs->SCICTL1.all = 0x0023;
+        ScixRegs->SCICTL1.bit.RXERRINTENA = 1;
     }
 
     if (ScibRegs.SCIRXST.bit.RXRDY == 1)
@@ -884,12 +990,6 @@ __interrupt void scicRxFifoIsr(void)
 {
     COM_Dev_t *pDev = &_gCOMList[COM3];
     volatile struct SCI_REGS * ScixRegs = pDev->ScixRegs;
-    if (ScixRegs->SCIRXST.bit.RXERROR == 1)
-    {
-        ScixRegs->SCICTL1.all = 0x0003;
-        ScixRegs->SCICTL1.all = 0x0023;
-        ScixRegs->SCICTL1.bit.RXERRINTENA = 1;
-    }
 
     if (pDev->receive_char_callback != NULL)
     {
@@ -906,8 +1006,18 @@ __interrupt void scicRxFifoIsr(void)
         for (uint16_t i = 0; i < rx_fifo_ele_num; i++)
         {
             byte_t ch = pDev->ScixRegs->SCIRXBUF.all; // Read data
-            cqueue_enqueue(&pDev->rxQueue, &ch);
+            if (ScixRegs->SCIRXST.bit.RXERROR == 0)
+            {
+                cqueue_enqueue(&pDev->rxQueue, &ch);
+            }
         }
+    }
+
+    if (ScixRegs->SCIRXST.bit.RXERROR == 1)
+    {
+        ScixRegs->SCICTL1.all = 0x0003;
+        ScixRegs->SCICTL1.all = 0x0023;
+        ScixRegs->SCICTL1.bit.RXERRINTENA = 1;
     }
 
     if (ScicRegs.SCIRXST.bit.RXRDY == 1)
