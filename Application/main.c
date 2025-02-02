@@ -143,7 +143,8 @@ void main(void)
     for (;;)
     {
 #ifdef _DEBUG
-        APP_Main_Test_Poll();
+       APP_Main_Poll();
+        // APP_Main_Test_Poll();
 #else
         APP_Main_Poll();
 #endif

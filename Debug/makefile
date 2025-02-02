@@ -4,14 +4,13 @@
 
 SHELL = cmd.exe
 
-CG_TOOL_ROOT := C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259
+CG_TOOL_ROOT := C:/ti/ccs1260/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS
 
 GEN_OPTS__FLAG := 
 GEN_CMDS__FLAG := 
 
 ORDERED_OBJS += \
 -lrts2800_fpu32_fast_supplement.lib \
--lrts2800_fpu32.lib \
 "./DSP2833x_ADC_cal.obj" \
 "./DSP2833x_Adc.obj" \
 "./DSP2833x_CodeStartBranch.obj" \
@@ -26,6 +25,7 @@ ORDERED_OBJS += \
 "./DSP2833x_SysCtrl.obj" \
 "./DSP2833x_usDelay.obj" \
 "./APP/APP_Main.obj" \
+"./APP/APP_Main_Test.obj" \
 "./APP/B1_CapacitanceTemperatureMeasure.obj" \
 "./APP/B1_Measure.obj" \
 "./APP/B1_ModbusRTUSlaver.obj" \
@@ -34,6 +34,7 @@ ORDERED_OBJS += \
 "./APP/B2_CmdBypassCapacitors.obj" \
 "./APP/B2_CmdCutOffCapacitors.obj" \
 "./APP/B2_CmdMakeCapacitorsWork.obj" \
+"./APP/B2_EventRecord.obj" \
 "./APP/B3_FaultDetect.obj" \
 "./APP/B3_RTUPush.obj" \
 "./APP/B3_SysAutoMode.obj" \
@@ -47,20 +48,29 @@ ORDERED_OBJS += \
 "./BFL/BFL_SCR.obj" \
 "./BFL/BFL_VCB.obj" \
 "./BFL/async_delay.obj" \
+"./BFL/datetime.obj" \
 "./BFL/log.obj" \
 "./BFL/period_query.obj" \
 "./BFL/state_duration_timer.obj" \
+"./CHIP/CHIP_DS3231.obj" \
+"./CHIP/CHIP_DS3231_Port.obj" \
+"./CHIP/CHIP_PCF8563.obj" \
+"./CHIP/CHIP_PCF8563_Port.obj" \
 "./CHIP/CHIP_W25Q128.obj" \
 "./HDL/HDL_CAN.obj" \
 "./HDL/HDL_CPU_Time.obj" \
 "./HDL/HDL_GPIO.obj" \
+"./HDL/HDL_IIC.obj" \
 "./HDL/HDL_IWDG.obj" \
+"./HDL/HDL_RTC.obj" \
 "./HDL/HDL_SPI.obj" \
 "./HDL/HDL_Uart.obj" \
 "./LIB/average_filter.obj" \
+"./LIB/ccoding.obj" \
 "./LIB/cfunction.obj" \
 "./LIB/cqueue.obj" \
 "./LIB/crc.obj" \
+"./LIB/mtime.obj" \
 "./Test/test.obj" \
 "./freemodbus/functions/mbfunccoils.obj" \
 "./freemodbus/functions/mbfuncdiag.obj" \
@@ -77,10 +87,11 @@ ORDERED_OBJS += \
 "./freemodbus/rtu/mbcrc.obj" \
 "./freemodbus/rtu/mbrtu.obj" \
 "./freemodbus/tcp/mbtcp.obj" \
+"../28335_RAM_lnk.cmd" \
 "C:/ti/c2000/C2000Ware_5_01_00_00/device_support/f2833x/headers/cmd/DSP2833x_Headers_nonBIOS.cmd" \
-"../F28335.cmd" \
 $(GEN_CMDS__FLAG) \
 -lIQmath_fpu32.lib \
+-llibc.a \
 
 -include ../makefile.init
 
@@ -218,23 +229,24 @@ EXE_OUTPUTS__QUOTED += \
 
 
 # All Target
-all: Example_2833xCpuTimer.out
+all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
+	@$(MAKE) --no-print-directory -Onone "Example_2833xCpuTimer.out"
 
 # Tool invocations
 Example_2833xCpuTimer.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: C2000 Linker'
-	"C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259/bin/cl2000" -v28 -ml -mt --float_support=fpu32 -O4 --opt_for_speed=5 --fp_reassoc=on --advice:performance=all --define=_DEBUG --define=LARGE_MODEL -g --c99 --diag_suppress=10063 --diag_warning=225 --issue_remarks --verbose_diagnostics --quiet -z -m"Example_2833xCpuTimer.map" --stack_size=0x400 --warn_sections -i"C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259/lib" -i"C:/ti/ccstheia131/ccs/tools/compiler/ti-cgt-c2000_22.6.1A23259/include" -i"C:/Users/liuyu/Desktop/WorkPlace/workspace_ccstheia_hdl_2833x/HDL_2833x" -i"C:/ti/c2000/C2000Ware_5_01_00_00/device_support/f2833x/common/lib" -i"C:/ti/c2000/C2000Ware_5_01_00_00/libraries/math/IQmath/c28/lib" -i"C:/ti/c2000/C2000Ware_5_01_00_00/libraries/math/FPUfastRTS/c28/lib" --priority --reread_libs --issue_remarks --verbose_diagnostics --xml_link_info="Example_2833xCpuTimer_linkInfo.xml" --entry_point=code_start --rom_model -o "Example_2833xCpuTimer.out" $(ORDERED_OBJS)
+	"C:/ti/ccs1260/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/bin/cl2000" -v28 -ml -mt --float_support=fpu32 -O4 --opt_for_speed=0 --fp_reassoc=on --advice:performance=all --define=_DEBUG --define=LARGE_MODEL -g --c99 --diag_suppress=10063 --diag_warning=225 --issue_remarks --verbose_diagnostics --quiet --abi=coffabi -z -m"Example_2833xCpuTimer.map" --stack_size=0x400 --warn_sections -i"C:/ti/ccs1260/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/lib" -i"C:/ti/ccs1260/ccs/tools/compiler/ti-cgt-c2000_22.6.1.LTS/include" -i"C:/Users/liuyu/Desktop/WorkPlace/workspace_ccstheia_hdl_2833x/HDL_2833x" -i"C:/ti/c2000/C2000Ware_5_01_00_00/device_support/f2833x/common/lib" -i"C:/ti/c2000/C2000Ware_5_01_00_00/libraries/math/IQmath/c28/lib" -i"C:/ti/c2000/C2000Ware_5_01_00_00/libraries/math/FPUfastRTS/c28/lib" --priority --reread_libs --issue_remarks --verbose_diagnostics --xml_link_info="Example_2833xCpuTimer_linkInfo.xml" --entry_point=code_start --rom_model -o "Example_2833xCpuTimer.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "DSP2833x_ADC_cal.obj" "DSP2833x_Adc.obj" "DSP2833x_CodeStartBranch.obj" "DSP2833x_CpuTimers.obj" "DSP2833x_DMA.obj" "DSP2833x_DefaultIsr.obj" "DSP2833x_ECan.obj" "DSP2833x_EPwm.obj" "DSP2833x_GlobalVariableDefs.obj" "DSP2833x_PieCtrl.obj" "DSP2833x_PieVect.obj" "DSP2833x_SysCtrl.obj" "DSP2833x_usDelay.obj" "APP\APP_Main.obj" "APP\B1_CapacitanceTemperatureMeasure.obj" "APP\B1_Measure.obj" "APP\B1_ModbusRTUSlaver.obj" "APP\B1_SysModeGet.obj" "APP\B1_VCBStatusGet.obj" "APP\B2_CmdBypassCapacitors.obj" "APP\B2_CmdCutOffCapacitors.obj" "APP\B2_CmdMakeCapacitorsWork.obj" "APP\B3_FaultDetect.obj" "APP\B3_RTUPush.obj" "APP\B3_SysAutoMode.obj" "APP\B3_SysManualMode.obj" "Application\main.obj" "BFL\BFL_Button.obj" "BFL\BFL_Buzz.obj" "BFL\BFL_DebugPin.obj" "BFL\BFL_Measure.obj" "BFL\BFL_RS485.obj" "BFL\BFL_SCR.obj" "BFL\BFL_VCB.obj" "BFL\async_delay.obj" "BFL\log.obj" "BFL\period_query.obj" "BFL\state_duration_timer.obj" "CHIP\CHIP_W25Q128.obj" "HDL\HDL_CAN.obj" "HDL\HDL_CPU_Time.obj" "HDL\HDL_GPIO.obj" 
-	-$(RM) "HDL\HDL_IWDG.obj" "HDL\HDL_SPI.obj" "HDL\HDL_Uart.obj" "LIB\average_filter.obj" "LIB\cfunction.obj" "LIB\cqueue.obj" "LIB\crc.obj" "Test\test.obj" "freemodbus\functions\mbfunccoils.obj" "freemodbus\functions\mbfuncdiag.obj" "freemodbus\functions\mbfuncdisc.obj" "freemodbus\functions\mbfuncholding.obj" "freemodbus\functions\mbfuncinput.obj" "freemodbus\functions\mbfuncother.obj" "freemodbus\functions\mbutils.obj" "freemodbus\mb.obj" "freemodbus\port\mbcb.obj" "freemodbus\port\portevent.obj" "freemodbus\port\portserial.obj" "freemodbus\port\porttimer.obj" "freemodbus\rtu\mbcrc.obj" "freemodbus\rtu\mbrtu.obj" "freemodbus\tcp\mbtcp.obj" 
-	-$(RM) "DSP2833x_Adc.d" "DSP2833x_CpuTimers.d" "DSP2833x_DMA.d" "DSP2833x_DefaultIsr.d" "DSP2833x_ECan.d" "DSP2833x_EPwm.d" "DSP2833x_GlobalVariableDefs.d" "DSP2833x_PieCtrl.d" "DSP2833x_PieVect.d" "DSP2833x_SysCtrl.d" "APP\APP_Main.d" "APP\B1_CapacitanceTemperatureMeasure.d" "APP\B1_Measure.d" "APP\B1_ModbusRTUSlaver.d" "APP\B1_SysModeGet.d" "APP\B1_VCBStatusGet.d" "APP\B2_CmdBypassCapacitors.d" "APP\B2_CmdCutOffCapacitors.d" "APP\B2_CmdMakeCapacitorsWork.d" "APP\B3_FaultDetect.d" "APP\B3_RTUPush.d" "APP\B3_SysAutoMode.d" "APP\B3_SysManualMode.d" "Application\main.d" "BFL\BFL_Button.d" "BFL\BFL_Buzz.d" "BFL\BFL_DebugPin.d" "BFL\BFL_Measure.d" "BFL\BFL_RS485.d" "BFL\BFL_SCR.d" "BFL\BFL_VCB.d" "BFL\async_delay.d" "BFL\log.d" "BFL\period_query.d" "BFL\state_duration_timer.d" "CHIP\CHIP_W25Q128.d" "HDL\HDL_CAN.d" "HDL\HDL_CPU_Time.d" "HDL\HDL_GPIO.d" "HDL\HDL_IWDG.d" "HDL\HDL_SPI.d" "HDL\HDL_Uart.d" "LIB\average_filter.d" "LIB\cfunction.d" "LIB\cqueue.d" "LIB\crc.d" "Test\test.d" "freemodbus\functions\mbfunccoils.d" 
-	-$(RM) "freemodbus\functions\mbfuncdiag.d" "freemodbus\functions\mbfuncdisc.d" "freemodbus\functions\mbfuncholding.d" "freemodbus\functions\mbfuncinput.d" "freemodbus\functions\mbfuncother.d" "freemodbus\functions\mbutils.d" "freemodbus\mb.d" "freemodbus\port\mbcb.d" "freemodbus\port\portevent.d" "freemodbus\port\portserial.d" "freemodbus\port\porttimer.d" "freemodbus\rtu\mbcrc.d" "freemodbus\rtu\mbrtu.d" "freemodbus\tcp\mbtcp.d" 
+	-$(RM) "DSP2833x_ADC_cal.obj" "DSP2833x_Adc.obj" "DSP2833x_CodeStartBranch.obj" "DSP2833x_CpuTimers.obj" "DSP2833x_DMA.obj" "DSP2833x_DefaultIsr.obj" "DSP2833x_ECan.obj" "DSP2833x_EPwm.obj" "DSP2833x_GlobalVariableDefs.obj" "DSP2833x_PieCtrl.obj" "DSP2833x_PieVect.obj" "DSP2833x_SysCtrl.obj" "DSP2833x_usDelay.obj" "APP\APP_Main.obj" "APP\APP_Main_Test.obj" "APP\B1_CapacitanceTemperatureMeasure.obj" "APP\B1_Measure.obj" "APP\B1_ModbusRTUSlaver.obj" "APP\B1_SysModeGet.obj" "APP\B1_VCBStatusGet.obj" "APP\B2_CmdBypassCapacitors.obj" "APP\B2_CmdCutOffCapacitors.obj" "APP\B2_CmdMakeCapacitorsWork.obj" "APP\B2_EventRecord.obj" "APP\B3_FaultDetect.obj" "APP\B3_RTUPush.obj" "APP\B3_SysAutoMode.obj" "APP\B3_SysManualMode.obj" "Application\main.obj" "BFL\BFL_Button.obj" "BFL\BFL_Buzz.obj" "BFL\BFL_DebugPin.obj" "BFL\BFL_Measure.obj" "BFL\BFL_RS485.obj" "BFL\BFL_SCR.obj" "BFL\BFL_VCB.obj" "BFL\async_delay.obj" "BFL\datetime.obj" "BFL\log.obj" "BFL\period_query.obj" "BFL\state_duration_timer.obj" "CHIP\CHIP_DS3231.obj" 
+	-$(RM) "CHIP\CHIP_DS3231_Port.obj" "CHIP\CHIP_PCF8563.obj" "CHIP\CHIP_PCF8563_Port.obj" "CHIP\CHIP_W25Q128.obj" "HDL\HDL_CAN.obj" "HDL\HDL_CPU_Time.obj" "HDL\HDL_GPIO.obj" "HDL\HDL_IIC.obj" "HDL\HDL_IWDG.obj" "HDL\HDL_RTC.obj" "HDL\HDL_SPI.obj" "HDL\HDL_Uart.obj" "LIB\average_filter.obj" "LIB\ccoding.obj" "LIB\cfunction.obj" "LIB\cqueue.obj" "LIB\crc.obj" "LIB\mtime.obj" "Test\test.obj" "freemodbus\functions\mbfunccoils.obj" "freemodbus\functions\mbfuncdiag.obj" "freemodbus\functions\mbfuncdisc.obj" "freemodbus\functions\mbfuncholding.obj" "freemodbus\functions\mbfuncinput.obj" "freemodbus\functions\mbfuncother.obj" "freemodbus\functions\mbutils.obj" "freemodbus\mb.obj" "freemodbus\port\mbcb.obj" "freemodbus\port\portevent.obj" "freemodbus\port\portserial.obj" "freemodbus\port\porttimer.obj" "freemodbus\rtu\mbcrc.obj" "freemodbus\rtu\mbrtu.obj" "freemodbus\tcp\mbtcp.obj" 
+	-$(RM) "DSP2833x_Adc.d" "DSP2833x_CpuTimers.d" "DSP2833x_DMA.d" "DSP2833x_DefaultIsr.d" "DSP2833x_ECan.d" "DSP2833x_EPwm.d" "DSP2833x_GlobalVariableDefs.d" "DSP2833x_PieCtrl.d" "DSP2833x_PieVect.d" "DSP2833x_SysCtrl.d" "APP\APP_Main.d" "APP\APP_Main_Test.d" "APP\B1_CapacitanceTemperatureMeasure.d" "APP\B1_Measure.d" "APP\B1_ModbusRTUSlaver.d" "APP\B1_SysModeGet.d" "APP\B1_VCBStatusGet.d" "APP\B2_CmdBypassCapacitors.d" "APP\B2_CmdCutOffCapacitors.d" "APP\B2_CmdMakeCapacitorsWork.d" "APP\B2_EventRecord.d" "APP\B3_FaultDetect.d" "APP\B3_RTUPush.d" "APP\B3_SysAutoMode.d" "APP\B3_SysManualMode.d" "Application\main.d" "BFL\BFL_Button.d" "BFL\BFL_Buzz.d" "BFL\BFL_DebugPin.d" "BFL\BFL_Measure.d" "BFL\BFL_RS485.d" "BFL\BFL_SCR.d" "BFL\BFL_VCB.d" "BFL\async_delay.d" "BFL\datetime.d" "BFL\log.d" "BFL\period_query.d" "BFL\state_duration_timer.d" "CHIP\CHIP_DS3231.d" "CHIP\CHIP_DS3231_Port.d" "CHIP\CHIP_PCF8563.d" "CHIP\CHIP_PCF8563_Port.d" "CHIP\CHIP_W25Q128.d" "HDL\HDL_CAN.d" "HDL\HDL_CPU_Time.d" "HDL\HDL_GPIO.d" 
+	-$(RM) "HDL\HDL_IIC.d" "HDL\HDL_IWDG.d" "HDL\HDL_RTC.d" "HDL\HDL_SPI.d" "HDL\HDL_Uart.d" "LIB\average_filter.d" "LIB\ccoding.d" "LIB\cfunction.d" "LIB\cqueue.d" "LIB\crc.d" "LIB\mtime.d" "Test\test.d" "freemodbus\functions\mbfunccoils.d" "freemodbus\functions\mbfuncdiag.d" "freemodbus\functions\mbfuncdisc.d" "freemodbus\functions\mbfuncholding.d" "freemodbus\functions\mbfuncinput.d" "freemodbus\functions\mbfuncother.d" "freemodbus\functions\mbutils.d" "freemodbus\mb.d" "freemodbus\port\mbcb.d" "freemodbus\port\portevent.d" "freemodbus\port\portserial.d" "freemodbus\port\porttimer.d" "freemodbus\rtu\mbcrc.d" "freemodbus\rtu\mbrtu.d" "freemodbus\tcp\mbtcp.d" 
 	-$(RM) "DSP2833x_ADC_cal.d" "DSP2833x_CodeStartBranch.d" "DSP2833x_usDelay.d" 
 	-@echo 'Finished clean'
 	-@echo ' '

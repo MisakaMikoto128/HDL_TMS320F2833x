@@ -57,6 +57,21 @@
         "_stdint.h": "c",
         "mbport.h": "c",
         "mbrtu.h": "c",
-        "bfl_rs485.h": "c"
+        "bfl_rs485.h": "c",
+        "mbcb.h": "c",
+        "hdl_rtc.h": "c",
+        "datetime.h": "c",
+        "b2_eventrecord.h": "c",
+        "cqueue.h": "c",
+        "chip_pcf8563.h": "c",
+        "xtr1common": "c",
+        "stdarg.h": "c",
+        "chip_pcf8563_port.h": "c",
+        "chip_pcf8563_info.h": "c",
+        "app_main_test.h": "c",
+        "cmath": "c",
+        "cstdlib": "c",
+        "hdl_iic.h": "c",
+        "ccoding.h": "c"
     }
 }
